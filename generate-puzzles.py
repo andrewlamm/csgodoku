@@ -1,5 +1,6 @@
 import csv
 import random
+from prettytable import PrettyTable, ALL
 
 player_data = {}
 date_updated = None
@@ -8,10 +9,11 @@ team_players = {}
 partner_teams = {}
 teams = []
 preferable_teams = []
+country_set = set()
 
 PUZZLES_GRID = [(0, 3), (1, 3), (2, 3), (0, 4), (1, 4), (2, 4), (0, 5), (1, 5), (2, 5)]
 STATS = [
-  ('country', None),
+  ('country', country_set),
   ('age', [20, 25, 30]),
   ('rating2', [1.1, 1.2]),
   ('rating1', [1.1, 1.2]),
@@ -43,7 +45,7 @@ def read_data():
       player_id = int(row[1])
       player_data[player_id] = { 'name': row[0] }
 
-      for i in range(1, len(row)-1):
+      for i in range(1, len(row)):
         if row[i] == 'undefined' or row[i] == 'N/A':
           player_data[player_id][top_row[i]] = None
         elif parse_type[i] == 'int':
@@ -70,7 +72,9 @@ def preprocess_data():
         teams.append(team)
       team_players[team].add(player_id)
 
-  # find the tuple of teams that work
+    country_set.add(player_data[player_id]['country'])
+
+  # find partner teams
   for i in range(len(teams)):
     for j in range(i+1, len(teams)):
       if len(team_players[teams[i]].intersection(team_players[teams[j]])) > 0:
@@ -84,16 +88,46 @@ def generate_player_set(clue1, clue2):
   if clue1[0] == 'team':
     for player in team_players[clue1[1]]:
       clue1_possible.add(player)
+  elif clue1[0] == 'country':
+    for player in player_data:
+      if player_data[player]['country'] == clue1[1]:
+        clue1_possible.add(player)
+  elif clue1[0] == 'ratingYear':
+    year = clue1[1][0]
+    rating = clue1[1][1]
+    for player in player_data:
+      if year in player_data[player]['ratingYear'] and player_data[player]['ratingYear'][year] >= rating:
+        clue1_possible.add(player)
+  elif clue1[0] == 'topPlacement':
+    for player in player_data:
+      if player_data[player]['topPlacement'] is not None and player_data[player]['topPlacement'] <= clue1[1]:
+        clue1_possible.add(player)
   else:
-    # TODO: skip for now
-    pass
+    for player in player_data:
+      if player_data[player][clue1[0]] is not None and player_data[player][clue1[0]] >= clue1[1]:
+        clue1_possible.add(player)
 
   if clue2[0] == 'team':
     for player in team_players[clue2[1]]:
       clue2_possible.add(player)
+  elif clue2[0] == 'country':
+    for player in player_data:
+      if player_data[player]['country'] == clue2[1]:
+        clue2_possible.add(player)
+  elif clue2[0] == 'ratingYear':
+    year = clue2[1][0]
+    rating = clue2[1][1]
+    for player in player_data:
+      if year in player_data[player]['ratingYear'] and player_data[player]['ratingYear'][year] >= rating:
+        clue2_possible.add(player)
+  elif clue2[0] == 'topPlacement':
+    for player in player_data:
+      if player_data[player]['topPlacement'] is not None and player_data[player]['topPlacement'] <= clue2[1]:
+        clue2_possible.add(player)
   else:
-    # TODO: skip for now
-    pass
+    for player in player_data:
+      if player_data[player][clue2[0]] is not None and player_data[player][clue2[0]] >= clue2[1]:
+        clue2_possible.add(player)
 
   return clue1_possible.intersection(clue2_possible)
 
@@ -125,36 +159,102 @@ def generate_puzzle():
   while True:
     puzzle = [None, None, None, None, None, None]
     board = [None, None, None, None, None, None, None, None, None]
-    clues = set()
 
     init_team = random.choice(teams)
-    if len(partner_teams[init_team]) < 3:
+    top_row_teams_count = None
+    if len(partner_teams[init_team]) < 2:
       continue
-    puzzle[3] = ('team', init_team)
-    clues.add(init_team)
+    elif len(partner_teams[init_team]) == 2:
+      top_row_teams_count = 2
+    else:
+      top_row_teams_count = 2 if random.random() < 0.75 else 3
 
-    top_row = random.sample(list(partner_teams[init_team]), 3)
-    intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]]).intersection(partner_teams[top_row[2]])
+    puzzle[3] = ('team', init_team)
+
+    top_row = random.sample(list(partner_teams[init_team]), top_row_teams_count)
+    if top_row_teams_count == 2:
+      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]])
+
+    else:
+      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]]).intersection(partner_teams[top_row[2]])
+
     intersect.remove(init_team)
 
-    if len(intersect) < 2:
+    left_col_teams_count = None
+    if len(intersect) < 1:
       continue
+    elif len(intersect) == 1:
+      left_col_teams_count = 1
+    else:
+      left_col_teams_count = 1 if random.random() < 0.5 else 2
 
-    left_col = random.sample(list(intersect), 2)
+    left_col = random.sample(list(intersect), left_col_teams_count)
 
     puzzle[0] = ('team', top_row[0])
     puzzle[1] = ('team', top_row[1])
-    puzzle[2] = ('team', top_row[2])
-
     puzzle[4] = ('team', left_col[0])
-    puzzle[5] = ('team', left_col[1])
 
-    print('attempting to solve', puzzle)
+    if top_row_teams_count == 2:
+      random_stat = random.choice(STATS)
+      if random_stat[0] == 'country':
+        puzzle[2] = ('country', random.choice(list(country_set)))
+      elif random_stat[0] == 'ratingYear':
+        puzzle[2] = ('ratingYear', [random.choice(random_stat[1][0]), random.choice(random_stat[1][1])])
+      else:
+        puzzle[2] = (random_stat[0], random.choice(random_stat[1]))
+    else:
+      puzzle[2] = ('team', top_row[2])
+
+    if left_col_teams_count == 1:
+      random_stat = random.choice(STATS)
+      if random_stat[0] == 'country':
+        puzzle[5] = ('country', random.choice(list(country_set)))
+      elif random_stat[0] == 'ratingYear':
+        puzzle[5] = ('ratingYear', [random.choice(random_stat[1][0]), random.choice(random_stat[1][1])])
+      else:
+        puzzle[5] = (random_stat[0], random.choice(random_stat[1]))
+    else:
+      puzzle[5] = ('team', left_col[1])
+
+    # kind of a naive check for dupes xd
+    clues = set()
+    dupe_check = False
+    for i in range(6):
+      if puzzle[i][0] == 'team':
+        if puzzle[i][1] in clues:
+          dupe_check = True
+        clues.add(puzzle[i][1])
+      else:
+        if puzzle[i][0] in clues:
+          dupe_check = True
+        clues.add(puzzle[i][0])
+
+    if dupe_check:
+      continue
+
+    # print('attempting to solve', puzzle)
     ans = solve_puzzle(puzzle, board, 0, set())
     if ans is not None:
       return puzzle, ans
 
+def generate_puzzles(num_puzzles=10):
+  puzzles = []
+  for i in range(num_puzzles):
+    puzzle, ans = generate_puzzle()
+    puzzles.append(puzzle)
+
+    table = PrettyTable()
+    table.header = False
+    table.hrules=ALL
+    table.add_row([''] + puzzle[:3])
+    table.add_row([puzzle[3]] + ans[:3])
+    table.add_row([puzzle[4]] + ans[3:6])
+    table.add_row([puzzle[5]] + ans[6:9])
+    print(table)
+
+  return puzzles
+
 read_data()
 preprocess_data()
 
-print(generate_puzzle())
+generate_puzzles()

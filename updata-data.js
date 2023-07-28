@@ -117,7 +117,7 @@ async function main() {
       fullName: undefined,
       country: undefined,
       age: undefined,
-      rating2: undefined,
+      rating2: 'N/A',
       rating1: undefined,
       KDDiff: undefined,
       maps: undefined,
@@ -138,7 +138,7 @@ async function main() {
       MVPs: undefined,
       top20s: undefined,
       top10s: undefined,
-      topPlacement: undefined,
+      topPlacement: 'N/A',
     }
 
     const playerCells = player.findAll('td')
