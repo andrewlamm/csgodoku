@@ -5,6 +5,7 @@ player_data = {}
 date_updated = None
 
 team_players = {}
+partner_teams = {}
 teams = []
 preferable_teams = []
 
@@ -65,23 +66,16 @@ def preprocess_data():
     for team in player_data[player_id]['teams']:
       if team not in team_players:
         team_players[team] = set()
+        partner_teams[team] = set()
         teams.append(team)
       team_players[team].add(player_id)
 
   # find the tuple of teams that work
-  tuple_teams = []
   for i in range(len(teams)):
     for j in range(i+1, len(teams)):
       if len(team_players[teams[i]].intersection(team_players[teams[j]])) > 0:
-        tuple_teams.append((teams[i], teams[j]))
-
-  pref_teams = set()
-  for team1, team2 in tuple_teams:
-    pref_teams.add(team1)
-    pref_teams.add(team2)
-
-  for team in pref_teams:
-    preferable_teams.append(team)
+        partner_teams[teams[i]].add(teams[j])
+        partner_teams[teams[j]].add(teams[i])
 
 def generate_player_set(clue1, clue2):
   clue1_possible = set()
@@ -119,7 +113,7 @@ def solve_puzzle(puzzle, curr_board, curr_spot, player_set):
     player_set_dup = player_set.copy()
     curr_board_dup = curr_board.copy()
     player_set_dup.add(player)
-    curr_board_dup[curr_spot] = player
+    curr_board_dup[curr_spot] = player_data[player]['name']
 
     ans = solve_puzzle(puzzle, curr_board_dup, curr_spot+1, player_set_dup)
     if ans is not None:
@@ -129,17 +123,34 @@ def solve_puzzle(puzzle, curr_board, curr_spot, player_set):
 
 def generate_puzzle():
   while True:
-    puzzle = []
+    puzzle = [None, None, None, None, None, None]
+    board = [None, None, None, None, None, None, None, None, None]
     clues = set()
-    for i in range(6):
-      curr_clue = random.choice(preferable_teams)
-      while curr_clue in clues:
-        curr_clue = random.choice(preferable_teams)
-      clues.add(curr_clue)
-      puzzle.append(['team', curr_clue])
+
+    init_team = random.choice(teams)
+    if len(partner_teams[init_team]) < 3:
+      continue
+    puzzle[3] = ('team', init_team)
+    clues.add(init_team)
+
+    top_row = random.sample(list(partner_teams[init_team]), 3)
+    intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]]).intersection(partner_teams[top_row[2]])
+    intersect.remove(init_team)
+
+    if len(intersect) < 2:
+      continue
+
+    left_col = random.sample(list(intersect), 2)
+
+    puzzle[0] = ('team', top_row[0])
+    puzzle[1] = ('team', top_row[1])
+    puzzle[2] = ('team', top_row[2])
+
+    puzzle[4] = ('team', left_col[0])
+    puzzle[5] = ('team', left_col[1])
 
     print('attempting to solve', puzzle)
-    ans = solve_puzzle(puzzle, [None, None, None, None, None, None, None, None, None], 0, set())
+    ans = solve_puzzle(puzzle, board, 0, set())
     if ans is not None:
       return puzzle, ans
 
