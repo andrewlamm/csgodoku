@@ -257,4 +257,6 @@ def generate_puzzles(num_puzzles=10):
 read_data()
 preprocess_data()
 
-generate_puzzles()
+puzzles = generate_puzzles(1)
+print(puzzles[0])
+print(teams)

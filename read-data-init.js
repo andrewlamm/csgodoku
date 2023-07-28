@@ -177,7 +177,8 @@ async function main() {
       for (let i = 0; i < teamsTable.length; i++) {
         // TODO: download team images
         const teamName = teamsTable[i].find('td', {'class': 'team-name-cell'}).text
-        playerData[id].teams.add(teamName)
+        const teamID = parseInt(teamsTable[i].find('td', {'class': 'team-name-cell'}).find('a').attrs.href.split('/')[2])
+        playerData[id].teams.add(teamID + '/' + teamName)
       }
 
       if (profilePage.find('div', {'id': 'majorAchievement'}) !== undefined) {
@@ -246,6 +247,8 @@ async function main() {
       }
 
       dataToWrite += `${addString}\n`
+
+      break
     }
 
     fs.writeFile('playerData.csv', dataToWrite, err => {
