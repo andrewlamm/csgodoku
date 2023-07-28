@@ -189,6 +189,8 @@ async function main() {
         const deathsBox = statsDivs[2]
         playerData[id].deaths = parseInt(deathsBox.findAll('span')[1].text)
 
+        playerData[id].KDDiff = playerData[id].kills - playerData[id].deaths
+
         const KDRatioBox = statsDivs[3]
         playerData[id].KDRatio = parseFloat(KDRatioBox.findAll('span')[1].text)
 

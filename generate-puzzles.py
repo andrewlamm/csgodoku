@@ -6,6 +6,7 @@ date_updated = None
 team_players = {}
 
 grid = [[((0, 3), (1, 3), (2, 3))], [(0, 4), (1, 4), (2, 4)], [(0, 5), (1, 5), (2, 5)]]
+STATS = [('country', None), ('age', [20, 25, 30]), ('rating2', [1.1, 1.2]), ('rating1', [1.1, 1.2]), ('maps', [1000, 2000, 3000]), ('rounds', [20000, 30000, 40000]), ('kills', [10000, 20000, 30000]), ('deaths', [10000, 20000, 30000]), ('ratingTop20')]
 
 def read_data():
   with open("playerData.csv", 'r') as file:
