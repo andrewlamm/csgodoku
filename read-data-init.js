@@ -247,8 +247,6 @@ async function main() {
       }
 
       dataToWrite += `${addString}\n`
-
-      break
     }
 
     fs.writeFile('playerData.csv', dataToWrite, err => {
