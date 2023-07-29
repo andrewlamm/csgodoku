@@ -592,6 +592,10 @@ video {
   height: 9rem;
 }
 
+.h-128 {
+  height: 32rem;
+}
+
 .max-h-128 {
   max-height: 32rem;
 }
@@ -650,14 +654,6 @@ video {
 
 .overflow-y-auto {
   overflow-y: auto;
-}
-
-.overflow-y-visible {
-  overflow-y: visible;
-}
-
-.overflow-y-scroll {
-  overflow-y: scroll;
 }
 
 .rounded-2xl {

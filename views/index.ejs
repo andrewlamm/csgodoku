@@ -30,7 +30,7 @@
             you have
           </div>
           <div class="text-6xl font-bold" id="rounds-left">
-            9
+            <%= currGame.guessesLeft %>
           </div>
           <div>
             round<span id="rounds-plural">s</span> left
@@ -47,7 +47,7 @@
         <div class="w-80">
           <input type="text" placeholder="enter a player" class="w-80 px-2 py-1.5 rounded-lg" oninput="updatePlayerList()" id="player-popup-input">
         </div>
-        <div class="w-80 max-h-128 overflow-y-auto my-2" id="player-popup-list">
+        <div class="w-80 h-128 overflow-y-auto my-2" id="player-popup-list">
 
         </div>
         <div class="mt-4 w-80">
@@ -109,18 +109,19 @@
         }
         else {
           filtered_players = players.filter(player => {
-            if (player.name.toLowerCase().startsWith(val)) {
-              return true
-            }
+            // if (player.name.toLowerCase().startsWith(val)) {
+            //   return true
+            // }
 
-            const names = player.fullName.split(' ')
-            for (let i = 0; i < names.length; i++) {
-              if (names[i].toLowerCase().startsWith(val)) {
-                return true
-              }
-            }
+            // const names = player.fullName.split(' ')
+            // for (let i = 0; i < names.length; i++) {
+            //   if (names[i].toLowerCase().startsWith(val)) {
+            //     return true
+            //   }
+            // }
+            return player.name.toLowerCase().includes(val) || player.fullName.toLowerCase().includes(val)
 
-            return false
+            // return false
           })
 
           filtered_players.map(player => {
