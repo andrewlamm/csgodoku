@@ -194,9 +194,15 @@ def generate_puzzle():
     if len(intersect) < 1:
       continue
     elif len(intersect) == 1:
-      left_col_teams_count = 1
+      continue
     else:
-      left_col_teams_count = 1 if random.random() < 0.5 else 2
+      left_col_teams_count = 2
+    # if len(intersect) < 1:
+    #   continue
+    # elif len(intersect) == 1:
+    #   left_col_teams_count = 1
+    # else:
+    #   left_col_teams_count = 1 if random.random() < 0.5 else 2
 
     left_col = random.sample(list(intersect), left_col_teams_count)
 
