@@ -99,7 +99,7 @@ async function readCSV(playerData) {
 }
 
 async function main() {
-  const nameToID = {}
+  const idToName = {}
   const playerData = {}
   const playerCache = {}
 
@@ -110,7 +110,7 @@ async function main() {
     const playerName = player.find('td', {'class': 'playerCol'}).text
     const playerID = parseInt(player.find('td', {'class': 'playerCol'}).find('a').attrs.href.split('/')[3])
 
-    nameToID[playerName] = playerID
+    idToName[playerID] = playerName
     playerData[playerID] = {
       name: playerName,
       id: playerID,
@@ -156,10 +156,10 @@ async function main() {
 
   try {
     // loading all player data
-    for (const [name, id] of Object.entries(nameToID)) {
+    for (const [id, name] of Object.entries(idToName)) {
       if (playerData[id] === undefined || playerCache[id].maps !== playerData[id].maps || playerCache[id].rounds !== playerData[id].rounds || playerCache[id].KDDiff !== playerData[id].KDDiff) {
         console.log(new Date().toLocaleTimeString() + ' - getting stats for ' + name)
-        const statsPage = await getParsedPage('https://www.hltv.org/stats/players/' + nameToID[name] + '/' + name)
+        const statsPage = await getParsedPage('https://www.hltv.org/stats/players/' + id + '/' + name)
 
         // TODO: download picture of player
 
@@ -208,7 +208,7 @@ async function main() {
           playerData[id].ratingTop20 = parseFloat(ratingBoxes[2].find('div').text)
         }
 
-        const careerPage = await getParsedPage('https://www.hltv.org/stats/players/career/' + nameToID[name] + '/' + name)
+        const careerPage = await getParsedPage('https://www.hltv.org/stats/players/career/' + id + '/' + name)
 
         const ratingYear = careerPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
         for (let i = 0; i < ratingYear.length-1; i++) {
@@ -219,13 +219,13 @@ async function main() {
 
         let clutchesWon = 0
         for (let i = 0; i < 5; i++) {
-          const clutchPage = await getParsedPage('https://www.hltv.org/stats/players/clutches/' + nameToID[name] + `/1on${i+1}/` + name)
+          const clutchPage = await getParsedPage('https://www.hltv.org/stats/players/clutches/' + id + `/1on${i+1}/` + name)
           const clutches = parseInt(clutchPage.find('div', {'class': 'summary-box'}).find('div', {'class': 'value'}).text)
           clutchesWon += clutches
         }
         playerData[id].clutchesTotal = clutchesWon
 
-        const profilePage = await getParsedPage('https://www.hltv.org/player/' + nameToID[name] + '/' + name)
+        const profilePage = await getParsedPage('https://www.hltv.org/player/' + id + '/' + name)
         const teamsTable = profilePage.find('table', {'class': 'team-breakdown'}).find('tbody').findAll('tr', {'class': 'team'})
 
         for (let i = 0; i < teamsTable.length; i++) {
