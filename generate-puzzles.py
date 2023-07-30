@@ -191,18 +191,18 @@ def generate_puzzle():
     intersect.remove(init_team)
 
     left_col_teams_count = None
-    if len(intersect) < 1:
-      continue
-    elif len(intersect) == 1:
-      continue
-    else:
-      left_col_teams_count = 2
     # if len(intersect) < 1:
     #   continue
     # elif len(intersect) == 1:
-    #   left_col_teams_count = 1
+    #   continue
     # else:
-    #   left_col_teams_count = 1 if random.random() < 0.5 else 2
+    #   left_col_teams_count = 2
+    if len(intersect) < 1:
+      continue
+    elif len(intersect) == 1:
+      left_col_teams_count = 1
+    else:
+      left_col_teams_count = 1 if random.random() < 0.5 else 2
 
     left_col = random.sample(list(intersect), left_col_teams_count)
 
@@ -252,9 +252,9 @@ def generate_puzzle():
     ans = solve_puzzle(puzzle, board, 0, set())
     if ans is not None:
       puzzle_list = [list(elm) for elm in puzzle]
-      for elm in puzzle_list:
-        if elm[0] == 'team':
-          elm[1] = elm[1][elm[1].index('/')+1:]
+      # for elm in puzzle_list:
+      #   if elm[0] == 'team':
+      #     elm[1] = elm[1][elm[1].index('/')+1:]
       return puzzle_list, ans
 
 def generate_puzzles(num_puzzles=10):
