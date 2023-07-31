@@ -2,7 +2,7 @@
 <html>
   <%- include('partials/helmet.ejs', {title: 'csgodoku'}) %>
   <body>
-    <div class="w-full min-h-screen flex flex-col justify-center items-center bg-black">
+    <div class="w-full min-h-screen flex flex-col justify-center items-center bg-black" id="game-screen">
       <div class="flex flex-row justify-center">
         <div class="flex flex-col">
           <div class="flex flex-row">
@@ -17,14 +17,19 @@
                 <%- displayClue(puzzle[i]) %>
               <% } %>
             </div>
-            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden">
+            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="user-board">
               <% for (let i = 0; i < 9; i++) { %>
                 <% if (currGame.board[i]) { %>
-                  <div class="flex flex-col h-36 w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
+                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
                     <%= players[currGame.board[i]].name %>
+                    <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white" id="grid-percentage-<%= i %>">
+                      <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
+                    </div>
                   </div>
                 <% } else { %>
-                  <div class="flex flex-col h-36 w-36 items-center justify-center border-white <%= getBorders(i) %> cursor-pointer bg-slate-800 hover:bg-slate-600 transition-colors" onclick="openPopup(<%= i %>)" id="grid-spot-<%= i %>">
+                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> <% if (currGame.gameStatus === 0) { %> cursor-pointer hover:bg-slate-600 <% } %> bg-slate-800 transition-colors" <% if (currGame.gameStatus === 0) { %>onclick="openPopup(<%= i %>)"<% } %> id="grid-spot-<%= i %>">
+                    <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white" id="grid-percentage-<%= i %>">
+                    </div>
                   </div>
                 <% } %>
               <% } %>
@@ -39,7 +44,12 @@
             <%= currGame.guessesLeft %>
           </div>
           <div>
-            round<span id="rounds-plural"><% if (currGame.guessesLeft > 1) { %>s<% } %></span> left
+            round<span id="rounds-plural"><% if (currGame.guessesLeft !== 1) { %>s<% } %></span> left
+          </div>
+          <div class="w-full mt-8 <% if (currGame.guessesLeft > 0) { %> hidden <% } %>" id="show-recap-button">
+            <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-semibold cursor-pointer" onclick="openRecapPopup()">
+              recap
+            </div>
           </div>
         </div>
       </div>
@@ -54,10 +64,125 @@
           <input type="text" placeholder="enter a player" class="w-80 px-2 py-1.5 rounded-lg" oninput="updatePlayerList()" id="player-popup-input">
         </div>
         <div class="w-80 h-128 overflow-y-auto my-2" id="player-popup-list">
-
         </div>
         <div class="mt-4 w-80">
           <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closePopup()">
+            close
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="recap-popup-bg" >
+      <div class="flex flex-col items-center justify-center p-4 w-96 z-10 bg-gray-400 rounded-xl" id="recap-popup">
+        <div class="w-full font-bold text-xl text-center">
+          recap
+        </div>
+        <div class="w-full flex flex-row justify-center">
+          <div class="flex flex-col items-center w-1/2 border-r-2 border-slate-700">
+            <div class="font-bold text-2xl" id="score-text"><%= currGame.userScore[0] %> / 9</div>
+            <div class="font-semibold">your score</div>
+          </div>
+          <div class="flex flex-col items-center w-1/2">
+            <div class="font-bold text-2xl" id="uniqueness-text"><%= currGame.userScore[1] %></div>
+            <div class="font-semibold">uniqueness</div>
+          </div>
+        </div>
+        <div class="my-4 grid grid-cols-3 gap-4">
+          <% for (let i = 0; i < 9; i++) { %>
+            <div class="w-20 h-20 rounded-lg <% if (currGame.board[i]) { %> bg-green-500 <% } else { %> bg-gray-500 <% } %>" id="recap-grid-<%= i %>">
+            </div>
+          <% } %>
+        </div>
+        <div class="w-full flex flex-col items-center justify-center">
+          <div class="font-bold text-2xl" id="next-puzzle-timer"></div>
+          <div class="font-semibold">until next puzzle</div>
+        </div>
+        <div class="flex flex-row mt-2 w-full gap-4">
+          <div class="w-1/2">
+            <div class="rounded-lg bg-slate-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeRecapPopup()">
+              close
+            </div>
+          </div>
+          <div class="w-1/2">
+            <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="openStatsPage()">
+              view stats
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="w-full min-h-screen flex flex-row justify-center items-center bg-black text-white hidden" id="postgame-screen">
+      <div class="w-1/2 flex flex-col justify-center items-center">
+        <div class="w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+          <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
+            your board
+          </div>
+          <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="common-board-select" onclick="toggleCommonBoard()">
+            most common picks
+          </div>
+        </div>
+        <div class="mt-8 flex flex-col justify-center items-center">
+          <div class="flex flex-row">
+            <div class="h-36 w-36"></div>
+            <% for (let i = 0; i < 3; i++) { %>
+              <%- displayClue(puzzle[i]) %>
+            <% } %>
+          </div>
+          <div class="flex flex-row">
+            <div class="flex flex-col">
+              <% for (let i = 3; i < 6; i++) { %>
+                <%- displayClue(puzzle[i]) %>
+              <% } %>
+            </div>
+            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-user-board">
+              <% if (currGame.gameStatus !== 0) { %>
+                <% for (let i = 0; i < 9; i++) { %>
+                  <% if (currGame.board[i]) { %>
+                    <div class="flex flex-col h-36 w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
+                      <%= players[currGame.board[i]].name %>
+                    </div>
+                  <% } else { %>
+                    <div class="flex flex-col h-36 w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors">
+                    </div>
+                  <% } %>
+                <% } %>
+              <% } %>
+            </div>
+            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="stats-common-board">
+              <% if (currGame.gameStatus !== 0) { %>
+                <% for (let i = 0; i < 9; i++) { %>
+                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer" onclick="openStatsPopup(<%= i %>)">
+                    <%= pickedPlayers[i][0].name %>
+                    <div class="absolute top-0 right-0 px-2 bg-black font-bold">
+                      <%= formatPercentage(pickedPlayers[i][0].percentage * 100) %>
+                    </div>
+                  </div>
+                <% } %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="w-1/2 flex flex-col justify-center">
+        <div class="w-1/2 flex flex-row items-center">
+          <div class="w-1/2 text-center">
+            your stats
+          </div>
+          <div class="w-1/2 text-center">
+            today's stats
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="stats-popup-bg" >
+      <div class="flex flex-col items-center justify-center p-4 w-96 z-10 bg-gray-400 rounded-xl" id="stats-popup">
+        <div class="text-center mb-4" id="stats-popup-text">
+          players who <span class="font-bold" id="stats-popup-clue-1"></span> and <span class="font-bold" id="stats-popup-clue-2"></span>
+        </div>
+        <div class="w-80 h-128 overflow-y-auto my-2" id="stats-popup-list">
+        </div>
+        <div class="mt-4 w-80">
+          <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeStatsPopup()">
             close
           </div>
         </div>
@@ -136,6 +261,18 @@
         }
       }
 
+      function formatPercentage(percent) {
+        if (percent < 10) {
+          return `${percent.toFixed(2)}%`
+        }
+        else if (percent < 100) {
+          return `${percent.toFixed(1)}%`
+        }
+        else {
+          return `${percent.toFixed(0)}%`
+        }
+      }
+
       function closePopup() {
         popupShowing = false
         document.getElementById('player-popup-bg').classList.add('hidden')
@@ -159,6 +296,13 @@
       //     closePopup()
       //   }
       // })
+
+      function openRecapPopup() {
+        document.getElementById('recap-popup-bg').classList.remove('hidden')
+      }
+      function closeRecapPopup() {
+        document.getElementById('recap-popup-bg').classList.add('hidden')
+      }
 
       async function submitGuess(playerID) {
         if (indexSelected === undefined) {
@@ -193,6 +337,9 @@
         if (res.guessesLeft === 1) {
           document.getElementById('rounds-plural').innerHTML = ''
         }
+        else {
+          document.getElementById('rounds-plural').innerHTML = 's'
+        }
 
         if (res.guessStatus === -1) {
           // error, do nothing
@@ -214,10 +361,70 @@
           document.getElementById(`grid-spot-${ind}`).classList.add('bg-slate-600')
           document.getElementById(`grid-spot-${ind}`).onclick = undefined
 
-          document.getElementById(`grid-spot-${ind}`).innerHTML = player.name
+          document.getElementById(`grid-spot-${ind}`).childNodes[0].nodeValue = player.name
+          document.getElementById(`grid-percentage-${ind}`).innerHTML = formatPercentage(res.guessPercentage   * 100)
+
+          document.getElementById(`recap-grid-${ind}`).classList.add('bg-green-500')
+          document.getElementById(`recap-grid-${ind}`).classList.remove('bg-gray-500')
 
           closePopup()
         }
+        else {
+          // ???
+          return
+        }
+
+        if (res.guessesLeft === 0) {
+          // game over sequence
+          document.getElementById('score-text').innerHTML = `${res.userScore[0]} / 9`
+          document.getElementById('uniqueness-text').innerHTML = `${res.userScore[1]}`
+
+          for (let i = 0; i < 9; i++) {
+            document.getElementById(`grid-spot-${i}`).onclick = undefined
+            document.getElementById(`grid-spot-${i}`).classList.remove('cursor-pointer', 'hover:bg-slate-600')
+          }
+
+          // set variables
+          pickedPlayers = res.pickedPlayers
+          finalScores = res.finalScores
+
+          // display on stats user grid
+          for (let i = 0; i < 9; i++) {
+            const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
+            gridNode.id = `stats-grid-spot-${i}`
+            gridNode.childNodes[1].id = `stats-grid-percentage-${i}`
+
+            document.getElementById('stats-user-board').appendChild(gridNode)
+          }
+          // display on stats common grid
+          for (let i = 0; i < 9; i++) {
+            const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
+            gridNode.id = `stats-common-spot-${i}`
+            gridNode.childNodes[1].id = `stats-common-percentage-${i}`
+
+            gridNode.classList.remove('bg-slate-800')
+            gridNode.classList.add('bg-slate-600', 'cursor-pointer')
+            gridNode.onclick = function() {
+              openStatsPopup(i)
+            }
+
+            gridNode.childNodes[0].nodeValue = res.pickedPlayers[i][0].name
+            gridNode.childNodes[1].innerHTML = formatPercentage(res.pickedPlayers[i][0].percentage * 100)
+
+            document.getElementById('stats-common-board').appendChild(gridNode)
+          }
+
+          // show everything
+          closePopup()
+          document.getElementById('show-recap-button').classList.remove('hidden')
+          openRecapPopup()
+        }
+      }
+
+      function openStatsPage() {
+        document.getElementById('postgame-screen').classList.remove('hidden')
+        closeRecapPopup()
+        document.getElementById('game-screen').classList.add('hidden')
       }
 
       function updatePlayerList() {
@@ -264,11 +471,11 @@
             else {
               selectElement.classList.add('rounded-lg', 'bg-blue-400', 'px-2', 'py-1', 'cursor-pointer', 'mr-2')
               selectElement.innerHTML = 'select'
+              selectElement.onclick = function() {
+                submitGuess(player.id)
+              }
             }
             selectElement.id = `player-popup-select-${player.id}`
-            selectElement.onclick = function() {
-              submitGuess(player.id)
-            }
 
             playerElementWrapper = document.createElement('div')
             playerElementWrapper.classList.add('flex', 'flex-row', 'items-center', 'w-full', 'my-4')
@@ -299,6 +506,119 @@
           players[<%= currGame.board[i] %>].correct = true
         <% } %>
       <% } %>
+
+      <% if (currGame.guessesLeft <= 0) { %>
+        openRecapPopup()
+      <% } %>
+
+      /* Timer Functions */
+      const TIME_OFFSET = 1690682400
+      const puzzleStartTime = <%= Math.floor(new Date(currGame.start).getTime() / 1000) %> - TIME_OFFSET
+      const puzzleStartDay = Math.floor(puzzleStartTime / 86400)
+      const nextPuzzleStartTime = (puzzleStartDay + 1) * 86400 + TIME_OFFSET
+
+      function setTimer(diff) {
+        const hours = Math.floor(diff / 3600)
+        const minutes = Math.floor((diff % 3600) / 60)
+        const seconds = diff % 60
+
+        const hoursString = hours < 10 ? `0${hours}` : `${hours}`
+        const minutesString = minutes < 10 ? `0${minutes}` : `${minutes}`
+        const secondsString = seconds < 10 ? `0${seconds}` : `${seconds}`
+
+        return `${hoursString}:${minutesString}:${secondsString}`
+      }
+
+      setInterval(function() {
+        const currTime = Math.floor(new Date().getTime() / 1000)
+        const diff = nextPuzzleStartTime - currTime
+        if (diff <= 0) {
+          location.reload()
+        }
+        else {
+          document.getElementById('next-puzzle-timer').innerHTML = setTimer(diff)
+        }
+      }, 1000)
+
+      const currTime = Math.floor(new Date().getTime() / 1000)
+      const diff = nextPuzzleStartTime - currTime
+      document.getElementById('next-puzzle-timer').innerHTML = setTimer(diff)
+
+      /* Stats Page Functions */
+      let pickedPlayers = <% if (pickedPlayers === undefined) { %> undefined <% } else { %> <%- JSON.stringify(pickedPlayers) %> <% } %>
+      let finalScores = <% if (finalScores === undefined) { %> undefined <% } else { %> <%- JSON.stringify(finalScores) %> <% } %>
+
+      function toggleOwnBoard() {
+        document.getElementById('stats-user-board').classList.remove('hidden')
+        document.getElementById('stats-common-board').classList.add('hidden')
+
+        document.getElementById('own-board-select').classList.add('bg-gray-500')
+        document.getElementById('own-board-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('common-board-select').classList.remove('bg-gray-500')
+        document.getElementById('common-board-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+      }
+
+      function toggleCommonBoard() {
+        document.getElementById('stats-user-board').classList.add('hidden')
+        document.getElementById('stats-common-board').classList.remove('hidden')
+
+        document.getElementById('own-board-select').classList.remove('bg-gray-500')
+        document.getElementById('own-board-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('common-board-select').classList.add('bg-gray-500')
+        document.getElementById('common-board-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+      }
+
+      function openStatsPopup(ind) {
+        document.getElementById('stats-popup-clue-1').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][0]]).replaceAll('is', 'are').replaceAll('has', 'have')
+        document.getElementById('stats-popup-clue-2').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][1]]).replaceAll('is', 'are').replaceAll('has', 'have')
+
+        document.getElementById('stats-popup-bg').classList.remove('hidden')
+
+        document.getElementById('stats-popup-list').innerHTML = ''
+
+        for (let i = 0; i < pickedPlayers[ind].length; i++) {
+          const player = pickedPlayers[ind][i]
+
+          playerNameElement = document.createElement('div')
+          playerNameElement.innerHTML = player.name
+          playerNameElement.classList.add('font-bold', 'text-lg')
+
+          playerFullNameElement = document.createElement('div')
+          playerFullNameElement.innerHTML = player.fullName
+          playerFullNameElement.classList.add('text-sm')
+
+          playerElement = document.createElement('div')
+          playerElement.classList.add('flex', 'flex-col', 'justify-center', 'flex-grow')
+          playerElement.appendChild(playerNameElement)
+          playerElement.appendChild(playerFullNameElement)
+
+          dataElementPercent = document.createElement('div')
+          dataElementPercent.innerHTML = formatPercentage(player.percentage * 100)
+          dataElementPercent.classList.add('font-bold', 'text-lg')
+
+          dataElementCount = document.createElement('div')
+          dataElementCount.innerHTML = `${player.count} / ${player.totalPicks}`
+          dataElementCount.classList.add('text-sm')
+
+          dataElement = document.createElement('div')
+          dataElement.classList.add('flex', 'flex-col', 'text-right', 'px-2')
+          dataElement.appendChild(dataElementPercent)
+          dataElement.appendChild(dataElementCount)
+
+          playerElementWrapper = document.createElement('div')
+          playerElementWrapper.classList.add('flex', 'flex-row', 'items-center', 'w-full', 'my-4')
+          playerElementWrapper.appendChild(playerElement)
+          playerElementWrapper.appendChild(dataElement)
+
+          document.getElementById('stats-popup-list').appendChild(playerElementWrapper)
+        }
+      }
+
+      function closeStatsPopup() {
+        document.getElementById('stats-popup-bg').classList.add('hidden')
+
+        document.getElementById('stats-popup-list').innerHTML = ''
+      }
     </script>
   </body>
 </html>
