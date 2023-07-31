@@ -121,25 +121,68 @@
             most common picks
           </div>
         </div>
-        <div class="mt-8 flex flex-col justify-center items-center">
-          <div class="flex flex-row">
+        <div class="mt-8 flex flex-col justify-center items-center" id="right-side-container">
+          <div class="w-full flex flex-col items-center justify-center hidden" id="user-stats-container">
+            <div class="w-full flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  today's score
+                </div>
+                <div class="font-bold text-2xl" id="user-stats-score">
+                  <%= currGame.board.filter(x => x !== undefined && x !== null).length %> / 9
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  uniqueness score
+                </div>
+                <div class="font-bold text-2xl" id="user-unique-score">
+                  <%= currGame.userScore[1] %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-full flex flex-col items-center justify-center" id="overall-stats-container">
+            <div class="w-full flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  today's average
+                </div>
+                <div class="font-bold text-2xl" id="overall-average-score">
+                  - / 9
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  average uniqueness
+                </div>
+                <div class="font-bold text-2xl" id="overall-unique-score">
+                  -
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="flex flex-row">
             <div class="h-36 w-36"></div>
             <% for (let i = 0; i < 3; i++) { %>
               <%- displayClue(puzzle[i]) %>
             <% } %>
-          </div>
-          <div class="flex flex-row">
-            <div class="flex flex-col">
+          </div> -->
+          <div class="flex flex-row mt-8">
+            <!-- <div class="flex flex-col">
               <% for (let i = 3; i < 6; i++) { %>
                 <%- displayClue(puzzle[i]) %>
               <% } %>
-            </div>
+            </div> -->
             <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-user-board">
               <% if (currGame.gameStatus !== 0) { %>
                 <% for (let i = 0; i < 9; i++) { %>
                   <% if (currGame.board[i]) { %>
-                    <div class="flex flex-col h-36 w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
+                    <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
                       <%= players[currGame.board[i]].name %>
+                      <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white">
+                        <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
+                      </div>
                     </div>
                   <% } else { %>
                     <div class="flex flex-col h-36 w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors">
@@ -163,13 +206,55 @@
           </div>
         </div>
       </div>
-      <div class="w-1/2 flex flex-col justify-center">
-        <div class="w-1/2 flex flex-row items-center">
-          <div class="w-1/2 text-center">
+      <div class="w-1/2 flex flex-col justify-center items-center">
+        <div class="w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+          <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="user-stats-select" onclick="toggleOwnStats()">
             your stats
           </div>
-          <div class="w-1/2 text-center">
+          <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="today-stats-select" onclick="toggleTodayStats()">
             today's stats
+          </div>
+        </div>
+        <div class="mt-8 flex flex-col justify-center items-center w-full" id="left-side-container">
+          <div class="w-full flex flex-col items-center justify-center hidden" id="user-overall-container">
+            <div class="w-1/2 flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  your total games
+                </div>
+                <div class="font-bold text-2xl" id="user-total-games">
+                  -
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  your average score
+                </div>
+                <div class="font-bold text-2xl" id="user-average-score">
+                  - / 9
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-full flex flex-col items-center justify-center" id="average-overall-container">
+            <div class="w-1/2 flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  total games today
+                </div>
+                <div class="font-bold text-2xl" id="average-total-games">
+                  -
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  average score today
+                </div>
+                <div class="font-bold text-2xl" id="average-today-average">
+                  -
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -414,6 +499,10 @@
             document.getElementById('stats-common-board').appendChild(gridNode)
           }
 
+          document.getElementById('user-stats-score').innerHTML = `${res.userScore[0]} / 9`
+          document.getElementById('uniqueness-text').innerHTML = `${res.userScore[1]}`
+          document.getElementById('user-unique-score').innerHTML = `${res.userScore[1]}`
+
           // show everything
           closePopup()
           document.getElementById('show-recap-button').classList.remove('hidden')
@@ -425,6 +514,12 @@
         document.getElementById('postgame-screen').classList.remove('hidden')
         closeRecapPopup()
         document.getElementById('game-screen').classList.add('hidden')
+
+        /* change heights to match */
+        const leftSideHeight = document.getElementById('left-side-container').offsetHeight
+        const rightSideHeight = document.getElementById('right-side-container').offsetHeight
+        document.getElementById('left-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
+        document.getElementById('right-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
       }
 
       function updatePlayerList() {
@@ -551,6 +646,8 @@
       function toggleOwnBoard() {
         document.getElementById('stats-user-board').classList.remove('hidden')
         document.getElementById('stats-common-board').classList.add('hidden')
+        document.getElementById('user-stats-container').classList.remove('hidden')
+        document.getElementById('overall-stats-container').classList.add('hidden')
 
         document.getElementById('own-board-select').classList.add('bg-gray-500')
         document.getElementById('own-board-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
@@ -561,6 +658,8 @@
       function toggleCommonBoard() {
         document.getElementById('stats-user-board').classList.add('hidden')
         document.getElementById('stats-common-board').classList.remove('hidden')
+        document.getElementById('user-stats-container').classList.add('hidden')
+        document.getElementById('overall-stats-container').classList.remove('hidden')
 
         document.getElementById('own-board-select').classList.remove('bg-gray-500')
         document.getElementById('own-board-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
@@ -618,6 +717,26 @@
         document.getElementById('stats-popup-bg').classList.add('hidden')
 
         document.getElementById('stats-popup-list').innerHTML = ''
+      }
+
+      function toggleOwnStats() {
+        document.getElementById('user-overall-container').classList.remove('hidden')
+        document.getElementById('average-overall-container').classList.add('hidden')
+
+        document.getElementById('today-stats-select').classList.remove('bg-gray-500')
+        document.getElementById('today-stats-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('user-stats-select').classList.add('bg-gray-500')
+        document.getElementById('user-stats-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+      }
+
+      function toggleTodayStats() {
+        document.getElementById('user-overall-container').classList.add('hidden')
+        document.getElementById('average-overall-container').classList.remove('hidden')
+
+        document.getElementById('today-stats-select').classList.add('bg-gray-500')
+        document.getElementById('today-stats-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('user-stats-select').classList.remove('bg-gray-500')
+        document.getElementById('user-stats-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
       }
     </script>
   </body>

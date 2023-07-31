@@ -271,6 +271,21 @@ function findAllPossiblePlayers(puzzle) {
   }
 }
 
+function calculateUniqueness(board, possiblePlayers) {
+  let score = 0
+  for (let i = 0; i < 9; i++) {
+    if (board[i] !== undefined && board[i] !== null) {
+      for (let j = 0; j < possiblePlayers[i].length; j++) {
+        if (possiblePlayers[i][j].playerID === board[i]) {
+          score += 100 - parseInt(possiblePlayers[i][j].percentage * 100)
+          break
+        }
+      }
+    }
+  }
+  return score
+}
+
 /* Middleware */
 async function checkPuzzle(req, res, next) {
   // if past a time then update yada
@@ -489,14 +504,9 @@ async function insertGuessHelper(req, res, next) {
           }
         }
 
-        if (req.session.player.board.filter(x => x === undefined || x === null).length === 0) {
+        if (req.session.player.guessesLeft <= 0) {
           // game won
           const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
-          // TODO: calc uniqueness
-          // add uniqueness scores to player stats
-
-          req.session.player.gameStatus = 1
-          req.session.player.userScore = [score, '-']
 
           req.session.userStats.finalGridAmount[score] += 1
 
@@ -504,14 +514,20 @@ async function insertGuessHelper(req, res, next) {
           await updateGlobalFinalScores(score)
           const finalScores = await getFinalScores()
 
+          const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
+          req.session.player.gameStatus = 1
+          req.session.player.userScore = [score, uniqueScore]
+
           res.locals.guessReturn = {
             guessStatus: 1,
             guessesLeft: req.session.player.guessesLeft,
             guessPercentage: res.locals.guessPercentage,
-            gameStatus: 1,
+            gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1,
             pickedPlayers: pickedPlayersData,
             finalScores: finalScores,
-            userScore: [score, '-']
+            userScore: [score, uniqueScore],
+            averageUniqueness: undefined, // TODO
+            userGridAmount: req.session.userStats.finalGridAmount,
           }
           next()
         }
@@ -521,7 +537,7 @@ async function insertGuessHelper(req, res, next) {
             guessStatus: 1,
             guessesLeft: req.session.player.guessesLeft,
             guessPercentage: res.locals.guessPercentage,
-            gameStatus: 0
+            gameStatus: 0,
           }
           next()
         }
@@ -530,11 +546,6 @@ async function insertGuessHelper(req, res, next) {
         if (req.session.player.guessesLeft <= 0) {
           // game lost
           const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
-          // TODO: calc uniqueness
-          // add uniqueness scores to player stats
-
-          req.session.player.gameStatus = -1
-          req.session.player.userScore = [score, '-']
 
           req.session.userStats.finalGridAmount[score] += 1
 
@@ -542,13 +553,19 @@ async function insertGuessHelper(req, res, next) {
           await updateGlobalFinalScores(score)
           const finalScores = await getFinalScores()
 
+          const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
+          req.session.player.gameStatus = -1
+          req.session.player.userScore = [score, uniqueScore]
+
           res.locals.guessReturn = {
             guessStatus: 0,
             guessesLeft: req.session.player.guessesLeft,
             gameStatus: -1,
             pickedPlayers: pickedPlayersData,
             finalScores: finalScores,
-            userScore: [score, '-']
+            userScore: [score, uniqueScore],
+            averageUniqueness: undefined, // TODO
+            userGridAmount: req.session.userStats.finalGridAmount,
           }
           next()
         }
@@ -612,7 +629,7 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
 
   if (req.session.player.gameStatus !== 0) {
     // game ended
-    // TODO: update unique scores
+    req.session.player.userScore[1] = calculateUniqueness(req.session.player.board, res.locals.pickedPlayersData)
     res.render('index', { puzzle: puzzle, players: playerList, currGame: req.session.player, finalScores: res.locals.finalScores, pickedPlayers: res.locals.pickedPlayersData })
   }
   else {
