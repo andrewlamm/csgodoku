@@ -493,6 +493,7 @@ async function insertGuessHelper(req, res, next) {
       req.session.player.guessesLeft -= 1
 
       if (possiblePlayers[ind].has(guess)) {
+        // correct guess
         req.session.player.board[ind] = guess
 
         // TODO: update db from here
@@ -503,82 +504,45 @@ async function insertGuessHelper(req, res, next) {
             break
           }
         }
+      }
 
-        if (req.session.player.guessesLeft <= 0) {
-          // game won
-          const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
+      if (req.session.player.guessesLeft <= 0) {
+        // game is over
+        const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
-          req.session.userStats.finalGridAmount[score] += 1
+        req.session.userStats.finalGridAmount[score] += 1
 
-          const pickedPlayersData = await getPickedPlayersList()
-          await updateGlobalFinalScores(score)
-          const finalScores = await getFinalScores()
+        const pickedPlayersData = await getPickedPlayersList()
+        await updateGlobalFinalScores(score)
+        const finalScores = await getFinalScores()
 
-          const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
-          req.session.player.gameStatus = 1
-          req.session.player.userScore = [score, uniqueScore]
+        const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
+        req.session.player.gameStatus = req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1
+        req.session.player.userScore = [score, uniqueScore]
 
-          res.locals.guessReturn = {
-            guessStatus: 1,
-            guessesLeft: req.session.player.guessesLeft,
-            guessPercentage: res.locals.guessPercentage,
-            gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1,
-            pickedPlayers: pickedPlayersData,
-            finalScores: finalScores,
-            userScore: [score, uniqueScore],
-            averageUniqueness: undefined, // TODO
-            userGridAmount: req.session.userStats.finalGridAmount,
-          }
-          next()
+        res.locals.guessReturn = {
+          guessStatus: possiblePlayers[ind].has(guess) ? 1 : 0,
+          guessesLeft: req.session.player.guessesLeft,
+          guessPercentage: res.locals.guessPercentage,
+          gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1,
+          pickedPlayers: pickedPlayersData,
+          finalScores: finalScores,
+          userScore: [score, uniqueScore],
+          averageUniqueness: undefined, // TODO
+          userGridAmount: req.session.userStats.finalGridAmount,
+          guessPercentage: res.locals.guessPercentage,
         }
-        else {
-          // continue game
-          res.locals.guessReturn = {
-            guessStatus: 1,
-            guessesLeft: req.session.player.guessesLeft,
-            guessPercentage: res.locals.guessPercentage,
-            gameStatus: 0,
-          }
-          next()
-        }
+        next()
       }
       else {
-        if (req.session.player.guessesLeft <= 0) {
-          // game lost
-          const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
-
-          req.session.userStats.finalGridAmount[score] += 1
-
-          const pickedPlayersData = await getPickedPlayersList()
-          await updateGlobalFinalScores(score)
-          const finalScores = await getFinalScores()
-
-          const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
-          req.session.player.gameStatus = -1
-          req.session.player.userScore = [score, uniqueScore]
-
-          res.locals.guessReturn = {
-            guessStatus: 0,
-            guessesLeft: req.session.player.guessesLeft,
-            gameStatus: -1,
-            pickedPlayers: pickedPlayersData,
-            finalScores: finalScores,
-            userScore: [score, uniqueScore],
-            averageUniqueness: undefined, // TODO
-            userGridAmount: req.session.userStats.finalGridAmount,
-          }
-          next()
+        // continue game
+        res.locals.guessReturn = {
+          guessStatus: possiblePlayers[ind].has(guess) ? 1 : 0,
+          guessesLeft: req.session.player.guessesLeft,
+          guessPercentage: res.locals.guessPercentage,
+          gameStatus: 0,
         }
-        else {
-          // continue game
-
-          res.locals.guessReturn = {
-            guessStatus: 0,
-            guessesLeft: req.session.player.guessesLeft,
-            gameStatus: 0,
-          }
-          next()
-        }
+        next()
       }
     }
   }
