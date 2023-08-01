@@ -54,7 +54,6 @@
         </div>
       </div>
     </div>
-
     <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="player-popup-bg" >
       <div class="flex flex-col items-center justify-center p-4 w-96 z-10 bg-gray-400 rounded-xl" id="player-popup">
         <div class="text-center mb-4" id="player-popup-text">
@@ -77,7 +76,7 @@
         <div class="w-full font-bold text-xl text-center">
           recap
         </div>
-        <div class="w-full flex flex-row justify-center">
+        <div class="w-full flex flex-row justify-center mt-2">
           <div class="flex flex-col items-center w-1/2 border-r-2 border-slate-700">
             <div class="font-bold text-2xl" id="score-text"><%= currGame.userScore[0] %> / 9</div>
             <div class="font-semibold">your score</div>
@@ -149,7 +148,7 @@
                   today's average
                 </div>
                 <div class="font-bold text-2xl" id="overall-average-score">
-                  - / 9
+                  <%= averageScore %> / 9
                 </div>
               </div>
               <div class="w-1/2 flex flex-col items-center justify-center">
@@ -157,7 +156,7 @@
                   average uniqueness
                 </div>
                 <div class="font-bold text-2xl" id="overall-unique-score">
-                  -
+                  <%= averageUniqueness %>
                 </div>
               </div>
             </div>
@@ -223,7 +222,7 @@
                   your total games
                 </div>
                 <div class="font-bold text-2xl" id="user-total-games">
-                  -
+                  <%= userOverallScores.reduce((a, b) => a + b, 0) %>
                 </div>
               </div>
               <div class="w-1/2 flex flex-col items-center justify-center">
@@ -231,7 +230,7 @@
                   your average score
                 </div>
                 <div class="font-bold text-2xl" id="user-average-score">
-                  - / 9
+                  <%= (userOverallScores.reduce((a, b, ind) => a + b * ind, 0) / userOverallScores.reduce((a, b) => a + b, 0)).toFixed(1) %> / 9
                 </div>
               </div>
             </div>
@@ -243,7 +242,7 @@
                   total games today
                 </div>
                 <div class="font-bold text-2xl" id="average-total-games">
-                  -
+                  <%= numberGames %>
                 </div>
               </div>
               <div class="w-1/2 flex flex-col items-center justify-center">
@@ -251,9 +250,29 @@
                   average score today
                 </div>
                 <div class="font-bold text-2xl" id="average-today-average">
-                  -
+                  <%= averageScore %> / 9
                 </div>
               </div>
+            </div>
+          </div>
+          <div class="w-128 flex flex-col justify-center items-center mt-8">
+            <div class="flex flex-row justify-center h-96">
+              <% for (let i = 0; i < 10; i++) { %>
+                <div class="flex flex-col justify-end h-full items-center w-10">
+                  <div class="text-sm font-medium" id="bar-value-<%= i %>"></div>
+                  <div class="bg-blue-500 rounded-full w-2 transition-all duration-500" style="height: 0%;" id="bar-graph-<%= i %>"></div>
+                </div>
+              <% } %>
+            </div>
+            <div class="w-full mt-2">
+              <div class="border border-whte rounded-xl"></div>
+            </div>
+            <div class="flex flex-row justify-center">
+              <% for (let i = 0; i < 10; i++) { %>
+                <div class="w-10 text-center">
+                  <%= i %>
+                </div>
+              <% } %>
             </div>
           </div>
         </div>
@@ -447,7 +466,7 @@
           document.getElementById(`grid-spot-${ind}`).onclick = undefined
 
           document.getElementById(`grid-spot-${ind}`).childNodes[0].nodeValue = player.name
-          document.getElementById(`grid-percentage-${ind}`).innerHTML = formatPercentage(res.guessPercentage   * 100)
+          document.getElementById(`grid-percentage-${ind}`).innerHTML = formatPercentage(res.guessPercentage * 100)
 
           document.getElementById(`recap-grid-${ind}`).classList.add('bg-green-500')
           document.getElementById(`recap-grid-${ind}`).classList.remove('bg-gray-500')
@@ -471,12 +490,15 @@
 
           // set variables
           pickedPlayers = res.pickedPlayers
-          finalScores = res.finalScores
+          globalOverallScores = res.finalScores
+          userOverallScores = res.userOverallScores
+          averageUniqueness = res.averageUniqueness
 
           // display on stats user grid
           for (let i = 0; i < 9; i++) {
             const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
             gridNode.id = `stats-grid-spot-${i}`
+            gridNode.onclick = undefined
             gridNode.childNodes[1].id = `stats-grid-percentage-${i}`
 
             document.getElementById('stats-user-board').appendChild(gridNode)
@@ -502,6 +524,15 @@
           document.getElementById('user-stats-score').innerHTML = `${res.userScore[0]} / 9`
           document.getElementById('uniqueness-text').innerHTML = `${res.userScore[1]}`
           document.getElementById('user-unique-score').innerHTML = `${res.userScore[1]}`
+          document.getElementById('overall-average-score').innerHTML = `${res.averageScore} / 9`
+          document.getElementById('overall-unique-score').innerHTML = `${res.averageUniqueness}`
+          document.getElementById('user-total-games').innerHTML = `${res.userOverallScores.reduce((a, b) => a + b, 0)}`
+          const averageScore = (res.userOverallScores.reduce((a, b, ind) => a + b * ind, 0) / res.userOverallScores.reduce((a, b) => a + b, 0))
+          document.getElementById('user-average-score').innerHTML = `${averageScore.toFixed(1)} / 9`
+          document.getElementById('average-total-games').innerHTML = `${res.numberGames}`
+          document.getElementById('average-today-average').innerHTML = `${res.averageScore} / 9`
+
+          // changeBarGraph(globalOverallScores)
 
           // show everything
           closePopup()
@@ -520,6 +551,8 @@
         const rightSideHeight = document.getElementById('right-side-container').offsetHeight
         document.getElementById('left-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
         document.getElementById('right-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
+
+        changeBarGraph(globalOverallScores)
       }
 
       function updatePlayerList() {
@@ -607,7 +640,7 @@
       <% } %>
 
       /* Timer Functions */
-      const TIME_OFFSET = 1690682400
+      const TIME_OFFSET = 1690855200
       const puzzleStartTime = <%= Math.floor(new Date(currGame.start).getTime() / 1000) %> - TIME_OFFSET
       const puzzleStartDay = Math.floor(puzzleStartTime / 86400)
       const nextPuzzleStartTime = (puzzleStartDay + 1) * 86400 + TIME_OFFSET
@@ -641,7 +674,35 @@
 
       /* Stats Page Functions */
       let pickedPlayers = <% if (pickedPlayers === undefined) { %> undefined <% } else { %> <%- JSON.stringify(pickedPlayers) %> <% } %>
-      let finalScores = <% if (finalScores === undefined) { %> undefined <% } else { %> <%- JSON.stringify(finalScores) %> <% } %>
+      let globalOverallScores = <% if (finalScores === undefined) { %> [0, 0, 0, 0, 0, 0, 0, 0, 0] <% } else { %> <%- JSON.stringify(finalScores) %> <% } %>
+      let userOverallScores = <% if (userOverallScores === undefined) { %> undefined <% } else { %> <%- JSON.stringify(userOverallScores) %> <% } %>
+      let averageUniqueness = <% if (averageUniqueness === undefined) { %> undefined <% } else { %> <%= averageUniqueness %> <% } %>
+
+      function changeBarGraph(values) {
+        if (values === undefined) {
+          return
+        }
+
+        let sum = 0
+        let max = 0
+        for (let i = 0; i < values.length; i++) {
+          sum += values[i]
+          max = Math.max(max, values[i])
+        }
+
+        if (sum === 0) {
+          for (let i = 0; i < 10; i++) {
+            document.getElementById(`bar-graph-${i}`).style.height = '0%'
+            document.getElementById(`bar-value-${i}`).innerHTML = 0
+          }
+        }
+        else {
+          for (let i = 0; i < 10; i++) {
+            document.getElementById(`bar-graph-${i}`).style.height = `${(values[i] / max) * 100}%`
+            document.getElementById(`bar-value-${i}`).innerHTML = `${values[i]}`
+          }
+        }
+      }
 
       function toggleOwnBoard() {
         document.getElementById('stats-user-board').classList.remove('hidden')
@@ -727,6 +788,8 @@
         document.getElementById('today-stats-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
         document.getElementById('user-stats-select').classList.add('bg-gray-500')
         document.getElementById('user-stats-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+
+        changeBarGraph(userOverallScores)
       }
 
       function toggleTodayStats() {
@@ -737,6 +800,8 @@
         document.getElementById('today-stats-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
         document.getElementById('user-stats-select').classList.remove('bg-gray-500')
         document.getElementById('user-stats-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+
+        changeBarGraph(globalOverallScores)
       }
     </script>
   </body>

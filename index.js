@@ -20,7 +20,8 @@ app.use(session({
   saveUninitialized: true
 }))
 
-// const db = require('./db')
+const db = require('./db')
+
 const playerData = {}
 const playerList = {}
 
@@ -277,7 +278,12 @@ function calculateUniqueness(board, possiblePlayers) {
     if (board[i] !== undefined && board[i] !== null) {
       for (let j = 0; j < possiblePlayers[i].length; j++) {
         if (possiblePlayers[i][j].playerID === board[i]) {
-          score += 100 - parseInt(possiblePlayers[i][j].percentage * 100)
+          if (possiblePlayers[i][j].percentage === undefined) {
+            score += 100
+          }
+          else {
+            score += 100 - parseInt(possiblePlayers[i][j].percentage * 100)
+          }
           break
         }
       }
@@ -288,9 +294,25 @@ function calculateUniqueness(board, possiblePlayers) {
 
 /* Middleware */
 async function checkPuzzle(req, res, next) {
-  // if past a time then update yada
+  // TODO: if past a time then update yada
   puzzle = [['team', '5974/CLG'], ['team', '9215/MIBR'], ['age', 20], ['team', '6673/NRG'], ['team', '5752/Cloud9'], ['team', '5973/Liquid']]
+
+  /* uncomment later
+  // TODO: code resets db stats
+  const query = { _id: 'currentPuzzleStats' }
+
+  const update = { $set: {
+    numberGames: 0,
+    scores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    totalUniqueness: 0,
+    pickedPlayers: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+  } }
+
+  const updateRes = await db.updateOne(query, update)
+  */
+
   findAllPossiblePlayers(puzzle)
+
   next()
 }
 
@@ -307,7 +329,6 @@ async function initPlayer(req, res, next) {
     }
     req.session.userStats = {
       finalGridAmount: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      uniqueScores: [],
     }
     next()
   }
@@ -332,31 +353,45 @@ async function initPlayer(req, res, next) {
 
 async function getPickedPlayersList() {
   // read from db
+  const pickedPlayersSet = [{}, {}, {}, {}, {}, {}, {}, {}, {}]
   const pickedPlayersCount = [[], [], [], [], [], [], [], [], []]
   const totalPicks = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
   for (let ind = 0; ind < 9; ind++) {
     possiblePlayers[ind].forEach(playerID => {
-      pickedPlayersCount[ind].push({
+      pickedPlayersSet[ind][playerID] = {
         playerID: playerID,
         name: playerData[playerID].name,
         fullName: playerData[playerID].fullName,
-        count: 1, // TODO: 0
+        count: 0,
         percentage: 0,
-      })
-
-      totalPicks[ind] += 1 // TODO: count
+      }
     })
   }
 
-  // TODO: make sure sorting is correct
+  const query = { _id: 'currentPuzzleStats' }
+  const result = await db.findOne(query)
+
+  for (let ind = 0; ind < 9; ind++) {
+    for (const [playerID, count] of Object.entries(result.pickedPlayers[ind])) {
+      pickedPlayersSet[ind][playerID].count = count
+      totalPicks[ind] += count
+    }
+  }
+
+  for (let ind = 0; ind < 9; ind++) {
+    for (const [playerID, player] of Object.entries(pickedPlayersSet[ind])) {
+      pickedPlayersCount[ind].push(player)
+    }
+  }
+
   for (let ind = 0; ind < 9; ind++) {
     pickedPlayersCount[ind].sort((a, b) => b.count - a.count)
   }
 
   for (let ind = 0; ind < 9; ind++) {
     for (const [playerID, player] of Object.entries(pickedPlayersCount[ind])) {
-      player.percentage = player.count / totalPicks[ind]
+      player.percentage = totalPicks[ind] === 0 ? 0 : player.count / totalPicks[ind]
       player.totalPicks = totalPicks[ind]
     }
   }
@@ -364,29 +399,35 @@ async function getPickedPlayersList() {
   return pickedPlayersCount
 }
 
-async function updateGlobalFinalScores(score) {
-  // TODO: call and update db
+async function updateGlobalFinalScores(score, unique) {
+  const query = { _id: 'currentPuzzleStats' }
+
+  const update = { $inc: {  } }
+  update.$inc[`scores.${score}`] = 1
+  update.$inc.numberGames = 1
+  update.$inc.totalUniqueness = unique
+
+  const updateRes = await db.updateOne(query, update)
 }
 
 async function getFinalScores() {
-   // TODO: read from db
+  const query = { _id: 'currentPuzzleStats' }
+  const result = await db.findOne(query)
 
-   const scoreCount = []
-   let totalGames = 0
-   for (let guess = 0; guess < NUMBER_OF_GUESSES; guess++) {
-    scoreCount.push({
-      count: 0,
-      percentage: 0,
-    })
-    totalGames += 0
-   }
+   return [result.scores, result.numberGames]
+}
 
-   return scoreCount
+async function getUniqueness() {
+  const query = { _id: 'currentPuzzleStats' }
+  const result = await db.findOne(query)
+
+  return result.numberGames === 0 ? 0 : parseInt(result.totalUniqueness / result.numberGames)
 }
 
 async function getStats(req, res, next) {
   res.locals.pickedPlayersData = await getPickedPlayersList()
   res.locals.finalScores = await getFinalScores()
+  res.locals.averageUniqueness = await getUniqueness()
 
   next()
 }
@@ -496,41 +537,72 @@ async function insertGuessHelper(req, res, next) {
         // correct guess
         req.session.player.board[ind] = guess
 
-        // TODO: update db from here
+        res.locals.pickedPlayersData = await getPickedPlayersList()
 
         for (let i = 0; i < res.locals.pickedPlayersData[ind].length; i++) {
           if (res.locals.pickedPlayersData[ind][i].playerID === guess) {
-            res.locals.guessPercentage = res.locals.pickedPlayersData[ind][i].percentage
+            res.locals.guessPercentage = (res.locals.pickedPlayersData[ind][i].count + 1) / (res.locals.pickedPlayersData[ind][i].totalPicks + 1)
             break
           }
         }
       }
 
+
       if (req.session.player.guessesLeft <= 0) {
         // game is over
+
+        /* add picks to db */
+        const query = { _id: 'currentPuzzleStats' }
+        const result = await db.findOne(query)
+
+        for (let i = 0; i < 9; i++) {
+          if (req.session.player.board[i] !== undefined && req.session.player.board[i] !== null) {
+            const player = req.session.player.board[i]
+            if (result.pickedPlayers[i][player] === undefined) {
+              const update = { $set: { } }
+              update.$set[`pickedPlayers.${i}.${player}`] = 1
+
+              const resultDoc = await db.updateOne(query, update)
+            }
+            else {
+              const update = { $inc: { } }
+              update.$inc[`pickedPlayers.${i}.${player}`] = 1
+
+              const resultDoc = await db.updateOne(query, update)
+            }
+          }
+        }
+
         const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
         req.session.userStats.finalGridAmount[score] += 1
 
         const pickedPlayersData = await getPickedPlayersList()
-        await updateGlobalFinalScores(score)
+        const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
+
+        await updateGlobalFinalScores(score, uniqueScore)
         const finalScores = await getFinalScores()
 
-        const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
+        const numberGames = finalScores[0].reduce((a, b) => a + b, 0)
+        const scoreSum = finalScores[0].reduce((a, b, ind) => a + b * ind, 0)
+
+        const averageUniqueness = await getUniqueness()
+
         req.session.player.gameStatus = req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1
         req.session.player.userScore = [score, uniqueScore]
 
         res.locals.guessReturn = {
-          guessStatus: possiblePlayers[ind].has(guess) ? 1 : 0,
-          guessesLeft: req.session.player.guessesLeft,
-          guessPercentage: res.locals.guessPercentage,
-          gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1,
-          pickedPlayers: pickedPlayersData,
-          finalScores: finalScores,
-          userScore: [score, uniqueScore],
-          averageUniqueness: undefined, // TODO
-          userGridAmount: req.session.userStats.finalGridAmount,
-          guessPercentage: res.locals.guessPercentage,
+          guessStatus: possiblePlayers[ind].has(guess) ? 1 : 0, // guess status; 1 = in board, 0 = not
+          guessesLeft: req.session.player.guessesLeft, // guesses left
+          guessPercentage: res.locals.guessPercentage, // percentage of players with this guess
+          gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1, // gameStatus; 1 = win, -1 = lose, 0 = in progress
+          pickedPlayers: pickedPlayersData, // list of picked players and %
+          finalScores: finalScores[0], // global scores today
+          numberGames: numberGames, // number of games today
+          averageScore: (scoreSum / numberGames).toFixed(1), // average score today
+          userScore: [score, uniqueScore], // user score [score, uniqueness]
+          averageUniqueness: averageUniqueness, // average global uniqueness
+          userOverallScores: req.session.userStats.finalGridAmount, // users scores over time
         }
         next()
       }
@@ -594,14 +666,37 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
   if (req.session.player.gameStatus !== 0) {
     // game ended
     req.session.player.userScore[1] = calculateUniqueness(req.session.player.board, res.locals.pickedPlayersData)
-    res.render('index', { puzzle: puzzle, players: playerList, currGame: req.session.player, finalScores: res.locals.finalScores, pickedPlayers: res.locals.pickedPlayersData })
+    const numberGames = res.locals.finalScores[0].reduce((a, b) => a + b, 0)
+    const scoreSum = res.locals.finalScores[0].reduce((a, b, ind) => a + b * ind, 0)
+
+    res.render('index', {
+      puzzle: puzzle,
+      players: playerList,
+      currGame: req.session.player,
+      finalScores: res.locals.finalScores[0],
+      averageScore: (scoreSum / numberGames).toFixed(1),
+      numberGames: res.locals.finalScores[1],
+      pickedPlayers: res.locals.pickedPlayersData,
+      userOverallScores: req.session.userStats.finalGridAmount,
+      averageUniqueness: res.locals.averageUniqueness,
+    })
   }
   else {
-    res.render('index', { puzzle: puzzle, players: playerList, currGame: req.session.player, finalScores: undefined, pickedPlayers: undefined })
+    res.render('index', {
+      puzzle: puzzle,
+      players: playerList,
+      currGame: req.session.player,
+      finalScores: undefined,
+      averageScore: undefined,
+      numberGames: undefined,
+      pickedPlayers: undefined,
+      userOverallScores: req.session.userStats.finalGridAmount,
+      averageUniqueness: undefined
+    })
   }
 })
 
-app.post('/insertGuess', [checkPlayer, getStats, insertGuessHelper], (req, res) => {
+app.post('/insertGuess', [checkPuzzle, checkPlayer, insertGuessHelper], (req, res) => {
   res.send(res.locals.guessReturn)
 })
 
