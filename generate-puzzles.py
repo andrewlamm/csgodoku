@@ -257,7 +257,7 @@ def generate_puzzle():
       #     elm[1] = elm[1][elm[1].index('/')+1:]
       return puzzle_list, ans
 
-def generate_puzzles(num_puzzles=10):
+def generate_puzzles(print_table=True, num_puzzles=10):
   puzzles = []
   for i in range(num_puzzles):
     puzzle, ans = generate_puzzle()
@@ -270,13 +270,14 @@ def generate_puzzles(num_puzzles=10):
     table.add_row([puzzle[3]] + ans[:3])
     table.add_row([puzzle[4]] + ans[3:6])
     table.add_row([puzzle[5]] + ans[6:9])
-    print(table)
+    if print_table:
+      print(table)
 
   return puzzles
 
 read_data()
 preprocess_data()
 
-puzzles = generate_puzzles(1)
-print(puzzles[0])
+# puzzles = generate_puzzles(1)
+# print(puzzles[0])
 # print(teams)
