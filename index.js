@@ -185,6 +185,9 @@ let puzzle = undefined
 let puzzleDate = undefined
 let possiblePlayers = undefined
 
+const TIME_OFFSET = 1690855200 // Jul 31, 10 PM EST
+const SECONDS_PER_DAY = 86400
+
 const NUMBER_OF_GUESSES = 9
 
 const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
@@ -295,25 +298,74 @@ function calculateUniqueness(board, possiblePlayers) {
 /* Middleware */
 async function checkPuzzle(req, res, next) {
   // TODO: if past a time then update yada
-  puzzle = [['team', '5974/CLG'], ['team', '9215/MIBR'], ['age', 20], ['team', '6673/NRG'], ['team', '5752/Cloud9'], ['team', '5973/Liquid']]
+  if (puzzle === undefined) {
+    // need to load puzzle
+    const currTime = Math.floor(new Date().getTime() / 1000) - TIME_OFFSET
+    puzzleDate = parseInt(currTime / SECONDS_PER_DAY)
 
-  /* uncomment later
-  // TODO: code resets db stats
-  const query = { _id: 'currentPuzzleStats' }
+    const puzzleResult = await db.findOne({ _id: 'puzzleList' })
+    const puzzleList = puzzleResult.puzzles
+    puzzle = puzzleList[puzzleDate]
 
-  const update = { $set: {
-    numberGames: 0,
-    scores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    totalUniqueness: 0,
-    pickedPlayers: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-  } }
+    findAllPossiblePlayers(puzzle)
 
-  const updateRes = await db.updateOne(query, update)
-  */
+    const statsResult = await db.findOne({ _id: 'currentPuzzleStats' })
+    if (puzzleDate === statsResult.puzzleDate) {
+      // date on stats is correct, no need to reset
+      next()
+    }
+    else {
+      // need to reset stats as well
+      const query = { _id: 'currentPuzzleStats' }
 
-  findAllPossiblePlayers(puzzle)
+      const update = { $set: {
+        puzzleDate: puzzleDate,
+        numberGames: 0,
+        scores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        totalUniqueness: 0,
+        pickedPlayers: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+      } }
 
-  next()
+      const updateRes = await db.updateOne(query, update)
+
+      next()
+    }
+  }
+  else {
+    const currTime = Math.floor(new Date().getTime() / 1000) - TIME_OFFSET
+    if (parseInt(currTime / SECONDS_PER_DAY) > puzzleDate) {
+      // need to have a new puzzle
+
+      /* get puzzle */
+      puzzleDate = parseInt(currTime / SECONDS_PER_DAY)
+
+      const puzzleResult = await db.findOne({ _id: 'puzzleList' })
+      const puzzleList = puzzleResult.puzzles
+      puzzle = puzzleList[puzzleDate]
+
+      /* reset stats */
+      const query = { _id: 'currentPuzzleStats' }
+
+      const update = { $set: {
+        puzzleDate: puzzleDate,
+        numberGames: 0,
+        scores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        totalUniqueness: 0,
+        pickedPlayers: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+      } }
+
+      const updateRes = await db.updateOne(query, update)
+
+      /* get possible players */
+      findAllPossiblePlayers(puzzle)
+
+      next()
+    }
+    else {
+      // current puzzle is fine, do nothing
+      next()
+    }
+  }
 }
 
 async function initPlayer(req, res, next) {
