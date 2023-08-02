@@ -83,9 +83,9 @@ async function readCSV(playerData, playerList) {
 app.locals.displayClue = function(clue) {
   if (clue[0] === 'team') {
     return `
-      <div class="flex flex-col relative h-36 w-36 items-center justify-center text-center text-white">
-        <img src="/images/team/${clue[1].substring(0, clue[1].indexOf('/'))}.png" title="${clue[1].substring(clue[1].indexOf('/')+1)}" class="h-20">
-        <div class="absolute bottom-0 w-full text-center pb-2">
+      <div class="flex flex-col relative h-20 w-20 md:h-36 md:w-36 items-center justify-center text-center text-white">
+        <img src="/images/team/${clue[1].substring(0, clue[1].indexOf('/'))}.png" title="${clue[1].substring(clue[1].indexOf('/')+1)}" class="h-12 md:h-20">
+        <div class="absolute bottom-0 w-full text-center pb-2 text-sm md:text-base">
           ${clue[1].substring(clue[1].indexOf('/')+1)}
         </div>
       </div>
@@ -93,9 +93,9 @@ app.locals.displayClue = function(clue) {
   }
   else if (clue[0] === 'country') {
     return `
-      <div class="flex flex-colrelative h-36 w-36 items-center justify-center text-center text-white">
-        <img src="/images/country/${clue[0]}.png" title="${clue[0]}" class="h-20">
-        <div class="absolute bottom-0 w-full text-center pb-2">
+      <div class="flex flex-colrelative h-20 w-20 md:h-36 md:w-36 items-center justify-center text-center text-white">
+        <img src="/images/country/${clue[0]}.png" title="${clue[0]}" class="h-12 md:h-20">
+        <div class="absolute bottom-0 w-full text-center pb-2 text-sm md:text-base">
           ${clue[1]} nationality
         </div>
       </div>
@@ -163,7 +163,7 @@ app.locals.displayClue = function(clue) {
     }
 
     return `
-      <div class="flex flex-col relative h-36 w-36 items-center justify-center text-center text-white">
+      <div class="flex flex-col relative h-20 w-20 md:h-36 md:w-36 items-center justify-center text-center text-white text-sm md:text-base">
         ${clueString}
       </div>
     `

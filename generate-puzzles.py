@@ -260,6 +260,7 @@ def generate_puzzle():
 def generate_puzzles(print_table=True, num_puzzles=10):
   puzzles = []
   for i in range(num_puzzles):
+    print('generating puzzle', i+1)
     puzzle, ans = generate_puzzle()
     puzzles.append(puzzle)
 

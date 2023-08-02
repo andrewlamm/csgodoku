@@ -3,10 +3,10 @@
   <%- include('partials/helmet.ejs', {title: 'csgodoku'}) %>
   <body>
     <div class="w-full min-h-screen flex flex-col justify-center items-center bg-black" id="game-screen">
-      <div class="flex flex-row justify-center">
+      <div class="flex flex-col md:flex-row justify-center">
         <div class="flex flex-col">
           <div class="flex flex-row">
-            <div class="h-36 w-36"></div>
+            <div class="h-20 w-20 md:h-36 md:w-36"></div>
             <% for (let i = 0; i < 3; i++) { %>
               <%- displayClue(puzzle[i]) %>
             <% } %>
@@ -20,19 +20,19 @@
             <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="user-board">
               <% for (let i = 0; i < 9; i++) { %>
                 <% if (currGame.board[i]) { %>
-                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
+                  <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
                     <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
-                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center">
+                    <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
                       <%= players[currGame.board[i]].name %>
                     </div>
-                    <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white" id="grid-percentage-<%= i %>">
+                    <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white" id="grid-percentage-<%= i %>">
                       <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
                     </div>
                   </div>
                 <% } else { %>
-                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> <% if (currGame.gameStatus === 0) { %> cursor-pointer hover:bg-slate-600 <% } %> bg-slate-800 transition-colors" <% if (currGame.gameStatus === 0) { %>onclick="openPopup(<%= i %>)"<% } %> id="grid-spot-<%= i %>">
+                  <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> <% if (currGame.gameStatus === 0) { %> cursor-pointer hover:bg-slate-600 <% } %> bg-slate-800 transition-colors" <% if (currGame.gameStatus === 0) { %>onclick="openPopup(<%= i %>)"<% } %> id="grid-spot-<%= i %>">
                     <img class="w-full h-full" id="grid-image-<%= i %>">
-                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center" id="grid-name-<%= i %>">
+                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center text-sm md:text-base" id="grid-name-<%= i %>">
                     </div>
                     <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white" id="grid-percentage-<%= i %>">
                     </div>
@@ -42,18 +42,18 @@
             </div>
           </div>
         </div>
-        <div class="flex flex-col justify-center items-center text-2xl ml-6 text-white pt-36">
+        <div class="flex flex-col justify-center items-center text-base md:text-2xl md:ml-6 text-white pt-12 md:pt-36">
           <div>
             you have
           </div>
-          <div class="text-6xl font-bold" id="rounds-left">
+          <div class="text-xl md:text-6xl font-bold" id="rounds-left">
             <%= currGame.guessesLeft %>
           </div>
           <div>
             round<span id="rounds-plural"><% if (currGame.guessesLeft !== 1) { %>s<% } %></span> left
           </div>
-          <div class="w-full mt-8 <% if (currGame.guessesLeft > 0) { %> hidden <% } %>" id="show-recap-button">
-            <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-semibold cursor-pointer" onclick="openRecapPopup()">
+          <div class="w-full flex justify-center mt-4 md:mt-8 <% if (currGame.guessesLeft > 0) { %> hidden <% } %>" id="show-recap-button">
+            <div class="rounded-lg bg-blue-500 w-1/2 md:w-full text-center py-2 font-semibold cursor-pointer" onclick="openRecapPopup()">
               recap
             </div>
           </div>
@@ -61,7 +61,7 @@
       </div>
     </div>
     <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="player-popup-bg" >
-      <div class="flex flex-col items-center justify-center p-4 w-96 z-10 bg-gray-400 rounded-xl" id="player-popup">
+      <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl" id="player-popup">
         <div class="text-center mb-4" id="player-popup-text">
           enter a player who <span class="font-bold" id="player-popup-clue-1"></span> and <span class="font-bold" id="player-popup-clue-2"></span>
         </div>
@@ -78,7 +78,7 @@
       </div>
     </div>
     <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="recap-popup-bg" >
-      <div class="flex flex-col items-center justify-center p-4 w-96 z-10 bg-gray-400 rounded-xl" id="recap-popup">
+      <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl" id="recap-popup">
         <div class="w-full font-bold text-xl text-center">
           recap
         </div>
@@ -116,9 +116,9 @@
         </div>
       </div>
     </div>
-    <div class="w-full min-h-screen flex flex-row justify-center items-center bg-black text-white hidden" id="postgame-screen">
-      <div class="w-1/2 flex flex-col justify-center items-center">
-        <div class="w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+    <div class="w-full min-h-screen flex flex-col lg:flex-row justify-center items-center bg-black text-white hidden" id="postgame-screen">
+      <div class="w-full lg:w-1/2 my-8 lg:my-0 px-2 md:mx-2 flex flex-col justify-center items-center">
+        <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
           <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
             your board
           </div>
@@ -126,9 +126,9 @@
             most common picks
           </div>
         </div>
-        <div class="mt-8 flex flex-col justify-center items-center" id="right-side-container">
+        <div class="flex flex-col justify-center items-center w-full mt-4 lg:mt-8" id="right-side-container">
           <div class="w-full flex flex-col items-center justify-center hidden" id="user-stats-container">
-            <div class="w-full flex flex-row items-center justify-center">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
               <div class="w-1/2 flex flex-col items-center justify-center">
                 <div class="font-semibold">
                   today's score
@@ -148,7 +148,7 @@
             </div>
           </div>
           <div class="w-full flex flex-col items-center justify-center" id="overall-stats-container">
-            <div class="w-full flex flex-row items-center justify-center">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
               <div class="w-1/2 flex flex-col items-center justify-center">
                 <div class="font-semibold">
                   today's average
@@ -183,17 +183,17 @@
               <% if (currGame.gameStatus !== 0) { %>
                 <% for (let i = 0; i < 9; i++) { %>
                   <% if (currGame.board[i]) { %>
-                    <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
+                    <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
                       <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
-                      <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center">
+                      <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
                         <%= players[currGame.board[i]].name %>
                       </div>
-                      <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white">
+                      <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white text-sm md:text-base">
                         <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
                       </div>
                     </div>
                   <% } else { %>
-                    <div class="flex flex-col h-36 w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors">
+                    <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors">
                     </div>
                   <% } %>
                 <% } %>
@@ -202,12 +202,12 @@
             <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="stats-common-board">
               <% if (currGame.gameStatus !== 0) { %>
                 <% for (let i = 0; i < 9; i++) { %>
-                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer hover:bg-gray-700" onclick="openStatsPopup(<%= i %>)">
+                  <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer hover:bg-gray-700" onclick="openStatsPopup(<%= i %>)">
                     <img class="w-full h-full" src="/images/player/<%= pickedPlayers[i][0].playerID %>.png">
-                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center">
+                    <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
                       <%= pickedPlayers[i][0].name %>
                     </div>
-                    <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white">
+                    <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white text-sm md:text-base">
                       <%= formatPercentage(pickedPlayers[i][0].percentage * 100) %>
                     </div>
                   </div>
@@ -217,8 +217,8 @@
           </div>
         </div>
       </div>
-      <div class="w-1/2 flex flex-col justify-center items-center">
-        <div class="w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+      <div class="w-full lg:w-1/2 mb-8 lg:mb-0 px-2 md:mx-2 flex flex-col justify-center items-center">
+        <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
           <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="user-stats-select" onclick="toggleOwnStats()">
             your stats
           </div>
@@ -226,9 +226,9 @@
             today's stats
           </div>
         </div>
-        <div class="mt-8 flex flex-col justify-center items-center w-full" id="left-side-container">
+        <div class="flex flex-col justify-center items-center w-full mt-4 lg:mt-8" id="left-side-container">
           <div class="w-full flex flex-col items-center justify-center hidden" id="user-overall-container">
-            <div class="w-1/2 flex flex-row items-center justify-center">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
               <div class="w-1/2 flex flex-col items-center justify-center">
                 <div class="font-semibold">
                   your total games
@@ -248,7 +248,7 @@
             </div>
           </div>
           <div class="w-full flex flex-col items-center justify-center" id="average-overall-container">
-            <div class="w-1/2 flex flex-row items-center justify-center">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
               <div class="w-1/2 flex flex-col items-center justify-center">
                 <div class="font-semibold">
                   total games today
@@ -267,10 +267,10 @@
               </div>
             </div>
           </div>
-          <div class="w-128 flex flex-col justify-center items-center mt-8">
+          <div class="w-full md:w-128 flex flex-col justify-center items-center mt-8">
             <div class="flex flex-row justify-center h-96">
               <% for (let i = 0; i < 10; i++) { %>
-                <div class="flex flex-col justify-end h-full items-center w-10">
+                <div class="flex flex-col justify-end h-full items-center w-8 md:w-10">
                   <div class="text-sm font-medium" id="bar-value-<%= i %>"></div>
                   <div class="bg-blue-500 rounded-full w-2 transition-all duration-500" style="height: 0%;" id="bar-graph-<%= i %>"></div>
                 </div>
@@ -281,7 +281,7 @@
             </div>
             <div class="flex flex-row justify-center">
               <% for (let i = 0; i < 10; i++) { %>
-                <div class="w-10 text-center">
+                <div class="w-8 md:-10 text-center">
                   <%= i %>
                 </div>
               <% } %>
@@ -291,13 +291,13 @@
       </div>
     </div>
     <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="stats-popup-bg" >
-      <div class="flex flex-col items-center justify-center p-4 w-96 z-10 bg-gray-400 rounded-xl" id="stats-popup">
+      <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl" id="stats-popup">
         <div class="text-center mb-4" id="stats-popup-text">
           players who <span class="font-bold" id="stats-popup-clue-1"></span> and <span class="font-bold" id="stats-popup-clue-2"></span>
         </div>
-        <div class="w-80 h-128 overflow-y-auto my-2" id="stats-popup-list">
+        <div class="w-64 md:w-80 h-128 overflow-y-auto my-2" id="stats-popup-list">
         </div>
-        <div class="mt-4 w-80">
+        <div class="mt-4 w-64 md:w-80">
           <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeStatsPopup()">
             close
           </div>
@@ -570,10 +570,12 @@
         document.getElementById('game-screen').classList.add('hidden')
 
         /* change heights to match */
-        const leftSideHeight = document.getElementById('left-side-container').offsetHeight
-        const rightSideHeight = document.getElementById('right-side-container').offsetHeight
-        document.getElementById('left-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
-        document.getElementById('right-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
+        if (window.innerWidth >= 768) {
+          const leftSideHeight = document.getElementById('left-side-container').offsetHeight
+          const rightSideHeight = document.getElementById('right-side-container').offsetHeight
+          document.getElementById('left-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
+          document.getElementById('right-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
+        }
 
         changeBarGraph(globalOverallScores)
       }

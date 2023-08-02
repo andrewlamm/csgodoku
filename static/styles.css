@@ -14,8 +14,18 @@
   text-align: center;
 }
 
+.h-12 {
+  height: 3rem;
+}
+
 .h-20 {
   height: 5rem;
+}
+
+@media (min-width: 768px) {
+  .md\:h-20 {
+    height: 5rem;
+  }
 }
 
 /* Scrollbar Stuff */
