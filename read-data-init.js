@@ -15,7 +15,7 @@ async function downloadImage(url, category, id) {
   await delay(2000)
   const fixedURL = url.replaceAll('&amp;', '&')
 
-  console.log(fixedURL)
+  // console.log(fixedURL)
 
   const picture = await (await fetch(fixedURL)).blob()
   const arrayBuffer = await picture.arrayBuffer()
@@ -121,10 +121,10 @@ async function main() {
     }
   })
 
-  // console.log(new Date().toLocaleTimeString() + ' - downloading country flags...')
-  // for (const [country, url] of Object.entries(downloadedCountryImages)) {
-  //   await downloadImage(url, 'country', country)
-  // }
+  console.log(new Date().toLocaleTimeString() + ' - downloading country flags...')
+  for (const [country, url] of Object.entries(downloadedCountryImages)) {
+    await downloadImage(url, 'country', country)
+  }
 
   let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
 
@@ -132,7 +132,7 @@ async function main() {
     // loading all player data
     ct = 0
     for (const [id, name] of Object.entries(idToName)) {
-      if (ct < 0) {
+      if (ct < 576) {
         console.log('skipping', name)
         ct += 1
         continue
@@ -143,11 +143,11 @@ async function main() {
 
       if (statsPage.find('img', {'class': 'summaryBodyshot'}) !== undefined) {
         const imageURL = statsPage.find('img', {'class': 'summaryBodyshot'}).attrs.src
-        await downloadImage(imageURL, 'player', id)
+        await downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'player', id)
       }
       else if (statsPage.find('img', {'class': 'summarySquare'}) !== undefined) {
         const imageURL = statsPage.find('img', {'class': 'summarySquare'}).attrs.src
-        await downloadImage(imageURL, 'player', id)
+        await downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'player', id)
       }
 
       playerData[id].fullName = statsPage.find('div', {'class': 'summaryRealname'}).text
