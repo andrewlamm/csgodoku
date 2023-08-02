@@ -31,6 +31,18 @@ async function downloadImage(url, category, id) {
   // })
 }
 
+async function getTeamImage(url) {
+  await delay(2000)
+
+  const page = await (await fetch(`https://www.hltv.org/team/${url}`)).text()
+  const soupPage = new JSSoup(page)
+  const imageURL = soupPage.find('div', {'class': 'profile-team-logo-container'}).find('img').attrs.src
+
+  const id = url.split('/')[0]
+
+  downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'team', id)
+}
+
 async function getParsedPage(url, loadAllPlayers=false) {
   return new Promise(async function (resolve, reject) {
     await delay(2000)
@@ -120,7 +132,7 @@ async function readCSV(playerData) {
 
 async function main() {
   const downloadedCountryImages = {}
-  const downloadedTeamImages = new Set()
+  const downloadTeamLinks = new Set()
 
   const idToName = {}
   const playerData = {}
@@ -280,17 +292,7 @@ async function main() {
           const teamID = parseInt(teamsTable[i].find('td', {'class': 'team-name-cell'}).find('a').attrs.href.split('/')[2])
           playerData[id].teams.add(teamID + '/' + teamName)
 
-          if (!downloadedTeamImages.has(teamID)) {
-            const teamImageURL = teamsTable[i].find('td', {'class': 'team-name-cell'}).find('img', {'class': 'team-logo'}).attrs.src
-            if (teamImageURL.charAt(0) === '/') {
-              await downloadImage(`https://www.hltv.org${teamImageURL}`, 'team', teamID)
-            }
-            else {
-              await downloadImage(teamImageURL, 'team', teamID)
-            }
-
-            downloadedTeamImages.add(teamID)
-          }
+          downloadTeamLinks.add(teamID + '/' + teamName)
         }
 
         if (profilePage.find('div', {'id': 'majorAchievement'}) !== undefined) {
@@ -365,10 +367,16 @@ async function main() {
       dataToWrite += `${addString}\n`
     }
 
+    console.log(new Date().toLocaleTimeString() + ' - writing to csv...')
     fs.writeFile('playerData.csv', dataToWrite, err => {
       if (err) {
         console.error('error writing to file', err)
       }
+    })
+
+    console.log(new Date().toLocaleTimeString() + ' - downloading team logos...')
+    downloadTeamLinks.forEach(async link => {
+      await getTeamImage(link)
     })
   }
   catch (err) {
