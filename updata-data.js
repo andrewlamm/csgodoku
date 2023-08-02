@@ -211,7 +211,7 @@ async function main() {
 
         playerData[id].age = parseInt(statsPage.find('div', {'class': 'summaryPlayerAge'}).text.split(' ')[0])
 
-        // playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title // TODO: fix?
+        playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title
 
         const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
 
