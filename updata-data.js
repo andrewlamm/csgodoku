@@ -6,9 +6,29 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const fs = require('fs')
 const { executablePath } = require('puppeteer')
 const csv = require('csv-parser')
+const sharp = require('sharp')
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function downloadImage(url, category, id) {
+  await delay(2000)
+  const fixedURL = url.replaceAll('&amp;', '&')
+
+  // console.log(fixedURL)
+
+  const picture = await (await fetch(fixedURL)).blob()
+  const arrayBuffer = await picture.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  sharp(buffer).png().toFile(`static/images/${category}/${id}.png`, (err, info) => {
+    if (err) console.log(err)
+  })
+
+  // fs.writeFile(`static/images/${category}/${id}.png`, buffer, err => {
+  //   if (err) console.log(err)
+  // })
 }
 
 async function getParsedPage(url, loadAllPlayers=false) {
@@ -99,6 +119,9 @@ async function readCSV(playerData) {
 }
 
 async function main() {
+  const downloadedCountryImages = {}
+  const downloadedTeamImages = new Set()
+
   const idToName = {}
   const playerData = {}
   const playerCache = {}
@@ -109,6 +132,9 @@ async function main() {
   players.map(player => {
     const playerName = player.find('td', {'class': 'playerCol'}).text
     const playerID = parseInt(player.find('td', {'class': 'playerCol'}).find('a').attrs.href.split('/')[3])
+
+    const countryElement = player.find('td', {'class': 'playerCol'}).find('img')
+    downloadedCountryImages[countryElement.attrs.title] = `https://www.hltv.org${countryElement.attrs.src}`
 
     idToName[playerID] = playerName
     playerData[playerID] = {
@@ -149,6 +175,17 @@ async function main() {
     }
   })
 
+  console.log(new Date().toLocaleTimeString() + ' - downloading country flags...')
+  for (const [country, url] of Object.entries(downloadedCountryImages)) {
+    if (fs.existsSync(`static/images/country/${country}.png`)) {
+      console.log(new Date().toLocaleTimeString() + ' - skipping ' + country)
+    }
+    else {
+      console.log(new Date().toLocaleTimeString() + ' - downloading ' + country)
+      await downloadImage(url, 'country', country)
+    }
+  }
+
   // now read csv file
   const lastUpdated = await readCSV(playerData)
 
@@ -161,11 +198,20 @@ async function main() {
         console.log(new Date().toLocaleTimeString() + ' - getting stats for ' + name)
         const statsPage = await getParsedPage('https://www.hltv.org/stats/players/' + id + '/' + name)
 
-        // TODO: download picture of player
+        if (statsPage.find('img', {'class': 'summaryBodyshot'}) !== undefined) {
+          const imageURL = statsPage.find('img', {'class': 'summaryBodyshot'}).attrs.src
+          await downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'player', id)
+        }
+        else if (statsPage.find('img', {'class': 'summarySquare'}) !== undefined) {
+          const imageURL = statsPage.find('img', {'class': 'summarySquare'}).attrs.src
+          await downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'player', id)
+        }
 
         playerData[id].fullName = statsPage.find('div', {'class': 'summaryRealname'}).text
 
         playerData[id].age = parseInt(statsPage.find('div', {'class': 'summaryPlayerAge'}).text.split(' ')[0])
+
+        // playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title // TODO: fix?
 
         const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
 
@@ -233,6 +279,18 @@ async function main() {
           const teamName = teamsTable[i].find('td', {'class': 'team-name-cell'}).text
           const teamID = parseInt(teamsTable[i].find('td', {'class': 'team-name-cell'}).find('a').attrs.href.split('/')[2])
           playerData[id].teams.add(teamID + '/' + teamName)
+
+          if (!downloadedTeamImages.has(teamID)) {
+            const teamImageURL = teamsTable[i].find('td', {'class': 'team-name-cell'}).find('img', {'class': 'team-logo'}).attrs.src
+            if (teamImageURL.charAt(0) === '/') {
+              await downloadImage(`https://www.hltv.org${teamImageURL}`, 'team', teamID)
+            }
+            else {
+              await downloadImage(teamImageURL, 'team', teamID)
+            }
+
+            downloadedTeamImages.add(teamID)
+          }
         }
 
         if (profilePage.find('div', {'id': 'majorAchievement'}) !== undefined) {
