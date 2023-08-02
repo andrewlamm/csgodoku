@@ -542,6 +542,10 @@ video {
   position: relative;
 }
 
+.bottom-0 {
+  bottom: 0px;
+}
+
 .right-0 {
   right: 0px;
 }
@@ -924,6 +928,10 @@ video {
   text-align: center;
 }
 
+.h-20 {
+  height: 5rem;
+}
+
 /* Scrollbar Stuff */
 
 ::-webkit-scrollbar {
@@ -953,4 +961,9 @@ video {
 .hover\:bg-slate-600:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(71 85 105 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-gray-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(55 65 81 / var(--tw-bg-opacity));
 }

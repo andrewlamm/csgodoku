@@ -21,13 +21,19 @@
               <% for (let i = 0; i < 9; i++) { %>
                 <% if (currGame.board[i]) { %>
                   <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
-                    <%= players[currGame.board[i]].name %>
+                    <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
+                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center">
+                      <%= players[currGame.board[i]].name %>
+                    </div>
                     <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white" id="grid-percentage-<%= i %>">
                       <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
                     </div>
                   </div>
                 <% } else { %>
                   <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> <% if (currGame.gameStatus === 0) { %> cursor-pointer hover:bg-slate-600 <% } %> bg-slate-800 transition-colors" <% if (currGame.gameStatus === 0) { %>onclick="openPopup(<%= i %>)"<% } %> id="grid-spot-<%= i %>">
+                    <img class="w-full h-full" id="grid-image-<%= i %>">
+                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center" id="grid-name-<%= i %>">
+                    </div>
                     <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white" id="grid-percentage-<%= i %>">
                     </div>
                   </div>
@@ -178,7 +184,10 @@
                 <% for (let i = 0; i < 9; i++) { %>
                   <% if (currGame.board[i]) { %>
                     <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
-                      <%= players[currGame.board[i]].name %>
+                      <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
+                      <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center">
+                        <%= players[currGame.board[i]].name %>
+                      </div>
                       <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white">
                         <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
                       </div>
@@ -193,9 +202,12 @@
             <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="stats-common-board">
               <% if (currGame.gameStatus !== 0) { %>
                 <% for (let i = 0; i < 9; i++) { %>
-                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer" onclick="openStatsPopup(<%= i %>)">
-                    <%= pickedPlayers[i][0].name %>
-                    <div class="absolute top-0 right-0 px-2 bg-black font-bold">
+                  <div class="flex flex-col h-36 w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer hover:bg-gray-700" onclick="openStatsPopup(<%= i %>)">
+                    <img class="w-full h-full" src="/images/player/<%= pickedPlayers[i][0].playerID %>.png">
+                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center">
+                      <%= pickedPlayers[i][0].name %>
+                    </div>
+                    <div class="absolute top-0 right-0 px-2 bg-black font-bold text-white">
                       <%= formatPercentage(pickedPlayers[i][0].percentage * 100) %>
                     </div>
                   </div>
@@ -435,7 +447,7 @@
           })
         })).json()
 
-        console.log(res)
+        // console.log(res)
 
         document.getElementById('rounds-left').innerHTML = res.guessesLeft
         if (res.guessesLeft === 1) {
@@ -465,7 +477,8 @@
           document.getElementById(`grid-spot-${ind}`).classList.add('bg-slate-600')
           document.getElementById(`grid-spot-${ind}`).onclick = undefined
 
-          document.getElementById(`grid-spot-${ind}`).childNodes[0].nodeValue = player.name
+          document.getElementById(`grid-image-${ind}`).src = `/images/player/${player.id}.png`
+          document.getElementById(`grid-name-${ind}`).innerHTML = player.name
           document.getElementById(`grid-percentage-${ind}`).innerHTML = formatPercentage(res.guessPercentage * 100)
 
           document.getElementById(`recap-grid-${ind}`).classList.add('bg-green-500')
@@ -497,26 +510,36 @@
           // display on stats user grid
           for (let i = 0; i < 9; i++) {
             const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
-            gridNode.id = `stats-grid-spot-${i}`
             gridNode.onclick = undefined
-            gridNode.childNodes[1].id = `stats-grid-percentage-${i}`
+
+            gridNode.removeAttribute('id')
+            console.log(gridNode.children)
+            gridNode.children[0].removeAttribute('id')
+            gridNode.children[1].removeAttribute('id')
+            gridNode.children[2].removeAttribute('id')
 
             document.getElementById('stats-user-board').appendChild(gridNode)
           }
+
           // display on stats common grid
           for (let i = 0; i < 9; i++) {
             const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
-            gridNode.id = `stats-common-spot-${i}`
-            gridNode.childNodes[1].id = `stats-common-percentage-${i}`
+            gridNode.onclick = undefined
+
+            gridNode.removeAttribute('id')
+            gridNode.children[0].removeAttribute('id')
+            gridNode.children[1].removeAttribute('id')
+            gridNode.children[2].removeAttribute('id')
 
             gridNode.classList.remove('bg-slate-800')
-            gridNode.classList.add('bg-slate-600', 'cursor-pointer')
+            gridNode.classList.add('bg-slate-600', 'cursor-pointer', 'hover:bg-gray-700')
             gridNode.onclick = function() {
               openStatsPopup(i)
             }
 
-            gridNode.childNodes[0].nodeValue = res.pickedPlayers[i][0].name
-            gridNode.childNodes[1].innerHTML = formatPercentage(res.pickedPlayers[i][0].percentage * 100)
+            gridNode.children[0].src = `/images/player/${res.pickedPlayers[i][0].playerID}.png`
+            gridNode.children[1].innerHTML = res.pickedPlayers[i][0].name
+            gridNode.children[2].innerHTML = formatPercentage(res.pickedPlayers[i][0].percentage * 100)
 
             document.getElementById('stats-common-board').appendChild(gridNode)
           }
