@@ -212,14 +212,6 @@ const NUMBER_OF_GUESSES = 9
 
 const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
 
-async function start() {
-  console.log('reading csv...')
-  const lastUpdated = await readCSV(playerData, playerList)
-  console.log(`Last updated: ${lastUpdated}`)
-}
-
-start()
-
 function checkPlayerGrid(playerID, clue1, clue2) {
   const clue1Type = clue1[0]
   const clue1Val = clue1[1]
@@ -891,6 +883,13 @@ app.post('/concede', [checkPuzzle, checkPlayer, concedeHelper], (req, res) => {
   res.send(res.locals.guessReturn)
 })
 
-app.listen(process.env.PORT || 4000, () => console.log("Server is running..."))
+async function start() {
+  console.log('reading csv...')
+  const lastUpdated = await readCSV(playerData, playerList)
+  console.log(`Last updated: ${lastUpdated}`)
+  app.listen(process.env.PORT || 4000, () => console.log("Server is running..."))
+}
+
+start()
 
 // npx tailwindcss -i .\static\styles.css -o ./static/output.css --watch
