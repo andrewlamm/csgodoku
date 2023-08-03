@@ -44,17 +44,30 @@
         </div>
         <div class="flex flex-col justify-center items-center text-base md:text-2xl md:ml-6 text-white pt-12 md:pt-36">
           <div>
-            you have
+            round<span id="rounds-plural"><% if (currGame.guessesLeft !== 1) { %>s<% } %></span> left
           </div>
           <div class="text-xl md:text-6xl font-bold" id="rounds-left">
             <%= currGame.guessesLeft %>
           </div>
-          <div>
-            round<span id="rounds-plural"><% if (currGame.guessesLeft !== 1) { %>s<% } %></span> left
-          </div>
           <div class="w-full flex justify-center mt-4 md:mt-8 <% if (currGame.guessesLeft > 0) { %> hidden <% } %>" id="show-recap-button">
             <div class="rounded-lg bg-blue-500 w-1/2 md:w-full text-center py-2 font-semibold cursor-pointer" onclick="openRecapPopup()">
               recap
+            </div>
+          </div>
+          <div class="w-full flex justify-center mt-4 md:mt-4 <% if (currGame.guessesLeft === 0) { %> hidden <% } %>" id="show-concede-button">
+            <div class="rounded-lg bg-red-500 w-1/2 md:w-full text-center py-2 font-semibold cursor-pointer" onclick="openConcede()">
+              give up
+            </div>
+          </div>
+          <div class="w-full flex flex-col justify-center mt-4 md:mt-4 hidden" id="confirm-concede-button">
+            <div class="text-lg w-full text-center">are you sure?</div>
+            <div class="flex flex-row mt-2 gap-2">
+              <div class="rounded-lg bg-red-500 md:w-full text-center py-2 font-semibold cursor-pointer" onclick="confirmConcede()">
+                yes
+              </div>
+              <div class="rounded-lg bg-blue-500 md:w-full text-center py-2 font-semibold cursor-pointer" onclick="cancelConcede()">
+                no
+              </div>
             </div>
           </div>
         </div>
@@ -281,7 +294,7 @@
             </div>
             <div class="flex flex-row justify-center">
               <% for (let i = 0; i < 10; i++) { %>
-                <div class="w-8 md:-10 text-center">
+                <div class="w-8 md:w-10 text-center">
                   <%= i %>
                 </div>
               <% } %>
@@ -407,17 +420,114 @@
         indexSelected = ind
       }
 
-      // window.addEventListener('click', function(e) {
+      // window.addEventListener('click', function(e) { // TODO
       //   if (popupShowing && !document.getElementById('player-popup').contains(e.target)) {
       //     closePopup()
       //   }
       // })
+
+      function openConcede() {
+        document.getElementById('show-concede-button').classList.add('hidden')
+        document.getElementById('confirm-concede-button').classList.remove('hidden')
+      }
+
+      async function confirmConcede() {
+        const res = await (await fetch(`/concede`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: new Headers({
+            'Content-Type': 'application/x-www-form-urlencoded'
+          })
+        })).json()
+
+        // console.log(res)
+
+        gameOverSequence(res)
+      }
+
+      function cancelConcede() {
+        document.getElementById('show-concede-button').classList.remove('hidden')
+        document.getElementById('confirm-concede-button').classList.add('hidden')
+      }
 
       function openRecapPopup() {
         document.getElementById('recap-popup-bg').classList.remove('hidden')
       }
       function closeRecapPopup() {
         document.getElementById('recap-popup-bg').classList.add('hidden')
+      }
+
+      function gameOverSequence(res) {
+        document.getElementById('score-text').innerHTML = `${res.userScore[0]} / 9`
+        document.getElementById('uniqueness-text').innerHTML = `${res.userScore[1]}`
+
+        for (let i = 0; i < 9; i++) {
+          document.getElementById(`grid-spot-${i}`).onclick = undefined
+          document.getElementById(`grid-spot-${i}`).classList.remove('cursor-pointer', 'hover:bg-slate-600')
+        }
+
+        // set variables
+        pickedPlayers = res.pickedPlayers
+        globalOverallScores = res.finalScores
+        userOverallScores = res.userOverallScores
+        averageUniqueness = res.averageUniqueness
+
+        // display on stats user grid
+        for (let i = 0; i < 9; i++) {
+          const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
+          gridNode.onclick = undefined
+
+          gridNode.removeAttribute('id')
+          gridNode.children[0].removeAttribute('id')
+          gridNode.children[1].removeAttribute('id')
+          gridNode.children[2].removeAttribute('id')
+
+          document.getElementById('stats-user-board').appendChild(gridNode)
+        }
+
+        // display on stats common grid
+        for (let i = 0; i < 9; i++) {
+          const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
+          gridNode.onclick = undefined
+
+          gridNode.removeAttribute('id')
+          gridNode.children[0].removeAttribute('id')
+          gridNode.children[1].removeAttribute('id')
+          gridNode.children[2].removeAttribute('id')
+
+          gridNode.classList.remove('bg-slate-800')
+          gridNode.classList.add('bg-slate-600', 'cursor-pointer', 'hover:bg-gray-700')
+          gridNode.onclick = function() {
+            openStatsPopup(i)
+          }
+
+          gridNode.children[0].src = `/images/player/${res.pickedPlayers[i][0].playerID}.png`
+          gridNode.children[1].innerHTML = res.pickedPlayers[i][0].name
+          gridNode.children[2].innerHTML = formatPercentage(res.pickedPlayers[i][0].percentage * 100)
+
+          document.getElementById('stats-common-board').appendChild(gridNode)
+        }
+
+        document.getElementById('user-stats-score').innerHTML = `${res.userScore[0]} / 9`
+        document.getElementById('uniqueness-text').innerHTML = `${res.userScore[1]}`
+        document.getElementById('user-unique-score').innerHTML = `${res.userScore[1]}`
+        document.getElementById('overall-average-score').innerHTML = `${res.averageScore} / 9`
+        document.getElementById('overall-unique-score').innerHTML = `${res.averageUniqueness}`
+        document.getElementById('user-total-games').innerHTML = `${res.userOverallScores.reduce((a, b) => a + b, 0)}`
+        const averageScore = (res.userOverallScores.reduce((a, b, ind) => a + b * ind, 0) / res.userOverallScores.reduce((a, b) => a + b, 0))
+        document.getElementById('user-average-score').innerHTML = `${averageScore.toFixed(1)} / 9`
+        document.getElementById('average-total-games').innerHTML = `${res.numberGames}`
+        document.getElementById('average-today-average').innerHTML = `${res.averageScore} / 9`
+
+        // changeBarGraph(globalOverallScores)
+
+        // show everything
+        closePopup()
+        document.getElementById('show-recap-button').classList.remove('hidden')
+        openRecapPopup()
+
+        cancelConcede()
+        document.getElementById('show-concede-button').classList.add('hidden')
       }
 
       async function submitGuess(playerID) {
@@ -493,74 +603,7 @@
 
         if (res.guessesLeft === 0) {
           // game over sequence
-          document.getElementById('score-text').innerHTML = `${res.userScore[0]} / 9`
-          document.getElementById('uniqueness-text').innerHTML = `${res.userScore[1]}`
-
-          for (let i = 0; i < 9; i++) {
-            document.getElementById(`grid-spot-${i}`).onclick = undefined
-            document.getElementById(`grid-spot-${i}`).classList.remove('cursor-pointer', 'hover:bg-slate-600')
-          }
-
-          // set variables
-          pickedPlayers = res.pickedPlayers
-          globalOverallScores = res.finalScores
-          userOverallScores = res.userOverallScores
-          averageUniqueness = res.averageUniqueness
-
-          // display on stats user grid
-          for (let i = 0; i < 9; i++) {
-            const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
-            gridNode.onclick = undefined
-
-            gridNode.removeAttribute('id')
-            console.log(gridNode.children)
-            gridNode.children[0].removeAttribute('id')
-            gridNode.children[1].removeAttribute('id')
-            gridNode.children[2].removeAttribute('id')
-
-            document.getElementById('stats-user-board').appendChild(gridNode)
-          }
-
-          // display on stats common grid
-          for (let i = 0; i < 9; i++) {
-            const gridNode = document.getElementById(`grid-spot-${i}`).cloneNode(true)
-            gridNode.onclick = undefined
-
-            gridNode.removeAttribute('id')
-            gridNode.children[0].removeAttribute('id')
-            gridNode.children[1].removeAttribute('id')
-            gridNode.children[2].removeAttribute('id')
-
-            gridNode.classList.remove('bg-slate-800')
-            gridNode.classList.add('bg-slate-600', 'cursor-pointer', 'hover:bg-gray-700')
-            gridNode.onclick = function() {
-              openStatsPopup(i)
-            }
-
-            gridNode.children[0].src = `/images/player/${res.pickedPlayers[i][0].playerID}.png`
-            gridNode.children[1].innerHTML = res.pickedPlayers[i][0].name
-            gridNode.children[2].innerHTML = formatPercentage(res.pickedPlayers[i][0].percentage * 100)
-
-            document.getElementById('stats-common-board').appendChild(gridNode)
-          }
-
-          document.getElementById('user-stats-score').innerHTML = `${res.userScore[0]} / 9`
-          document.getElementById('uniqueness-text').innerHTML = `${res.userScore[1]}`
-          document.getElementById('user-unique-score').innerHTML = `${res.userScore[1]}`
-          document.getElementById('overall-average-score').innerHTML = `${res.averageScore} / 9`
-          document.getElementById('overall-unique-score').innerHTML = `${res.averageUniqueness}`
-          document.getElementById('user-total-games').innerHTML = `${res.userOverallScores.reduce((a, b) => a + b, 0)}`
-          const averageScore = (res.userOverallScores.reduce((a, b, ind) => a + b * ind, 0) / res.userOverallScores.reduce((a, b) => a + b, 0))
-          document.getElementById('user-average-score').innerHTML = `${averageScore.toFixed(1)} / 9`
-          document.getElementById('average-total-games').innerHTML = `${res.numberGames}`
-          document.getElementById('average-today-average').innerHTML = `${res.averageScore} / 9`
-
-          // changeBarGraph(globalOverallScores)
-
-          // show everything
-          closePopup()
-          document.getElementById('show-recap-button').classList.remove('hidden')
-          openRecapPopup()
+          gameOverSequence(res)
         }
       }
 

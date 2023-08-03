@@ -687,6 +687,114 @@ async function insertGuessHelper(req, res, next) {
   }
 }
 
+async function concedeHelper(req, res, next) {
+  try {
+    if (req.session.player === undefined) {
+      console.log('concede fail, no player')
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (JSON.stringify(req.session.player.puzzle) !== JSON.stringify(puzzle)) {
+      console.log('concede fail, puzzle incorrect', req.session.player)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.player.board === undefined) {
+      console.log('concede fail, no board', req.session.player)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.player.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.userStats === undefined || req.session.userStats.finalGridAmount === undefined || req.session.userStats.finalGridAmount.length !== 10) {
+      console.log('concede fail, user stats error', req.session.userStats)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.player.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.player.gameStatus !== 0) {
+      // game has ended, do nothing
+      console.log('concede fail, game ended', req.session.player)
+      next()
+    }
+    else {
+      req.session.player.guessesLeft = 0
+      req.session.player.gameStatus = -1
+
+      const query = { _id: 'currentPuzzleStats' }
+      const result = await db.findOne(query)
+
+      for (let i = 0; i < 9; i++) {
+        if (req.session.player.board[i] !== undefined && req.session.player.board[i] !== null) {
+          const player = req.session.player.board[i]
+          if (result.pickedPlayers[i][player] === undefined) {
+            const update = { $set: { } }
+            update.$set[`pickedPlayers.${i}.${player}`] = 1
+
+            const resultDoc = await db.updateOne(query, update)
+          }
+          else {
+            const update = { $inc: { } }
+            update.$inc[`pickedPlayers.${i}.${player}`] = 1
+
+            const resultDoc = await db.updateOne(query, update)
+          }
+        }
+      }
+
+      const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
+
+      req.session.userStats.finalGridAmount[score] += 1
+
+      const pickedPlayersData = await getPickedPlayersList()
+      const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
+
+      await updateGlobalFinalScores(score, uniqueScore)
+      const finalScores = await getFinalScores()
+
+      const numberGames = finalScores[0].reduce((a, b) => a + b, 0)
+      const scoreSum = finalScores[0].reduce((a, b, ind) => a + b * ind, 0)
+
+      const averageUniqueness = await getUniqueness()
+
+      req.session.player.gameStatus = req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1
+      req.session.player.userScore = [score, uniqueScore]
+
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.player.guessesLeft,
+        guessPercentage: res.locals.guessPercentage,
+        gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1,
+        pickedPlayers: pickedPlayersData,
+        finalScores: finalScores[0],
+        numberGames: numberGames,
+        averageScore: (scoreSum / numberGames).toFixed(1),
+        userScore: [score, uniqueScore],
+        averageUniqueness: averageUniqueness,
+        userOverallScores: req.session.userStats.finalGridAmount,
+      }
+      next()
+    }
+  }
+  catch (err) {
+    console.log('concede fail, error', err)
+    next()
+  }
+}
+
 function checkPlayer(req, res, next) {
   if (req.session.player === undefined) {
     res.locals.guessReturn = {
@@ -714,7 +822,14 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
       // ind is filled with a player
       for (let i = 0; i < res.locals.pickedPlayersData[ind].length; i++) {
         if (res.locals.pickedPlayersData[ind][i].playerID === req.session.player.board[ind]) {
-          req.session.player.boardPercentages[ind] = res.locals.pickedPlayersData[ind][i].percentage
+          if (req.session.player.gameStatus !== 0) {
+            // game over
+            req.session.player.boardPercentages[ind] = res.locals.pickedPlayersData[ind][i].percentage
+          }
+          else {
+            // game not over, need to +1
+            req.session.player.boardPercentages[ind] = (res.locals.pickedPlayersData[ind][i].count + 1) / (res.locals.pickedPlayersData[ind][i].totalPicks + 1)
+          }
           break
         }
       }
@@ -755,6 +870,10 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
 })
 
 app.post('/insertGuess', [checkPuzzle, checkPlayer, insertGuessHelper], (req, res) => {
+  res.send(res.locals.guessReturn)
+})
+
+app.post('/concede', [checkPuzzle, checkPlayer, concedeHelper], (req, res) => {
   res.send(res.locals.guessReturn)
 })
 
