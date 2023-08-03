@@ -6,6 +6,7 @@ const csv = require('csv-parser')
 const fs = require('fs')
 const { Octokit } = require("@octokit/rest")
 const Readable = require('stream').Readable
+const { Base64 } = require('js-base64')
 
 app.set('view engine', 'ejs')
 app.use(express.static(`${__dirname}/static`))
@@ -37,7 +38,7 @@ async function readCSV(playerData, playerList) {
       repo: 'csgodoku',
       path: 'playerData.csv',
     })
-    const data = atob(res.data.content)
+    const data = Base64.decode(res.data.content)
 
     const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
     let lastUpdated = undefined
