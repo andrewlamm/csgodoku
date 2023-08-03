@@ -4,6 +4,8 @@ const session = require('cookie-session')
 const bodyParser = require('body-parser')
 const csv = require('csv-parser')
 const fs = require('fs')
+const { Octokit } = require("@octokit/rest")
+const Readable = require('stream').Readable
 
 app.set('view engine', 'ejs')
 app.use(express.static(`${__dirname}/static`))
@@ -27,10 +29,21 @@ const playerList = {}
 
 async function readCSV(playerData, playerList) {
   return new Promise(async function (resolve, reject) {
+    const octokit = new Octokit({
+      auth: process.env.GH_TOKEN,
+    })
+    const res = await octokit.repos.getContent({
+      owner: 'superandybean',
+      repo: 'csgodoku',
+      path: 'playerData.csv',
+    })
+    const data = atob(res.data.content)
+
     const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
     let lastUpdated = undefined
     let topRow = undefined
-    fs.createReadStream('playerData.csv')
+    // fs.createReadStream('playerData.csv')
+    Readable.from(data)
       .pipe(csv())
       .on('headers', (headers) => {
         topRow = headers
