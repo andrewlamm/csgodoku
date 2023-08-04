@@ -79,7 +79,8 @@ def preprocess_data():
   # find partner teams
   for i in range(len(top_30_teams)):
     for j in range(i+1, len(top_30_teams)):
-      if len(team_players[top_30_teams[i]].intersection(team_players[top_30_teams[j]])) > 0:
+      # if len(team_players[top_30_teams[i]].intersection(team_players[top_30_teams[j]])) > 0:
+      if len(team_players[top_30_teams[i]].intersection(team_players[top_30_teams[j]])) >= 3: # ensures 3+ players
         partner_teams[top_30_teams[i]].add(top_30_teams[j])
         partner_teams[top_30_teams[j]].add(top_30_teams[i])
 
@@ -149,6 +150,8 @@ def solve_puzzle(puzzle, curr_board, curr_spot, player_set):
   clue2 = puzzle[clue_pos[1]]
 
   possible_players = generate_player_set(clue1, clue2)
+  if len(possible_players) < 3: # comment out if not 3+ player mode
+    return None
 
   for player in possible_players:
     if player in player_set:
@@ -279,6 +282,6 @@ def generate_puzzles(print_table=True, num_puzzles=10):
 read_data()
 preprocess_data()
 
-# puzzles = generate_puzzles(1)
+puzzles = generate_puzzles(True, 1)
 # print(puzzles[0])
 # print(teams)
