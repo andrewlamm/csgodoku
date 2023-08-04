@@ -292,7 +292,11 @@ async function main() {
           const teamID = parseInt(teamsTable[i].find('td', {'class': 'team-name-cell'}).find('a').attrs.href.split('/')[2])
           playerData[id].teams.add(teamID + '/' + teamName)
 
-          downloadTeamLinks.add(teamID + '/' + teamName)
+          if (!downloadTeamLinks.has(teamID + '/' + teamName)) {
+            await getTeamImage(teamID + '/' + teamName)
+
+            downloadTeamLinks.add(teamID + '/' + teamName)
+          }
         }
 
         if (profilePage.find('div', {'id': 'majorAchievement'}) !== undefined) {
@@ -372,11 +376,6 @@ async function main() {
       if (err) {
         console.error('error writing to file', err)
       }
-    })
-
-    console.log(new Date().toLocaleTimeString() + ' - downloading team logos...')
-    downloadTeamLinks.forEach(async link => {
-      await getTeamImage(link)
     })
   }
   catch (err) {
