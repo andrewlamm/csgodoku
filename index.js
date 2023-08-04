@@ -18,9 +18,10 @@ require('dotenv').config()
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
-  name: 'pog',
+  name: 'csgodoku',
   resave: true,
-  saveUninitialized: true
+  saveUninitialized: true,
+  maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
 }))
 
 const db = require('./db')
@@ -822,6 +823,9 @@ function checkPlayer(req, res, next) {
 }
 
 app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
+  console.log('load')
+  req.session.update = Math.floor(Date.now() / 60000) // update cookie expiry every time user visits site
+
   req.session.player.boardPercentages = [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined]
   for (let ind = 0; ind < 9; ind++) {
     if (req.session.player.board[ind] !== undefined && req.session.player.board[ind] !== null) {

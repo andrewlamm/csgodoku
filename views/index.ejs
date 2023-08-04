@@ -18,11 +18,12 @@
         <div class="w-full my-4">
           <ul class="list-disc list-inside">
             <li>for each cell, pick a player that fits both the row and column criteria. you have <b>9</b> total guesses (rounds)</li>
-            <li>for a team to be counted, the player must have played at least one match with them. so, the brazilian core that left 100T before playing a single match with them would not be accepted</li>
-            <li>unlike other immaculate grids that you may be used to, for a stat to be counted, the player <b>does not</b> have to achieve that on a certain team. typically, the stats are valid for their entire career (unless otherwise noted in the criteria)</li>
+            <li>for a team to be counted, the player must have played at least one match with them. so, the brazilian core that left 100T before playing a single match with them would not be accepted. additionally, coaches are <b>not</b> counted</li>
+            <li>unlike other immaculate grids that you may be used to, for a team & stat grid, the player <b>does not</b> have to achieve the stat on a certain team. typically, the stats are valid for their entire career (unless otherwise noted in the criteria)</li>
             <li>a player can only be picked once, and when it has been picked for a certain spot in the grid, it cannot be changed</li>
             <li>uniqueness scores are calculated by summing up <span class="font-mono">(100 - percentage of games with chosen player)</span> for each 9 spots in the grid. an empty grid slot is worth 0 points. the higher the uniqueness score, the rarer the board is</li>
             <li>new games everyday at 10 PM EST</li>
+            <li>send suggestions/bug reports on reddit at u/superandywaffle</li>
             <li>glhf!</li>
           </ul>
         </div>
@@ -112,7 +113,7 @@
         <div class="w-64 md:w-80">
           <input type="text" placeholder="enter a player" class="w-64 md:w-80 px-2 py-1.5 rounded-lg" oninput="updatePlayerList()" id="player-popup-input">
         </div>
-        <div class="w-64 md:w-80 h-128 overflow-y-auto my-2" id="player-popup-list">
+        <div class="w-64 md:w-80 h-96 md:h-128 overflow-y-auto my-2" id="player-popup-list">
         </div>
         <div class="mt-4 w-64 md:w-80">
           <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closePopup()">
@@ -339,7 +340,7 @@
         <div class="text-center mb-4" id="stats-popup-text">
           players who <span class="font-bold" id="stats-popup-clue-1"></span> and <span class="font-bold" id="stats-popup-clue-2"></span>
         </div>
-        <div class="w-64 md:w-80 h-128 overflow-y-auto my-2" id="stats-popup-list">
+        <div class="w-64 md:w-80 h-96 md:h-128 overflow-y-auto my-2" id="stats-popup-list">
         </div>
         <div class="mt-4 w-64 md:w-80">
           <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeStatsPopup()">
