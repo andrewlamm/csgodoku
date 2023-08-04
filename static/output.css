@@ -641,10 +641,6 @@ video {
   height: 100%;
 }
 
-.h-screen {
-  height: 100vh;
-}
-
 .min-h-screen {
   min-height: 100vh;
 }
@@ -890,10 +886,6 @@ video {
   padding-top: 3rem;
 }
 
-.pt-4 {
-  padding-top: 1rem;
-}
-
 .pt-8 {
   padding-top: 2rem;
 }
@@ -998,6 +990,10 @@ video {
 
 .h-20 {
   height: 5rem;
+}
+
+.dropshadow {
+  filter: drop-shadow(0px 0px 2px #808080);
 }
 
 @media (min-width: 768px) {
@@ -1139,10 +1135,6 @@ video {
 
   .lg\:mb-0 {
     margin-bottom: 0px;
-  }
-
-  .lg\:mt-0 {
-    margin-top: 0px;
   }
 
   .lg\:mt-8 {

@@ -98,7 +98,7 @@ app.locals.displayClue = function(clue) {
   if (clue[0] === 'team') {
     return `
       <div class="flex flex-col relative h-20 w-20 md:h-36 md:w-36 items-center justify-center text-center text-white">
-        <img src="/images/team/${clue[1].substring(0, clue[1].indexOf('/'))}.png" title="${clue[1].substring(clue[1].indexOf('/')+1)}" class="h-12 md:h-20">
+        <img src="/images/team/${clue[1].substring(0, clue[1].indexOf('/'))}.png" title="${clue[1].substring(clue[1].indexOf('/')+1)}" class="h-12 md:h-20 dropshadow">
         <div class="absolute bottom-0 w-full text-center pb-2 text-sm md:text-base">
           ${clue[1].substring(clue[1].indexOf('/')+1)}
         </div>
