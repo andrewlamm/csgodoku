@@ -13,7 +13,7 @@ db = client["csgodoku"]["game"]
 page = db.find_one({ "_id": "puzzleList" })
 db_puzzles = page['puzzles']
 
-puzzle_list = generate_puzzles.generate_puzzles(False, 10)
+puzzle_list = generate_puzzles.generate_puzzles(False, 9)
 
 for puzzle in puzzle_list:
   db_puzzles.append(puzzle)
