@@ -32,6 +32,8 @@ async function downloadImage(url, category, id) {
 
 async function getTeamImage(url) {
   await delay(2000)
+  if (url === '6548/?')
+    url = '6548/-'
 
   const page = await (await fetch(`https://www.hltv.org/team/${url}`)).text()
   const soupPage = new JSSoup(page)
