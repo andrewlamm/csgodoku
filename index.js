@@ -647,38 +647,26 @@ async function insertGuessHelper(req, res, next) {
         const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
 
         await updateGlobalFinalScores(score, uniqueScore)
-        const finalScores = await getFinalScores()
-
-        const numberGames = finalScores[0].reduce((a, b) => a + b, 0)
-        const scoreSum = finalScores[0].reduce((a, b, ind) => a + b * ind, 0)
-
-        const averageUniqueness = await getUniqueness()
 
         req.session.player.gameStatus = req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1
         req.session.player.userScore = [score, uniqueScore]
 
         res.locals.guessReturn = {
+          gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1, // gameStatus; 1 = win, -1 = lose, 0 = in progress
           guessStatus: possiblePlayers[ind].has(guess) ? 1 : 0, // guess status; 1 = in board, 0 = not
           guessesLeft: req.session.player.guessesLeft, // guesses left
           guessPercentage: res.locals.guessPercentage, // percentage of players with this guess
-          gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1, // gameStatus; 1 = win, -1 = lose, 0 = in progress
-          pickedPlayers: pickedPlayersData, // list of picked players and %
-          finalScores: finalScores[0], // global scores today
-          numberGames: numberGames, // number of games today
-          averageScore: (scoreSum / numberGames).toFixed(1), // average score today
           userScore: [score, uniqueScore], // user score [score, uniqueness]
-          averageUniqueness: averageUniqueness, // average global uniqueness
-          userOverallScores: req.session.userStats.finalGridAmount, // users scores over time
         }
         next()
       }
       else {
         // continue game
         res.locals.guessReturn = {
+          gameStatus: 0,
           guessStatus: possiblePlayers[ind].has(guess) ? 1 : 0,
           guessesLeft: req.session.player.guessesLeft,
           guessPercentage: res.locals.guessPercentage,
-          gameStatus: 0,
         }
         next()
       }
@@ -771,28 +759,15 @@ async function concedeHelper(req, res, next) {
       const uniqueScore = calculateUniqueness(req.session.player.board, pickedPlayersData)
 
       await updateGlobalFinalScores(score, uniqueScore)
-      const finalScores = await getFinalScores()
-
-      const numberGames = finalScores[0].reduce((a, b) => a + b, 0)
-      const scoreSum = finalScores[0].reduce((a, b, ind) => a + b * ind, 0)
-
-      const averageUniqueness = await getUniqueness()
 
       req.session.player.gameStatus = req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1
       req.session.player.userScore = [score, uniqueScore]
 
       res.locals.guessReturn = {
-        guessStatus: -1,
-        guessesLeft: req.session.player.guessesLeft,
-        guessPercentage: res.locals.guessPercentage,
-        gameStatus: req.session.player.board.filter(x => x === undefined || x === null).length === 0 ? 1 : -1,
+        gameStatus: -1,
+        guessesLeft: 0,
         pickedPlayers: pickedPlayersData,
-        finalScores: finalScores[0],
-        numberGames: numberGames,
-        averageScore: (scoreSum / numberGames).toFixed(1),
         userScore: [score, uniqueScore],
-        averageUniqueness: averageUniqueness,
-        userOverallScores: req.session.userStats.finalGridAmount,
       }
       next()
     }
@@ -850,10 +825,42 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
   if (req.session.player.gameStatus !== 0) {
     // game ended
     req.session.player.userScore[1] = calculateUniqueness(req.session.player.board, res.locals.pickedPlayersData)
-    const numberGames = res.locals.finalScores[0].reduce((a, b) => a + b, 0)
-    const scoreSum = res.locals.finalScores[0].reduce((a, b, ind) => a + b * ind, 0)
+  }
 
-    res.render('index', {
+  res.render('index', {
+    puzzle: puzzle,
+    players: playerList,
+    currGame: req.session.player,
+    lastUpdated: lastUpdated
+  })
+})
+
+app.get('/stats', [checkPuzzle, initPlayer, getStats], (req, res) => {
+  req.session.update = Math.floor(Date.now() / 60000) // update cookie expiry every time user visits site
+
+  if (req.session.player.gameStatus !== 0) {
+  req.session.player.boardPercentages = [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined]
+    for (let ind = 0; ind < 9; ind++) {
+      if (req.session.player.board[ind] !== undefined && req.session.player.board[ind] !== null) {
+        // ind is filled with a player
+        for (let i = 0; i < res.locals.pickedPlayersData[ind].length; i++) {
+          if (res.locals.pickedPlayersData[ind][i].playerID === req.session.player.board[ind]) {
+            req.session.player.boardPercentages[ind] = res.locals.pickedPlayersData[ind][i].percentage
+            break
+          }
+        }
+      }
+    }
+  }
+
+  const numberGames = res.locals.finalScores[0].reduce((a, b) => a + b, 0)
+  const scoreSum = res.locals.finalScores[0].reduce((a, b, ind) => a + b * ind, 0)
+
+  if (req.session.player.gameStatus !== 0) {
+    // game ended
+    req.session.player.userScore[1] = calculateUniqueness(req.session.player.board, res.locals.pickedPlayersData)
+
+    res.render('stats', {
       puzzle: puzzle,
       players: playerList,
       currGame: req.session.player,
@@ -867,16 +874,16 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
     })
   }
   else {
-    res.render('index', {
+    res.render('stats', {
       puzzle: puzzle,
       players: playerList,
       currGame: req.session.player,
-      finalScores: undefined,
-      averageScore: undefined,
-      numberGames: undefined,
+      finalScores: res.locals.finalScores[0],
+      averageScore: (scoreSum / numberGames).toFixed(1),
+      numberGames: res.locals.finalScores[1],
       pickedPlayers: undefined,
       userOverallScores: req.session.userStats.finalGridAmount,
-      averageUniqueness: undefined,
+      averageUniqueness: res.locals.averageUniqueness,
       lastUpdated: lastUpdated
     })
   }
