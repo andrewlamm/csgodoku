@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+  <%- include('partials/helmet.ejs', {title: 'csgodoku'}) %>
+  <body>
+    <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
+      <div class="text-xl md:text-3xl cursor-pointer">
+        <a href="/" class="w-full h-full">CSGODOKU</a>
+      </div>
+      <div class="flex flex-row">
+        <!-- <div class="flex flex-col">
+          <div class="font-bold" id="next-puzzle-timer"></div>
+          <div class="font-semibold">until next puzzle</div>
+        </div> -->
+        <div class="text-base md:text-xl cursor-pointer">
+          <a href="/" class="w-full h-full">back to game</a>
+        </div>
+      </div>
+    </div>
+    <div class="w-full min-h-screen flex flex-col pt-8 lg:pt-0 lg:flex-row justify-center items-center bg-black text-white" id="postgame-screen">
+      <div class="w-full lg:w-1/2 my-8 lg:my-0 px-2 md:mx-2 flex flex-col justify-center items-center">
+        <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+          <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
+            your board
+          </div>
+          <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="common-board-select" onclick="toggleCommonBoard()">
+            most common picks
+          </div>
+        </div>
+        <div class="flex flex-col <% if (currGame.gameStatus !== 0) { %> justify-center <% } %> items-center w-full mt-4 lg:mt-8" id="right-side-container">
+          <div class="w-full flex flex-col items-center justify-center hidden" id="user-stats-container">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  today's score
+                </div>
+                <div class="font-bold text-2xl" id="user-stats-score">
+                  <%= currGame.userScore[0] %> / 9
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  uniqueness score
+                </div>
+                <div class="font-bold text-2xl" id="user-unique-score">
+                  <%= currGame.userScore[1] %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-full flex flex-col items-center justify-center" id="overall-stats-container">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  today's average
+                </div>
+                <div class="font-bold text-2xl" id="overall-average-score">
+                  <%= averageScore %> / 9
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  average uniqueness
+                </div>
+                <div class="font-bold text-2xl" id="overall-unique-score">
+                  <%= averageUniqueness %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="flex flex-row">
+            <div class="h-36 w-36"></div>
+            <% for (let i = 0; i < 3; i++) { %>
+              <%- displayClue(puzzle[i]) %>
+            <% } %>
+          </div> -->
+          <div class="flex flex-row mt-8">
+            <!-- <div class="flex flex-col">
+              <% for (let i = 3; i < 6; i++) { %>
+                <%- displayClue(puzzle[i]) %>
+              <% } %>
+            </div> -->
+            <% if (currGame.gameStatus !== 0) { %>
+              <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-user-board">
+                <% for (let i = 0; i < 9; i++) { %>
+                  <% if (currGame.board[i]) { %>
+                    <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
+                      <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
+                      <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
+                        <%= players[currGame.board[i]].name %>
+                      </div>
+                      <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white text-sm md:text-base">
+                        <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors">
+                    </div>
+                  <% } %>
+                <% } %>
+              </div>
+              <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="stats-common-board">
+                <% for (let i = 0; i < 9; i++) { %>
+                  <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer hover:bg-gray-700" onclick="openStatsPopup(<%= i %>)">
+                    <img class="w-full h-full" src="/images/player/<%= pickedPlayers[i][0].playerID %>.png">
+                    <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
+                      <%= pickedPlayers[i][0].name %>
+                    </div>
+                    <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white text-sm md:text-base">
+                      <%= formatPercentage(pickedPlayers[i][0].percentage * 100) %>
+                    </div>
+                  </div>
+                <% } %>
+              </div>
+            <% } else { %>
+              <div class="w-full h-full text-2xl hidden" id="stats-user-board">
+                play the game to view these stats!
+              </div>
+              <div class="w-full h-full text-2xl" id="stats-common-board">
+                play the game to view these stats!
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="w-full lg:w-1/2 mb-8 lg:mb-0 px-2 md:mx-2 flex flex-col justify-center items-center">
+        <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+          <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="user-stats-select" onclick="toggleOwnStats()">
+            your stats
+          </div>
+          <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="today-stats-select" onclick="toggleTodayStats()">
+            today's stats
+          </div>
+        </div>
+        <div class="flex flex-col justify-center items-center w-full mt-4 lg:mt-8" id="left-side-container">
+          <div class="w-full flex flex-col items-center justify-center hidden" id="user-overall-container">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  your total games
+                </div>
+                <div class="font-bold text-2xl" id="user-total-games">
+                  <%= userOverallScores.reduce((a, b) => a + b, 0) %>
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  your average score
+                </div>
+                <div class="font-bold text-2xl" id="user-average-score">
+                  <% if (userOverallScores.reduce((a, b) => a + b, 0) === 0) { %>
+                    - / 9
+                  <% } else { %>
+                    <%= (userOverallScores.reduce((a, b, ind) => a + b * ind, 0) / userOverallScores.reduce((a, b) => a + b, 0)).toFixed(1) %> / 9
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-full flex flex-col items-center justify-center" id="average-overall-container">
+            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  total games today
+                </div>
+                <div class="font-bold text-2xl" id="average-total-games">
+                  <%= numberGames %>
+                </div>
+              </div>
+              <div class="w-1/2 flex flex-col items-center justify-center">
+                <div class="font-semibold">
+                  average score today
+                </div>
+                <div class="font-bold text-2xl" id="average-today-average">
+                  <%= averageScore %> / 9
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-full md:w-128 flex flex-col justify-center items-center mt-8">
+            <div class="flex flex-row justify-center h-96">
+              <% for (let i = 0; i < 10; i++) { %>
+                <div class="flex flex-col justify-end h-full items-center w-8 md:w-10">
+                  <div class="text-sm font-medium" id="bar-value-<%= i %>"></div>
+                  <div class="bg-blue-500 rounded-full w-2 transition-all duration-500" style="height: 0%;" id="bar-graph-<%= i %>"></div>
+                </div>
+              <% } %>
+            </div>
+            <div class="w-full mt-2">
+              <div class="border border-whte rounded-xl"></div>
+            </div>
+            <div class="flex flex-row justify-center">
+              <% for (let i = 0; i < 10; i++) { %>
+                <div class="w-8 md:w-10 text-center">
+                  <%= i %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="stats-popup-bg" onclick="closeStatsPopup()">
+      <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl" id="stats-popup" onclick="event.stopPropagation()">
+        <div class="text-center mb-4" id="stats-popup-text">
+          players who <span class="font-bold" id="stats-popup-clue-1"></span> and <span class="font-bold" id="stats-popup-clue-2"></span>
+        </div>
+        <div class="w-64 md:w-80 h-96 md:h-128 overflow-y-auto my-2" id="stats-popup-list">
+        </div>
+        <div class="mt-4 w-64 md:w-80">
+          <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeStatsPopup()">
+            close
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const puzzle = <%- JSON.stringify(puzzle) %>
+      const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
+      let indexSelected = undefined
+      let currListener = undefined
+
+      let popupShowing = false
+      function convertClueToText(clue) {
+        // whats a switch statement omegadance
+        if (clue[0] === 'team') {
+          return `has played for ${clue[1].substring(clue[1].indexOf('/') + 1)}`
+        }
+        else if (clue[0] === 'country') {
+          return `is from ${clue[1]}`
+        }
+        else if (clue[0] === 'age') {
+          return `is older than ${clue[1]} years old`
+        }
+        else if (clue[0] === 'rating2') {
+          return `has a career rating 2.0 of over ${clue[1]}`
+        }
+        else if (clue[0] === 'rating1') {
+          return `has a career rating 1.0 of over ${clue[1]}`
+        }
+        else if (clue[0] === 'KDDiff') {
+          return `has a career K/D difference of over ${clue[1]}`
+        }
+        else if (clue[0] === 'maps') {
+          return `has played over ${clue[1]} maps in their career`
+        }
+        else if (clue[0] === 'rounds') {
+          return `has played over ${clue[1]} rounds in their career`
+        }
+        else if (clue[0] === 'KDRatio') {
+          return `has a career K/D ratio of over ${clue[1]}`
+        }
+        else if (clue[0] === 'HSRatio') {
+          return `has a career headshot percentage of over ${clue[1]}%`
+        }
+        else if (clue[0] === 'ratingTop20') {
+          return `has a rating 2.0 of over ${clue[1]} against top 20 teams in their career`
+        }
+        else if (clue[0] === 'clutchesTotal') {
+          return `has over ${clue[1]} clutches in their career`
+        }
+        else if (clue[0] === 'majorsWon') {
+          return `has won over ${clue[1]} majors in their career`
+        }
+        else if (clue[0] === 'majorsPlayed') {
+          return `has played in over ${clue[1]} majors in their career`
+        }
+        else if (clue[0] === 'LANsWon') {
+          return `has won over ${clue[1]} LANs in their career`
+        }
+        else if (clue[0] === 'LANsPlayed') {
+          return `has played in over ${clue[1]} LANs in their career`
+        }
+        else if (clue[0] === 'top20s') {
+          return `has been in the top 20 players of the year over ${clue[1]} times in their career`
+        }
+        else if (clue[0] === 'top10s') {
+          return `has been in the top 10 players of the year over ${clue[1]} times in their career`
+        }
+        else if (clue[0] === 'ratingYear') {
+          return `had over a rating 1.0 of ${clue[1][1]} in ${clue[1][0]}`
+        }
+        else if (clue[0] === 'topPlacement') {
+          return `has been a top ${clue[1]} player in at least one year`
+        }
+        else {
+          return `has over ${clue[1]} ${clue[0]} in their career`
+        }
+      }
+
+      function formatPercentage(percent) {
+        if (percent < 10) {
+          return `${percent.toFixed(2)}%`
+        }
+        else if (percent < 100) {
+          return `${percent.toFixed(1)}%`
+        }
+        else {
+          return `${percent.toFixed(0)}%`
+        }
+      }
+
+      /* Timer Functions */
+      const TIME_OFFSET = 1690855200
+      const puzzleStartTime = <%= Math.floor(new Date(currGame.start).getTime() / 1000) %> - TIME_OFFSET
+      const puzzleStartDay = Math.floor(puzzleStartTime / 86400)
+      const nextPuzzleStartTime = (puzzleStartDay + 1) * 86400 + TIME_OFFSET
+
+      function setTimer(diff) {
+        const hours = Math.floor(diff / 3600)
+        const minutes = Math.floor((diff % 3600) / 60)
+        const seconds = diff % 60
+
+        const hoursString = hours < 10 ? `0${hours}` : `${hours}`
+        const minutesString = minutes < 10 ? `0${minutes}` : `${minutes}`
+        const secondsString = seconds < 10 ? `0${seconds}` : `${seconds}`
+
+        return `${hoursString}:${minutesString}:${secondsString}`
+      }
+
+      setInterval(function() {
+        const currTime = Math.floor(new Date().getTime() / 1000)
+        const diff = nextPuzzleStartTime - currTime
+        if (diff <= 0) {
+          location.reload()
+        }
+        else {
+          // document.getElementById('next-puzzle-timer').innerHTML = setTimer(diff)
+        }
+      }, 1000)
+
+      const currTime = Math.floor(new Date().getTime() / 1000)
+      const diff = nextPuzzleStartTime - currTime
+      // document.getElementById('next-puzzle-timer').innerHTML = setTimer(diff)
+
+      /* Stats Page Functions */
+      let pickedPlayers = <% if (pickedPlayers === undefined) { %> undefined <% } else { %> <%- JSON.stringify(pickedPlayers) %> <% } %>
+      let globalOverallScores = <% if (finalScores === undefined) { %> [0, 0, 0, 0, 0, 0, 0, 0, 0] <% } else { %> <%- JSON.stringify(finalScores) %> <% } %>
+      let userOverallScores = <% if (userOverallScores === undefined) { %> undefined <% } else { %> <%- JSON.stringify(userOverallScores) %> <% } %>
+      let averageUniqueness = <% if (averageUniqueness === undefined) { %> undefined <% } else { %> <%= averageUniqueness %> <% } %>
+
+      function changeBarGraph(values) {
+        if (values === undefined) {
+          return
+        }
+
+        let sum = 0
+        let max = 0
+        for (let i = 0; i < values.length; i++) {
+          sum += values[i]
+          max = Math.max(max, values[i])
+        }
+
+        if (sum === 0) {
+          for (let i = 0; i < 10; i++) {
+            document.getElementById(`bar-graph-${i}`).style.height = '0%'
+            document.getElementById(`bar-value-${i}`).innerHTML = 0
+          }
+        }
+        else {
+          for (let i = 0; i < 10; i++) {
+            document.getElementById(`bar-graph-${i}`).style.height = `${(values[i] / max) * 100}%`
+            document.getElementById(`bar-value-${i}`).innerHTML = `${values[i]}`
+          }
+        }
+      }
+
+      function toggleOwnBoard() {
+        document.getElementById('stats-user-board').classList.remove('hidden')
+        document.getElementById('stats-common-board').classList.add('hidden')
+        document.getElementById('user-stats-container').classList.remove('hidden')
+        document.getElementById('overall-stats-container').classList.add('hidden')
+
+        document.getElementById('own-board-select').classList.add('bg-gray-500')
+        document.getElementById('own-board-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('common-board-select').classList.remove('bg-gray-500')
+        document.getElementById('common-board-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+      }
+
+      function toggleCommonBoard() {
+        document.getElementById('stats-user-board').classList.add('hidden')
+        document.getElementById('stats-common-board').classList.remove('hidden')
+        document.getElementById('user-stats-container').classList.add('hidden')
+        document.getElementById('overall-stats-container').classList.remove('hidden')
+
+        document.getElementById('own-board-select').classList.remove('bg-gray-500')
+        document.getElementById('own-board-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('common-board-select').classList.add('bg-gray-500')
+        document.getElementById('common-board-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+      }
+
+      function openStatsPopup(ind) {
+        document.getElementById('stats-popup-clue-1').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][0]]).replaceAll(' is ', ' are ').replaceAll(' has ', ' have ')
+        document.getElementById('stats-popup-clue-2').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][1]]).replaceAll(' is ', ' are ').replaceAll(' has ', ' have ')
+
+        document.getElementById('stats-popup-bg').classList.remove('hidden')
+
+        document.getElementById('stats-popup-list').innerHTML = ''
+
+        for (let i = 0; i < pickedPlayers[ind].length; i++) {
+          const player = pickedPlayers[ind][i]
+
+          playerNameElement = document.createElement('div')
+          playerNameElement.innerHTML = player.name
+          playerNameElement.classList.add('font-bold', 'text-lg')
+
+          playerFullNameElement = document.createElement('div')
+          playerFullNameElement.innerHTML = player.fullName
+          playerFullNameElement.classList.add('text-sm')
+
+          playerElement = document.createElement('div')
+          playerElement.classList.add('flex', 'flex-col', 'justify-center', 'flex-grow')
+          playerElement.appendChild(playerNameElement)
+          playerElement.appendChild(playerFullNameElement)
+
+          dataElementPercent = document.createElement('div')
+          dataElementPercent.innerHTML = formatPercentage(player.percentage * 100)
+          dataElementPercent.classList.add('font-bold', 'text-lg')
+
+          dataElementCount = document.createElement('div')
+          dataElementCount.innerHTML = `${player.count} / ${player.totalPicks}`
+          dataElementCount.classList.add('text-sm')
+
+          dataElement = document.createElement('div')
+          dataElement.classList.add('flex', 'flex-col', 'text-right', 'px-2')
+          dataElement.appendChild(dataElementPercent)
+          dataElement.appendChild(dataElementCount)
+
+          playerElementWrapper = document.createElement('div')
+          playerElementWrapper.classList.add('flex', 'flex-row', 'items-center', 'w-full', 'my-4')
+          playerElementWrapper.appendChild(playerElement)
+          playerElementWrapper.appendChild(dataElement)
+
+          document.getElementById('stats-popup-list').appendChild(playerElementWrapper)
+        }
+      }
+
+      function closeStatsPopup() {
+        document.getElementById('stats-popup-bg').classList.add('hidden')
+
+        document.getElementById('stats-popup-list').innerHTML = ''
+      }
+
+      function toggleOwnStats() {
+        document.getElementById('user-overall-container').classList.remove('hidden')
+        document.getElementById('average-overall-container').classList.add('hidden')
+
+        document.getElementById('today-stats-select').classList.remove('bg-gray-500')
+        document.getElementById('today-stats-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('user-stats-select').classList.add('bg-gray-500')
+        document.getElementById('user-stats-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+
+        changeBarGraph(userOverallScores)
+      }
+
+      function toggleTodayStats() {
+        document.getElementById('user-overall-container').classList.add('hidden')
+        document.getElementById('average-overall-container').classList.remove('hidden')
+
+        document.getElementById('today-stats-select').classList.add('bg-gray-500')
+        document.getElementById('today-stats-select').classList.remove('hover:bg-gray-400', 'cursor-pointer')
+        document.getElementById('user-stats-select').classList.remove('bg-gray-500')
+        document.getElementById('user-stats-select').classList.add('hover:bg-gray-400', 'cursor-pointer')
+
+        changeBarGraph(globalOverallScores)
+      }
+
+      /* change heights to match */
+      if (window.innerWidth >= 768) {
+        const leftSideHeight = document.getElementById('left-side-container').offsetHeight
+        const rightSideHeight = document.getElementById('right-side-container').offsetHeight
+        document.getElementById('left-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
+        document.getElementById('right-side-container').style.height = `${Math.max(leftSideHeight, rightSideHeight)}px`
+      }
+
+      changeBarGraph(globalOverallScores)
+    </script>
+  </body>
+</html>
