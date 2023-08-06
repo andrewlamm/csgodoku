@@ -3,7 +3,7 @@
   <%- include('partials/helmet.ejs', {title: 'csgodoku'}) %>
   <body>
     <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
-      <div class="text-xl md:text-3xl">
+      <div class="text-xl md:text-3xl cursor-pointer" onclick="location.reload()">
         CSGODOKU
       </div>
       <div class="text-base md:text-xl cursor-pointer" onclick="openHowToPlay()">
@@ -23,6 +23,7 @@
             <li>a player can only be picked once, and when it has been picked for a certain spot in the grid, it cannot be changed</li>
             <li>uniqueness scores are calculated by summing up <span class="font-mono">(100 - percentage of games with chosen player)</span> for each 9 spots in the grid. an empty grid slot is worth 0 points. the higher the uniqueness score, the rarer the board is</li>
             <li>new games everyday at 10 PM EST</li>
+            <li>player data was last updated on <b><%= lastUpdated%></b></li>
             <li>send suggestions/bug reports on reddit at u/superandywaffle</li>
             <li>glhf!</li>
           </ul>
@@ -831,8 +832,8 @@
       }
 
       function openStatsPopup(ind) {
-        document.getElementById('stats-popup-clue-1').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][0]]).replaceAll('is', 'are').replaceAll('has', 'have')
-        document.getElementById('stats-popup-clue-2').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][1]]).replaceAll('is', 'are').replaceAll('has', 'have')
+        document.getElementById('stats-popup-clue-1').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][0]]).replaceAll(' is ', ' are ').replaceAll(' has ', ' have ')
+        document.getElementById('stats-popup-clue-2').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][1]]).replaceAll(' is ', ' are ').replaceAll(' has ', ' have ')
 
         document.getElementById('stats-popup-bg').classList.remove('hidden')
 
