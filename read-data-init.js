@@ -305,8 +305,6 @@ async function main() {
       }
 
       dataToWrite += `${addString.substring(0, addString.length-1)}\n`
-
-      break
     }
 
     console.log(new Date().toLocaleTimeString() + ' - writing to csv...')
