@@ -101,9 +101,9 @@ async function readCSV(playerData) {
         const rowData = Object.values(row)
         const playerID = parseInt(rowData[1])
 
-        for (let i = 1; i < rowData.length-1; i++) {
+        for (let i = 1; i < rowData.length; i++) {
           if (rowData[i] === 'undefined' || rowData[i] === 'N/A') {
-            playerData[playerID][topRow[i]] = undefined
+            playerData[playerID][topRow[i]] = 'N/A'
           }
           else if (parseType[i] === 'int') {
             playerData[playerID][topRow[i]] = parseInt(rowData[i])
@@ -158,7 +158,7 @@ async function main() {
       country: undefined,
       age: undefined,
       rating2: 'N/A',
-      rating1: undefined,
+      rating1: parseFloat(player.find('td', {'class': 'ratingCol'}).text),
       KDDiff: undefined,
       maps: undefined,
       rounds: undefined,
