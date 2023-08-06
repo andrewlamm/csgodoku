@@ -86,7 +86,7 @@ async function getParsedPage(url, loadAllPlayers=false) {
   })
 }
 
-async function readCSV(playerData) {
+async function readCSV(playerData, idToName) {
   return new Promise(async function (resolve, reject) {
     const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
     let lastUpdated = undefined
@@ -100,6 +100,11 @@ async function readCSV(playerData) {
       .on('data', (row) => {
         const rowData = Object.values(row)
         const playerID = parseInt(rowData[1])
+
+        if (playerData[playerID] === undefined) {
+          playerData[playerID] = {}
+          idToName[playerID] = rowData[0]
+        }
 
         for (let i = 1; i < rowData.length; i++) {
           if (rowData[i] === 'undefined' || rowData[i] === 'N/A') {
@@ -201,14 +206,14 @@ async function main() {
   }
 
   // now read csv file
-  const lastUpdated = await readCSV(playerData)
+  const lastUpdated = await readCSV(playerData, idToName)
 
   let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
 
   try {
     // loading all player data
     for (const [id, name] of Object.entries(idToName)) {
-      if (playerData[id] === undefined || playerCache[id].maps !== playerData[id].maps || playerCache[id].rounds !== playerData[id].rounds || playerCache[id].KDDiff !== playerData[id].KDDiff) {
+      if (playerData[id] === undefined || playerCache[id] === undefined || playerCache[id].maps !== playerData[id].maps || playerCache[id].rounds !== playerData[id].rounds || playerCache[id].KDDiff !== playerData[id].KDDiff) {
         console.log(new Date().toLocaleTimeString() + ' - getting stats for ' + name)
         const statsPage = await getParsedPage('https://www.hltv.org/stats/players/' + id + '/' + name)
 

@@ -135,10 +135,10 @@ async function main() {
     }
   })
 
-  // console.log(new Date().toLocaleTimeString() + ' - downloading country flags...')
-  // for (const [country, url] of Object.entries(downloadedCountryImages)) {
-  //   await downloadImage(url, 'country', country)
-  // }
+  console.log(new Date().toLocaleTimeString() + ' - downloading country flags...')
+  for (const [country, url] of Object.entries(downloadedCountryImages)) {
+    await downloadImage(url, 'country', country)
+  }
 
   let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
 
