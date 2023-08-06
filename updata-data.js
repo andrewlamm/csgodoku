@@ -370,7 +370,7 @@ async function main() {
         }
       }
 
-      dataToWrite += `${addString}\n`
+      dataToWrite += `${addString.substring(0, addString.length-1)}\n`
     }
 
     console.log(new Date().toLocaleTimeString() + ' - writing to csv...')
