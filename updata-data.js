@@ -103,6 +103,7 @@ async function readCSV(playerData, idToName) {
 
         if (playerData[playerID] === undefined) {
           playerData[playerID] = {}
+          playerData[playerID].name = rowData[0]
           idToName[playerID] = rowData[0]
         }
 

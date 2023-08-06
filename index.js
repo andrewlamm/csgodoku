@@ -205,6 +205,7 @@ app.locals.formatPercentage = function(percent) {
 let puzzle = undefined
 let puzzleDate = undefined
 let possiblePlayers = undefined
+let lastUpdated = undefined
 
 const TIME_OFFSET = 1690855200 // Jul 31, 10 PM EST
 const SECONDS_PER_DAY = 86400
@@ -862,6 +863,7 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
       pickedPlayers: res.locals.pickedPlayersData,
       userOverallScores: req.session.userStats.finalGridAmount,
       averageUniqueness: res.locals.averageUniqueness,
+      lastUpdated: lastUpdated
     })
   }
   else {
@@ -874,7 +876,8 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
       numberGames: undefined,
       pickedPlayers: undefined,
       userOverallScores: req.session.userStats.finalGridAmount,
-      averageUniqueness: undefined
+      averageUniqueness: undefined,
+      lastUpdated: lastUpdated
     })
   }
 })
@@ -889,7 +892,7 @@ app.post('/concede', [checkPuzzle, checkPlayer, concedeHelper], (req, res) => {
 
 async function start() {
   console.log('reading csv...')
-  const lastUpdated = await readCSV(playerData, playerList)
+  lastUpdated = await readCSV(playerData, playerList)
   console.log(`Last updated: ${lastUpdated}`)
   app.listen(process.env.PORT || 4000, () => console.log("Server is running..."))
 }
