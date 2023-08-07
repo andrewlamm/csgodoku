@@ -54,7 +54,7 @@
                   today's average
                 </div>
                 <div class="font-bold text-2xl" id="overall-average-score">
-                  <%= averageScore %> / 9
+                  <% if (numberGames > 0) { %> <%= averageScore %> <% } else { %> - <% } %>/ 9
                 </div>
               </div>
               <div class="w-1/2 flex flex-col items-center justify-center">
@@ -62,7 +62,7 @@
                   average uniqueness
                 </div>
                 <div class="font-bold text-2xl" id="overall-unique-score">
-                  <%= averageUniqueness %>
+                  <% if (numberGames > 0) { %> <%= averageUniqueness %> <% } else { %> - <% } %>
                 </div>
               </div>
             </div>
@@ -171,7 +171,7 @@
                   average score today
                 </div>
                 <div class="font-bold text-2xl" id="average-today-average">
-                  <%= averageScore %> / 9
+                  <% if (numberGames > 0) { %> <%= averageScore %> <% } else { %> - <% } %>/ 9
                 </div>
               </div>
             </div>
