@@ -14,6 +14,15 @@
   text-align: center;
 }
 
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.h-4 {
+  height: 1rem;
+}
+
 .h-12 {
   height: 3rem;
 }
@@ -27,6 +36,9 @@
 }
 
 @media (min-width: 768px) {
+  .md\:h-12 {
+    height: 3rem;
+  }
   .md\:h-20 {
     height: 5rem;
   }

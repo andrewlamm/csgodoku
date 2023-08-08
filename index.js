@@ -108,9 +108,9 @@ app.locals.displayClue = function(clue) {
   }
   else if (clue[0] === 'country') {
     return `
-      <div class="flex flex-colrelative h-20 w-20 md:h-36 md:w-36 items-center justify-center text-center text-white">
-        <img src="/images/country/${clue[0]}.png" title="${clue[0]}" class="h-12 md:h-20">
-        <div class="absolute bottom-0 w-full text-center pb-2 text-sm md:text-base">
+      <div class="flex flex-col relative h-20 w-20 md:h-36 md:w-36 items-center justify-center text-center text-white">
+        <img src="/images/country/${clue[1]}.png" title="${clue[1]}" class="h-4 md:h-12">
+        <div class="absolute bottom-0 w-full text-center pb-2 text-xs md:text-base">
           ${clue[1]} nationality
         </div>
       </div>
