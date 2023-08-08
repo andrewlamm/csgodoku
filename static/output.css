@@ -809,6 +809,11 @@ video {
   background-color: rgb(107 114 128 / var(--tw-bg-opacity));
 }
 
+.bg-gray-900 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(17 24 39 / var(--tw-bg-opacity));
+}
+
 .bg-green-400 {
   --tw-bg-opacity: 1;
   background-color: rgb(74 222 128 / var(--tw-bg-opacity));
@@ -999,6 +1004,10 @@ video {
 
 .dropshadow {
   filter: drop-shadow(0px 0px 2px #808080);
+}
+
+.bg-gray-850 {
+  background-color: rgb(24, 32, 47);
 }
 
 @media (min-width: 768px) {
