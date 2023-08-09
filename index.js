@@ -57,7 +57,7 @@ async function readCSV(playerData, playerList) {
         playerData[playerID] = {}
         playerData[playerID]['name'] = rowData[0]
 
-        for (let i = 1; i < rowData.length-1; i++) {
+        for (let i = 1; i < rowData.length; i++) {
           if (rowData[i] === 'undefined' || rowData[i] === 'N/A') {
             playerData[playerID][topRow[i]] = undefined
           }
@@ -238,7 +238,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else if (clue1Type === 'topPlacement') {
-    if (playerData[playerID]['topPlacement'] <= parseInt(clue1Val[1])) {
+    if (playerData[playerID]['topPlacement'] <= parseInt(clue1Val)) {
       clue1Check = true
     }
   }
@@ -264,7 +264,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else if (clue2Type === 'topPlacement') {
-    if (playerData[playerID]['topPlacement'] <= parseInt(clue2Val[1])) {
+    if (playerData[playerID]['topPlacement'] <= parseInt(clue2Val)) {
       clue2Check = true
     }
   }
