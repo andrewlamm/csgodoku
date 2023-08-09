@@ -238,7 +238,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else if (clue1Type === 'topPlacement') {
-    if (playerData[playerID]['topPlacement'][clue1Val[0]] <= parseInt(clue1Val[1])) {
+    if (playerData[playerID]['topPlacement'] <= parseInt(clue1Val[1])) {
       clue1Check = true
     }
   }
@@ -264,7 +264,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else if (clue2Type === 'topPlacement') {
-    if (playerData[playerID]['topPlacement'][clue2Val[0]] <= parseInt(clue2Val[1])) {
+    if (playerData[playerID]['topPlacement'] <= parseInt(clue2Val[1])) {
       clue2Check = true
     }
   }
