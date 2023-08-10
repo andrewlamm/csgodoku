@@ -2,7 +2,7 @@
 <html>
   <%- include('partials/helmet.ejs', {title: 'csgodoku'}) %>
   <body>
-    <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
+    <div class="w-full absolute bg-gray-850 top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
       <div class="text-xl md:text-3xl cursor-pointer">
         <a href="/" class="w-full h-full">CSGODOKU</a>
       </div>
@@ -199,8 +199,8 @@
         </div>
       </div>
     </div>
-    <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="stats-popup-bg" onclick="closeStatsPopup()">
-      <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl" id="stats-popup" onclick="event.stopPropagation()">
+    <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full h-screen py-4 hidden" id="stats-popup-bg" onclick="closeStatsPopup()">
+      <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl max-h-full" id="stats-popup" onclick="event.stopPropagation()">
         <div class="text-center mb-4" id="stats-popup-text">
           players who <span class="font-bold" id="stats-popup-clue-1"></span> and <span class="font-bold" id="stats-popup-clue-2"></span>
         </div>

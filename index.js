@@ -906,3 +906,4 @@ async function start() {
 start()
 
 // npx tailwindcss -i .\static\styles.css -o ./static/output.css --watch
+// npx tailwindcss -i static/styles.css -o static/output.css --watch
