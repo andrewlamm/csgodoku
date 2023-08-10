@@ -144,6 +144,11 @@
             </div>
           <% } %>
         </div>
+        <div class="w-full flex justify-center mb-2">
+          <div class="rounded-lg bg-blue-400 px-4 text-center py-1 font-bold cursor-pointer" id="copy-score-button" onclick="copyScore()">
+            copy score
+          </div>
+        </div>
         <div class="w-full flex flex-col items-center justify-center">
           <div class="font-bold text-2xl" id="next-puzzle-timer"></div>
           <div class="font-semibold">until next puzzle</div>
@@ -169,6 +174,8 @@
       const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
       let indexSelected = undefined
       let currListener = undefined
+
+      let copyString = ""
 
       let popupShowing = false
       function convertClueToText(clue) {
@@ -304,6 +311,40 @@
       }
       function closeRecapPopup() {
         document.getElementById('recap-popup-bg').classList.add('hidden')
+      }
+
+      async function copyScore() {
+        if (copyString === "") {
+          // set copy string
+          const score = document.getElementById('score-text').innerHTML.charAt(0)
+
+          copyString += `CSGODOKU Puzzle ${puzzleStartDay} - ${score}/9\n\n`
+          copyString += `${document.getElementById('uniqueness-text').innerHTML} Uniqueness Score`
+
+          for (let i = 0; i < 9; i++) {
+            if (i % 3 === 0) {
+              copyString += '\n'
+            }
+
+            copyString += `${document.getElementById(`recap-grid-${i}`).classList.contains('bg-green-500') ? '🟩' : '⬜'}`
+          }
+
+          copyString += '\n\n'
+          copyString += `https://csgodoku.onrender.com`
+        }
+
+        await navigator.clipboard.writeText(copyString)
+
+        // change button text, add a listener to change it back
+        document.getElementById('copy-score-button').innerHTML = 'copied!'
+        document.getElementById('copy-score-button').onclick = undefined
+        document.getElementById('copy-score-button').classList.remove('cursor-pointer')
+
+        setTimeout(() => {
+          document.getElementById('copy-score-button').innerHTML = 'copy score'
+          document.getElementById('copy-score-button').onclick = copyScore
+          document.getElementById('copy-score-button').classList.add('cursor-pointer')
+        }, 2000)
       }
 
       function gameOverSequence(res) {
