@@ -311,7 +311,6 @@ function calculateUniqueness(board, possiblePlayers) {
 
 /* Middleware */
 async function checkPuzzle(req, res, next) {
-  // TODO: if past a time then update yada
   if (puzzle === undefined) {
     // need to load puzzle
     const currTime = Math.floor(new Date().getTime() / 1000) - TIME_OFFSET
@@ -330,6 +329,13 @@ async function checkPuzzle(req, res, next) {
     }
     else {
       // need to reset stats as well
+      const initPickedPlayers = [{}, {}, {}, {}, {}, {}, {}, {}, {}]
+      for (let i = 0; i < 9; i++) {
+        possiblePlayers[i].forEach(playerID => {
+          initPickedPlayers[i][playerID] = 0
+        })
+      }
+
       const query = { _id: 'currentPuzzleStats' }
 
       const update = { $set: {
@@ -337,7 +343,7 @@ async function checkPuzzle(req, res, next) {
         numberGames: 0,
         scores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         totalUniqueness: 0,
-        pickedPlayers: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+        pickedPlayers: initPickedPlayers,
       } }
 
       const updateRes = await db.updateOne(query, update)
@@ -357,6 +363,16 @@ async function checkPuzzle(req, res, next) {
       const puzzleList = puzzleResult.puzzles
       puzzle = puzzleList[puzzleDate]
 
+      /* get possible players */
+      findAllPossiblePlayers(puzzle)
+
+      const initPickedPlayers = [{}, {}, {}, {}, {}, {}, {}, {}, {}]
+      for (let i = 0; i < 9; i++) {
+        possiblePlayers[i].forEach(playerID => {
+          initPickedPlayers[i][playerID] = 0
+        })
+      }
+
       /* reset stats */
       const query = { _id: 'currentPuzzleStats' }
 
@@ -365,13 +381,10 @@ async function checkPuzzle(req, res, next) {
         numberGames: 0,
         scores: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         totalUniqueness: 0,
-        pickedPlayers: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+        pickedPlayers: initPickedPlayers,
       } }
 
       const updateRes = await db.updateOne(query, update)
-
-      /* get possible players */
-      findAllPossiblePlayers(puzzle)
 
       next()
     }
@@ -621,23 +634,16 @@ async function insertGuessHelper(req, res, next) {
         const query = { _id: 'currentPuzzleStats' }
         const result = await db.findOne(query)
 
+        const update = { $inc: { } }
+
         for (let i = 0; i < 9; i++) {
           if (req.session.player.board[i] !== undefined && req.session.player.board[i] !== null) {
             const player = req.session.player.board[i]
-            if (result.pickedPlayers[i][player] === undefined) {
-              const update = { $set: { } }
-              update.$set[`pickedPlayers.${i}.${player}`] = 1
-
-              const resultDoc = await db.updateOne(query, update)
-            }
-            else {
-              const update = { $inc: { } }
-              update.$inc[`pickedPlayers.${i}.${player}`] = 1
-
-              const resultDoc = await db.updateOne(query, update)
-            }
+            update.$inc[`pickedPlayers.${i}.${player}`] = 1
           }
         }
+
+        const resultDoc = await db.updateOne(query, update)
 
         const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
@@ -733,23 +739,16 @@ async function concedeHelper(req, res, next) {
       const query = { _id: 'currentPuzzleStats' }
       const result = await db.findOne(query)
 
+      const update = { $inc: { } }
+
       for (let i = 0; i < 9; i++) {
         if (req.session.player.board[i] !== undefined && req.session.player.board[i] !== null) {
           const player = req.session.player.board[i]
-          if (result.pickedPlayers[i][player] === undefined) {
-            const update = { $set: { } }
-            update.$set[`pickedPlayers.${i}.${player}`] = 1
-
-            const resultDoc = await db.updateOne(query, update)
-          }
-          else {
-            const update = { $inc: { } }
-            update.$inc[`pickedPlayers.${i}.${player}`] = 1
-
-            const resultDoc = await db.updateOne(query, update)
-          }
+          update.$inc[`pickedPlayers.${i}.${player}`] = 1
         }
       }
+
+      const resultDoc = await db.updateOne(query, update)
 
       const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
