@@ -2,213 +2,215 @@
 <html>
   <%- include('partials/helmet.ejs', {title: 'csgodoku'}) %>
   <body>
-    <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
-      <div class="text-xl md:text-3xl cursor-pointer">
-        <a href="/" class="w-full h-full">CSGODOKU</a>
-      </div>
-      <div class="flex flex-row">
-        <!-- <div class="flex flex-col">
-          <div class="font-bold" id="next-puzzle-timer"></div>
-          <div class="font-semibold">until next puzzle</div>
-        </div> -->
-        <div class="text-base md:text-xl cursor-pointer">
-          <a href="/" class="w-full h-full">back to game</a>
+    <div class="absolute inset-0">
+      <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
+        <div class="text-xl md:text-3xl cursor-pointer">
+          <a href="/" class="w-full h-full">CSGODOKU</a>
         </div>
-      </div>
-    </div>
-    <div class="w-full min-h-screen flex flex-col pt-8 lg:pt-0 lg:flex-row justify-center items-center bg-gray-850 text-white" id="postgame-screen">
-      <div class="w-full lg:w-1/2 my-8 lg:my-0 px-2 md:mx-2 flex flex-col justify-center items-center">
-        <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
-          <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
-            your board
-          </div>
-          <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="common-board-select" onclick="toggleCommonBoard()">
-            most common picks
-          </div>
-        </div>
-        <div class="flex flex-col <% if (currGame.gameStatus !== 0) { %> justify-center <% } %> items-center w-full mt-4 lg:mt-8" id="right-side-container">
-          <div class="w-full flex flex-col items-center justify-center hidden" id="user-stats-container">
-            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  today's score
-                </div>
-                <div class="font-bold text-2xl" id="user-stats-score">
-                  <%= currGame.userScore[0] %> / 9
-                </div>
-              </div>
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  uniqueness score
-                </div>
-                <div class="font-bold text-2xl" id="user-unique-score">
-                  <%= currGame.userScore[1] %>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="w-full flex flex-col items-center justify-center" id="overall-stats-container">
-            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  today's average
-                </div>
-                <div class="font-bold text-2xl" id="overall-average-score">
-                  <% if (numberGames > 0) { %> <%= averageScore %> <% } else { %> - <% } %>/ 9
-                </div>
-              </div>
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  average uniqueness
-                </div>
-                <div class="font-bold text-2xl" id="overall-unique-score">
-                  <% if (numberGames > 0) { %> <%= averageUniqueness %> <% } else { %> - <% } %>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- <div class="flex flex-row">
-            <div class="h-36 w-36"></div>
-            <% for (let i = 0; i < 3; i++) { %>
-              <%- displayClue(puzzle[i]) %>
-            <% } %>
+        <div class="flex flex-row">
+          <!-- <div class="flex flex-col">
+            <div class="font-bold" id="next-puzzle-timer"></div>
+            <div class="font-semibold">until next puzzle</div>
           </div> -->
-          <div class="flex flex-row mt-8">
-            <!-- <div class="flex flex-col">
-              <% for (let i = 3; i < 6; i++) { %>
+          <div class="text-base md:text-xl cursor-pointer">
+            <a href="/" class="w-full h-full">back to game</a>
+          </div>
+        </div>
+      </div>
+      <div class="w-full min-h-screen flex flex-col pt-8 lg:pt-0 lg:flex-row justify-center items-center bg-gray-850 text-white" id="postgame-screen">
+        <div class="w-full lg:w-1/2 my-8 lg:my-0 px-2 md:mx-2 flex flex-col justify-center items-center">
+          <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+            <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
+              your board
+            </div>
+            <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="common-board-select" onclick="toggleCommonBoard()">
+              most common picks
+            </div>
+          </div>
+          <div class="flex flex-col <% if (currGame.gameStatus !== 0) { %> justify-center <% } %> items-center w-full mt-4 lg:mt-8" id="right-side-container">
+            <div class="w-full flex flex-col items-center justify-center hidden" id="user-stats-container">
+              <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    today's score
+                  </div>
+                  <div class="font-bold text-2xl" id="user-stats-score">
+                    <%= currGame.userScore[0] %> / 9
+                  </div>
+                </div>
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    uniqueness score
+                  </div>
+                  <div class="font-bold text-2xl" id="user-unique-score">
+                    <%= currGame.userScore[1] %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="w-full flex flex-col items-center justify-center" id="overall-stats-container">
+              <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    today's average
+                  </div>
+                  <div class="font-bold text-2xl" id="overall-average-score">
+                    <% if (numberGames > 0) { %> <%= averageScore %> <% } else { %> - <% } %>/ 9
+                  </div>
+                </div>
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    average uniqueness
+                  </div>
+                  <div class="font-bold text-2xl" id="overall-unique-score">
+                    <% if (numberGames > 0) { %> <%= averageUniqueness %> <% } else { %> - <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- <div class="flex flex-row">
+              <div class="h-36 w-36"></div>
+              <% for (let i = 0; i < 3; i++) { %>
                 <%- displayClue(puzzle[i]) %>
               <% } %>
             </div> -->
-            <% if (currGame.gameStatus !== 0) { %>
-              <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-user-board">
-                <% for (let i = 0; i < 9; i++) { %>
-                  <% if (currGame.board[i]) { %>
-                    <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
-                      <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
+            <div class="flex flex-row mt-8">
+              <!-- <div class="flex flex-col">
+                <% for (let i = 3; i < 6; i++) { %>
+                  <%- displayClue(puzzle[i]) %>
+                <% } %>
+              </div> -->
+              <% if (currGame.gameStatus !== 0) { %>
+                <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-user-board">
+                  <% for (let i = 0; i < 9; i++) { %>
+                    <% if (currGame.board[i]) { %>
+                      <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
+                        <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
+                        <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
+                          <%= players[currGame.board[i]].name %>
+                        </div>
+                        <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white text-sm md:text-base">
+                          <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
+                        </div>
+                      </div>
+                    <% } else { %>
+                      <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors">
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+                <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="stats-common-board">
+                  <% for (let i = 0; i < 9; i++) { %>
+                    <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer hover:bg-gray-700" onclick="openStatsPopup(<%= i %>)">
+                      <img class="w-full h-full" src="/images/player/<%= pickedPlayers[i][0].playerID %>.png">
                       <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
-                        <%= players[currGame.board[i]].name %>
+                        <%= pickedPlayers[i][0].name %>
                       </div>
                       <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white text-sm md:text-base">
-                        <%= formatPercentage(currGame.boardPercentages[i] * 100) %>
+                        <%= formatPercentage(pickedPlayers[i][0].percentage * 100) %>
                       </div>
                     </div>
-                  <% } else { %>
-                    <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors">
-                    </div>
                   <% } %>
-                <% } %>
+                </div>
+              <% } else { %>
+                <div class="w-full h-full text-2xl hidden" id="stats-user-board">
+                  play the game to view these stats!
+                </div>
+                <div class="w-full h-full text-2xl" id="stats-common-board">
+                  play the game to view these stats!
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        <div class="w-full lg:w-1/2 mb-8 lg:mb-0 px-2 md:mx-2 flex flex-col justify-center items-center">
+          <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
+            <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="user-stats-select" onclick="toggleOwnStats()">
+              your stats
+            </div>
+            <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="today-stats-select" onclick="toggleTodayStats()">
+              today's stats
+            </div>
+          </div>
+          <div class="flex flex-col justify-center items-center w-full mt-4 lg:mt-8" id="left-side-container">
+            <div class="w-full flex flex-col items-center justify-center hidden" id="user-overall-container">
+              <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    your total games
+                  </div>
+                  <div class="font-bold text-2xl" id="user-total-games">
+                    <%= userOverallScores.reduce((a, b) => a + b, 0) %>
+                  </div>
+                </div>
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    your average score
+                  </div>
+                  <div class="font-bold text-2xl" id="user-average-score">
+                    <% if (userOverallScores.reduce((a, b) => a + b, 0) === 0) { %>
+                      - / 9
+                    <% } else { %>
+                      <%= (userOverallScores.reduce((a, b, ind) => a + b * ind, 0) / userOverallScores.reduce((a, b) => a + b, 0)).toFixed(1) %> / 9
+                    <% } %>
+                  </div>
+                </div>
               </div>
-              <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="stats-common-board">
-                <% for (let i = 0; i < 9; i++) { %>
-                  <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer hover:bg-gray-700" onclick="openStatsPopup(<%= i %>)">
-                    <img class="w-full h-full" src="/images/player/<%= pickedPlayers[i][0].playerID %>.png">
-                    <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
-                      <%= pickedPlayers[i][0].name %>
-                    </div>
-                    <div class="absolute top-0 right-0 px-1 md:px-2 bg-black font-bold text-white text-sm md:text-base">
-                      <%= formatPercentage(pickedPlayers[i][0].percentage * 100) %>
-                    </div>
+            </div>
+            <div class="w-full flex flex-col items-center justify-center" id="average-overall-container">
+              <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    total games today
+                  </div>
+                  <div class="font-bold text-2xl" id="average-total-games">
+                    <%= numberGames %>
+                  </div>
+                </div>
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                  <div class="font-semibold">
+                    average score today
+                  </div>
+                  <div class="font-bold text-2xl" id="average-today-average">
+                    <% if (numberGames > 0) { %> <%= averageScore %> <% } else { %> - <% } %>/ 9
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="w-full md:w-128 flex flex-col justify-center items-center mt-8">
+              <div class="flex flex-row justify-center h-96">
+                <% for (let i = 0; i < 10; i++) { %>
+                  <div class="flex flex-col justify-end h-full items-center w-8 md:w-10">
+                    <div class="text-sm font-medium" id="bar-value-<%= i %>"></div>
+                    <div class="bg-blue-500 rounded-full w-2 transition-all duration-500" style="height: 0%;" id="bar-graph-<%= i %>"></div>
                   </div>
                 <% } %>
               </div>
-            <% } else { %>
-              <div class="w-full h-full text-2xl hidden" id="stats-user-board">
-                play the game to view these stats!
+              <div class="w-full mt-2">
+                <div class="border border-whte rounded-xl"></div>
               </div>
-              <div class="w-full h-full text-2xl" id="stats-common-board">
-                play the game to view these stats!
+              <div class="flex flex-row justify-center">
+                <% for (let i = 0; i < 10; i++) { %>
+                  <div class="w-8 md:w-10 text-center">
+                    <%= i %>
+                  </div>
+                <% } %>
               </div>
-            <% } %>
-          </div>
-        </div>
-      </div>
-      <div class="w-full lg:w-1/2 mb-8 lg:mb-0 px-2 md:mx-2 flex flex-col justify-center items-center">
-        <div class="w-full md:w-1/2 lg:w-full xl:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold">
-          <div class="w-1/2 text-center border-r border-slate-500 py-2 cursor-pointer transition-colors hover:bg-gray-400 duration-500" id="user-stats-select" onclick="toggleOwnStats()">
-            your stats
-          </div>
-          <div class="w-1/2 text-center py-2 transition-colors duration-500 bg-gray-500" id="today-stats-select" onclick="toggleTodayStats()">
-            today's stats
-          </div>
-        </div>
-        <div class="flex flex-col justify-center items-center w-full mt-4 lg:mt-8" id="left-side-container">
-          <div class="w-full flex flex-col items-center justify-center hidden" id="user-overall-container">
-            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  your total games
-                </div>
-                <div class="font-bold text-2xl" id="user-total-games">
-                  <%= userOverallScores.reduce((a, b) => a + b, 0) %>
-                </div>
-              </div>
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  your average score
-                </div>
-                <div class="font-bold text-2xl" id="user-average-score">
-                  <% if (userOverallScores.reduce((a, b) => a + b, 0) === 0) { %>
-                    - / 9
-                  <% } else { %>
-                    <%= (userOverallScores.reduce((a, b, ind) => a + b * ind, 0) / userOverallScores.reduce((a, b) => a + b, 0)).toFixed(1) %> / 9
-                  <% } %>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="w-full flex flex-col items-center justify-center" id="average-overall-container">
-            <div class="w-full xl:w-1/2 flex flex-row items-center justify-center">
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  total games today
-                </div>
-                <div class="font-bold text-2xl" id="average-total-games">
-                  <%= numberGames %>
-                </div>
-              </div>
-              <div class="w-1/2 flex flex-col items-center justify-center">
-                <div class="font-semibold">
-                  average score today
-                </div>
-                <div class="font-bold text-2xl" id="average-today-average">
-                  <% if (numberGames > 0) { %> <%= averageScore %> <% } else { %> - <% } %>/ 9
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="w-full md:w-128 flex flex-col justify-center items-center mt-8">
-            <div class="flex flex-row justify-center h-96">
-              <% for (let i = 0; i < 10; i++) { %>
-                <div class="flex flex-col justify-end h-full items-center w-8 md:w-10">
-                  <div class="text-sm font-medium" id="bar-value-<%= i %>"></div>
-                  <div class="bg-blue-500 rounded-full w-2 transition-all duration-500" style="height: 0%;" id="bar-graph-<%= i %>"></div>
-                </div>
-              <% } %>
-            </div>
-            <div class="w-full mt-2">
-              <div class="border border-whte rounded-xl"></div>
-            </div>
-            <div class="flex flex-row justify-center">
-              <% for (let i = 0; i < 10; i++) { %>
-                <div class="w-8 md:w-10 text-center">
-                  <%= i %>
-                </div>
-              <% } %>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="stats-popup-bg" onclick="closeStatsPopup()">
-      <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl" id="stats-popup" onclick="event.stopPropagation()">
-        <div class="text-center mb-4" id="stats-popup-text">
-          players who <span class="font-bold" id="stats-popup-clue-1"></span> and <span class="font-bold" id="stats-popup-clue-2"></span>
-        </div>
-        <div class="w-64 md:w-80 h-96 md:h-128 overflow-y-auto my-2" id="stats-popup-list">
-        </div>
-        <div class="mt-4 w-64 md:w-80">
-          <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeStatsPopup()">
-            close
+      <div class="flex flex-col justify-center items-center absolute z-0 top-0 w-full min-h-screen hidden" id="stats-popup-bg" onclick="closeStatsPopup()">
+        <div class="flex flex-col items-center justify-center p-4 w-80 md:w-96 z-10 bg-gray-400 rounded-xl" id="stats-popup" onclick="event.stopPropagation()">
+          <div class="text-center mb-4" id="stats-popup-text">
+            players who <span class="font-bold" id="stats-popup-clue-1"></span> and <span class="font-bold" id="stats-popup-clue-2"></span>
+          </div>
+          <div class="w-64 md:w-80 h-96 md:h-128 overflow-y-auto my-2" id="stats-popup-list">
+          </div>
+          <div class="mt-4 w-64 md:w-80">
+            <div class="rounded-lg bg-blue-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeStatsPopup()">
+              close
+            </div>
           </div>
         </div>
       </div>
