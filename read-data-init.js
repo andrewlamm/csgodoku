@@ -224,20 +224,37 @@ async function main() {
       }
       playerData[id].clutchesTotal = clutchesWon
 
-      const profilePage = await getParsedPage('https://www.hltv.org/player/' + id + '/' + name)
-      const teamsTable = profilePage.find('table', {'class': 'team-breakdown'}).find('tbody').findAll('tr', {'class': 'team'})
+      const matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name)
+      const matchesTable = matchesPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
 
-      for (let i = 0; i < teamsTable.length; i++) {
-        const teamName = teamsTable[i].find('td', {'class': 'team-name-cell'}).text
-        const teamID = parseInt(teamsTable[i].find('td', {'class': 'team-name-cell'}).find('a').attrs.href.split('/')[2])
+      matchesTable.map((match) => {
+        const teamURL = match.findAll('td')[1].find('a').attrs.href
+        const teamID = parseInt(teamURL.split('/')[3])
+        const teamName = teamURL.split('/')[4]
+
         playerData[id].teams.add(teamID + '/' + teamName)
 
         if (!downloadTeamLinks.has(teamID + '/' + teamName)) {
-          await getTeamImage(teamID + '/' + teamName)
+          getTeamImage(teamID + '/' + teamName)
 
           downloadTeamLinks.add(teamID + '/' + teamName)
         }
-      }
+      })
+
+      const profilePage = await getParsedPage('https://www.hltv.org/player/' + id + '/' + name)
+      // const teamsTable = profilePage.find('table', {'class': 'team-breakdown'}).find('tbody').findAll('tr', {'class': 'team'})
+
+      // for (let i = 0; i < teamsTable.length; i++) {
+      //   const teamName = teamsTable[i].find('td', {'class': 'team-name-cell'}).text
+      //   const teamID = parseInt(teamsTable[i].find('td', {'class': 'team-name-cell'}).find('a').attrs.href.split('/')[2])
+      //   playerData[id].teams.add(teamID + '/' + teamName)
+
+      //   if (!downloadTeamLinks.has(teamID + '/' + teamName)) {
+      //     await getTeamImage(teamID + '/' + teamName)
+
+      //     downloadTeamLinks.add(teamID + '/' + teamName)
+      //   }
+      // }
 
       if (profilePage.find('div', {'id': 'majorAchievement'}) !== undefined) {
         const majorAchievements = profilePage.find('div', {'id': 'majorAchievement'}).findAll('div', {'class': 'highlighted-stat'})
