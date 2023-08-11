@@ -50,7 +50,14 @@ for team in all_teams:
 
   if team == '6548/?':
     team = '6548/-'
+
   team_page = get_parsed_page('https://www.hltv.org/team/' + team)
+
+  if team_page.find('div', {'class': 'team-chart-container'}) is None:
+    # whoops broken link, just skip :)
+    print('skipping team')
+    continue
+
   if len(team_page.find('div', {'class': 'team-chart-container'}).find_all('span', {'class': 'value'})) > 1:
     rank = int(team_page.find('div', {'class': 'team-chart-container'}).find_all('span', {'class': 'value'})[1].text[1:])
 

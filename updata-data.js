@@ -294,19 +294,20 @@ async function main() {
         const matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name)
         const matchesTable = matchesPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
 
-        matchesTable.map((match) => {
-          const teamURL = match.findAll('td')[1].find('a').attrs.href
+        for (let i = 0; i < matchesTable.length; i++) {
+          const teamURL = matchesTable[i].findAll('td')[1].find('a').attrs.href
           const teamID = parseInt(teamURL.split('/')[3])
-          const teamName = teamURL.split('/')[4]
+          const teamURLName = teamURL.split('/')[4]
+          const teamName = matchesTable[i].findAll('td')[1].find('a').text.replaceAll('&amp;', '&')
 
           playerData[id].teams.add(teamID + '/' + teamName)
 
           if (!downloadTeamLinks.has(teamID + '/' + teamName)) {
-            getTeamImage(teamID + '/' + teamName)
+            await getTeamImage(teamID + '/' + teamURLName)
 
             downloadTeamLinks.add(teamID + '/' + teamName)
           }
-        })
+        }
 
         const profilePage = await getParsedPage('https://www.hltv.org/player/' + id + '/' + name)
         // const teamsTable = profilePage.find('table', {'class': 'team-breakdown'}).find('tbody').findAll('tr', {'class': 'team'})
