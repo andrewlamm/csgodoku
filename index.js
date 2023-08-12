@@ -68,7 +68,13 @@ async function readCSV(playerData, playerList) {
             playerData[playerID][topRow[i]] = parseFloat(rowData[i])
           }
           else if (parseType[i] === 'set') {
-            playerData[playerID][topRow[i]] = new Set(JSON.parse(rowData[i]))
+            const teamSetWithID = new Set(JSON.parse(rowData[i]))
+            const teamSet = new Set()
+            teamSetWithID.forEach(team => {
+              const teamName = team.substring(team.indexOf('/')+1)
+              teamSet.add(teamName)
+            })
+            playerData[playerID][topRow[i]] = teamSet
           }
           else if (parseType[i] === 'dictionary') {
             const ratingDictionary = JSON.parse(rowData[i])
@@ -223,7 +229,8 @@ function checkPlayerGrid(playerID, clue1, clue2) {
   let clue2Check = false
 
   if (clue1Type === 'team') {
-    if (playerData[playerID]['teams'].has(clue1Val)) {
+    const team = clue1Val.substring(clue1Val.indexOf('/')+1)
+    if (playerData[playerID]['teams'].has(team)) {
       clue1Check = true
     }
   }
@@ -249,7 +256,8 @@ function checkPlayerGrid(playerID, clue1, clue2) {
   }
 
   if (clue2Type === 'team') {
-    if (playerData[playerID]['teams'].has(clue2Val)) {
+    const team = clue2Val.substring(clue2Val.indexOf('/')+1)
+    if (playerData[playerID]['teams'].has(team)) {
       clue2Check = true
     }
   }
