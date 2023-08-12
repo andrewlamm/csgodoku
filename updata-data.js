@@ -218,6 +218,32 @@ async function main() {
         console.log(new Date().toLocaleTimeString() + ' - getting stats for ' + name)
         const statsPage = await getParsedPage('https://www.hltv.org/stats/players/' + id + '/' + name)
 
+        const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
+
+        const mapsBox = statsDivs[6]
+        const playerMaps = parseInt(mapsBox.findAll('span')[1].text)
+
+        const roundsBox = statsDivs[7]
+        const playerRounds = parseInt(roundsBox.findAll('span')[1].text)
+
+        const killsBox = statsDivs[0]
+        const playerKills = parseInt(killsBox.findAll('span')[1].text)
+
+        const deathsBox = statsDivs[2]
+        const playerDeaths = parseInt(deathsBox.findAll('span')[1].text)
+
+        if (playerData[id].maps === playerMaps && playerData[id].rounds === playerRounds && playerData[id].kills === playerKills && playerData[id].deaths === playerDeaths) {
+          console.log(new Date().toLocaleTimeString() + ' - justkidding, skipping ' + name)
+          continue
+        }
+
+        playerData[id].maps = playerMaps
+        playerData[id].rounds = playerRounds
+        playerData[id].kills = playerKills
+        playerData[id].deaths = playerDeaths
+
+        playerData[id].KDDiff = playerData[id].kills - playerData[id].deaths
+
         if (statsPage.find('img', {'class': 'summaryBodyshot'}) !== undefined) {
           const imageURL = statsPage.find('img', {'class': 'summaryBodyshot'}).attrs.src
           await downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'player', id)
@@ -233,8 +259,6 @@ async function main() {
 
         playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title
 
-        const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
-
         const ratingBox = statsDivs[13]
         if (ratingBox.text.includes('2.0')) {
           playerData[id].rating2 = parseFloat(ratingBox.findAll('span')[1].text)
@@ -242,20 +266,6 @@ async function main() {
         else {
           playerData[id].rating2 = 'N/A'
         }
-
-        const mapsBox = statsDivs[6]
-        playerData[id].maps = parseInt(mapsBox.findAll('span')[1].text)
-
-        const roundsBox = statsDivs[7]
-        playerData[id].rounds = parseInt(roundsBox.findAll('span')[1].text)
-
-        const killsBox = statsDivs[0]
-        playerData[id].kills = parseInt(killsBox.findAll('span')[1].text)
-
-        const deathsBox = statsDivs[2]
-        playerData[id].deaths = parseInt(deathsBox.findAll('span')[1].text)
-
-        playerData[id].KDDiff = playerData[id].kills - playerData[id].deaths
 
         const KDRatioBox = statsDivs[3]
         playerData[id].KDRatio = parseFloat(KDRatioBox.findAll('span')[1].text)
