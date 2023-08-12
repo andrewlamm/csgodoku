@@ -208,6 +208,7 @@ async function main() {
 
   // now read csv file
   const lastUpdated = await readCSV(playerData, idToName)
+  const updateDate = new Date(lastUpdated)
 
   let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
 
@@ -305,6 +306,12 @@ async function main() {
         const matchesTable = matchesPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
 
         for (let i = 0; i < matchesTable.length; i++) {
+          const matchDate = matchesTable[i].findAll('td')[0].find('div', {'class': 'time'}).attrs['data-unix']
+          if (new Date(matchDate) < updateDate) {
+            // old match, no need to update
+            break
+          }
+
           const teamURL = matchesTable[i].findAll('td')[1].find('a').attrs.href
           const teamID = parseInt(teamURL.split('/')[3])
           const teamURLName = teamURL.split('/')[4]
