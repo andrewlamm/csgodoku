@@ -263,6 +263,11 @@
 
       function closeHowToPlay() {
         document.getElementById('how-to-popup-bg').classList.add('hidden')
+        localStorage.setItem('howToPlay', 'true')
+      }
+
+      if (localStorage.getItem('howToPlay') !== 'true') {
+        openHowToPlay()
       }
 
       function closePopup() {
