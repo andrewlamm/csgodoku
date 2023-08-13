@@ -63,7 +63,7 @@ def read_data():
         else:
           player_data[player_id][top_row[i]] = row[i]
 
-top_teams = ['11595/Outsiders', '7718/Movistar Riders', '6472/Rebels', '4548/CPH Wolves', '4602/Tricked', '6372/CSGL', '11837/Fluxo', '8481/Valiance', '4991/fnatic', '6548/?', '6133/Orbit', '10948/Extra Salt', '11251/Eternal Fire', '4688/Epsilon', '11283/Falcons', '6010/Chiefs', '6669/Binary Dragons', '8135/FORZE', '7801/Ghost', '4468/x6tence', '5310/HellRaisers', '9211/LeftOut', '8120/AVANGAR', '10606/c0ntact', '5378/Virtus.pro', '9888/New England Whalers', '11148/Akuma', '11419/ECSTATIC', '9572/ex-Space Soldiers', '7020/Spirit', '8008/Grayhound', '10621/1WIN', '7354/MVP PK', '11811/Monte', '7169/fnatic Academy', '6686/AGG', '10020/Aristocracy', '4559/Millenium', '4869/ENCE', '10150/CR4ZY', '5596/Platinium', '6773/VG.CyberZen', '11861/Aurora', '4477/Publiclir.se', '4791/Immunity', '6132/Method', '5974/CLG', '5435/gBots', '7613/Red Reserve', '11616/Players', '7157/Rogue', '6405/Orgless', '5991/Envy', '10276/Finest', '6220/Epiphany Bolt', '10304/Triumph', '9183/Winstrike', '10671/FunPlus Phoenix', '10831/Entropiq', '8113/Sharks', '6619/INTZ', '4501/ALTERNATE aTTaX', '4674/LDLC', '7726/Swole Patrol', '6375/Vexed', '4682/RCTIC', '8068/AGO', '6137/SK', '7106/eUnited', '4608/Natus Vincere', '5158/Bravado', '4494/MOUZ', '6641/Obey.Alliance', '11085/ex-Winstrike', '6978/Singularity', '4413/Lemondogs', '6134/Kinguin', '7532/BIG', '7168/Crowns', '6855/Fragsters', '10164/Riot Squad', '5906/Torqued', '10399/Evil Geniuses', '6301/Splyce', '11501/HEET', '6736/Selfless', '11164/Into the Breach', '9481/x6tence Galaxy', '9806/Apeks', '7865/HAVU', '10278/9INE', '7367/Quantum Bellator Fire', '9928/GamerLegion', '6673/NRG', '11514/Rare Atom', '10386/SKADE', '10697/BLINK', '7244/K23', '8669/Espada', '10851/Wings Up', '9862/devils.one', '8772/Syman', '10096/EXTREMUM', '10567/SAW', '7557/Misfits', '7059/X', '10514/Gen.G', '6503/CyberZen', '9085/Chaos', '5454/SKDC', '11003/DBL PONEY', '5599/Dobry&Gaming', '6724/Preparation', '6407/DenDD', '4411/Ninjas in Pyjamas', '11309/00NATION', '4555/Virtus.pro', '5973/Liquid', '4773/paiN', '6469/eXplosive', '11119/EPG Family', '6386/Winterfox', '8474/100 Thieves', '6597/Quest', '6211/Renegades', '6665/Astralis', '7124/passions', '8297/FURIA', '6947/TeamOne', '6094/Vega Squadron', '6248/TheMongolz', '7461/Copenhagen Flames', '5929/Space Soldiers', '9996/9z', '6651/Gambit', '5988/FlipSid3', '6667/FaZe', '7533/North', '6226/E-frag.net', '9565/Vitality', '5995/G2', '6685/Ancient', '6045/LDLC White', '11066/Fiend', '4863/TYLOO', '8513/Windigo', '7234/Endpoint', '7969/Nemiga', '9455/Imperial', '6745/eXtatus', '4914/3DMAX', '12000/500', '6290/Luminosity', '8362/MAD Lions', '6668/FLuffy Gangsters', '9976/Gambit Youngsters', '11518/Bad News Eagles', '6902/GODSENT', '10426/Wisla Krakow', '6334/Games Academy', '10421/Hard Legion', '8452/Seed', '4623/fnatic', '11585/IHC', '5395/PENTA', '7331/iGame.com', '5005/Complexity', '6118/Tempo Storm', '7175/Heroic', '8346/Heretics', '10994/O PLANO', '6959/MK', '8963/Lyngby Vikings', '7606/ViCi', '11665/ex-MAD Lions', '7010/Immortals', '5284/Titan', '5996/TSM', '5422/Dignitas', '6680/Echo Fox', '8305/DreamEaters', '8668/ORDER', '6615/OpTic', '6408/Arcade', '8637/Sprout', '8813/Illuminar', '6474/MVP Project', '10503/OG', '10577/SINNERS', '9943/ATK', '9215/MIBR', '7701/Imperial', '5752/Cloud9', '6191/Enemy', '11176/MOUZ NXT', '6292/Conquest']
+top_teams = ['8008/Grayhound', '10503/OG', '7059/X', '11585/IHC', '7461/Copenhagen Flames', '6548/?', '7613/Red Reserve', '6902/GODSENT', '6651/Gambit', '10150/CR4ZY', '5310/HellRaisers', '8362/MAD Lions', '4991/fnatic', '4869/ENCE', '10948/Extra Salt', '5752/Cloud9', '9928/GamerLegion', '5996/TSM', '10577/SINNERS', '11616/Players', '10276/Finest', '10399/Evil Geniuses', '6375/Vexed', '7801/Ghost', '7175/Heroic', '4602/Tricked', '5973/Liquid', '7718/Movistar Riders', '5995/G2', '4773/paiN', '11595/Outsiders', '8513/Windigo', '11309/00NATION', '10831/Entropiq', '6134/Kinguin', '6137/SK', '4623/fnatic', '4863/TYLOO', '5988/FlipSid3', '6667/FaZe', '11066/Fiend', '8135/FORZE', '11811/Monte', '4674/LDLC', '6978/Singularity', '7244/K23', '9455/Imperial', '10606/c0ntact', '9215/MIBR', '6637/ex-Titan', '10514/Gen.G', '6680/Echo Fox', '8637/Sprout', '8068/AGO', '4791/Immunity', '5974/CLG', '7533/North', '9996/9z', '6372/CSGL', '7020/Spirit', '7557/Misfits', '11148/Akuma', '7367/Quantum Bellator Fire', '7701/Imperial', '5005/Complexity', '9085/Chaos', '6615/OpTic', '6211/Renegades', '11251/Eternal Fire', '9183/Winstrike', '11501/HEET', '5929/Space Soldiers', '6673/NRG', '8481/Valiance', '10671/FunPlus Phoenix', '4555/Virtus.pro', '6094/Vega Squadron', '5422/Dignitas', '5284/Titan', '8305/DreamEaters', '10386/SKADE', '4608/Natus Vincere', '5991/Envy', '11419/ECSTATIC', '8474/100 Thieves', '6290/Luminosity', '9565/Vitality', '5395/PENTA', '9806/Apeks', '6959/MK', '6226/E-frag.net', '9943/ATK', '6118/Tempo Storm', '4688/Epsilon', '7532/BIG', '11164/Into the Breach', '6773/VG.CyberZen', '10278/9INE', '4411/Ninjas in Pyjamas', '7865/HAVU', '6665/Astralis', '8297/FURIA', '11518/Bad News Eagles', '4494/MOUZ', '7010/Immortals', '6292/Conquest', '5378/Virtus.pro', '8120/AVANGAR']
 
 def preprocess_data():
   for player_id in player_data:
@@ -150,7 +150,7 @@ def solve_puzzle(puzzle, curr_board, curr_spot, player_set):
   clue2 = puzzle[clue_pos[1]]
 
   possible_players = generate_player_set(clue1, clue2)
-  if len(possible_players) < 2: # comment out if not 2+ player mode
+  if len(possible_players) < 2: # guarantees multiple players in grid
     return None
 
   for player in possible_players:
@@ -240,9 +240,10 @@ def generate_puzzle():
     dupe_check = False
     for i in range(6):
       if puzzle[i][0] == 'team':
-        if puzzle[i][1] in clues:
+        team_name = puzzle[i][1].split('/')[1]
+        if team_name in clues:
           dupe_check = True
-        clues.add(puzzle[i][1])
+        clues.add(team_name)
       else:
         if puzzle[i][0] in clues:
           dupe_check = True
@@ -282,6 +283,6 @@ def generate_puzzles(print_table=True, num_puzzles=10):
 read_data()
 preprocess_data()
 
-puzzles = generate_puzzles(True, 1)
+# puzzles = generate_puzzles(True, 10)
 # print(puzzles[0])
 # print(teams)
