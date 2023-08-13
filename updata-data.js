@@ -301,11 +301,11 @@ async function main() {
           }
           playerData[id].clutchesTotal = clutchesWon
 
-          const matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name)
+          const matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name, true)
           const matchesTable = matchesPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
 
           for (let i = 0; i < matchesTable.length; i++) {
-            const matchDate = matchesTable[i].findAll('td')[0].find('div', {'class': 'time'}).attrs['data-unix']
+            const matchDate = parseInt(matchesTable[i].findAll('td')[0].find('div', {'class': 'time'}).attrs['data-unix'])
             if (new Date(matchDate) < updateDate) {
               // old match, no need to update
               break
