@@ -185,6 +185,7 @@ def generate_puzzle():
     puzzle[3] = ('team', init_team)
 
     top_row = random.sample(list(partner_teams[init_team]), top_row_teams_count)
+    intersect = None
     if top_row_teams_count == 2:
       intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]])
 
@@ -283,6 +284,6 @@ def generate_puzzles(print_table=True, num_puzzles=10):
 read_data()
 preprocess_data()
 
-# puzzles = generate_puzzles(True, 10)
+# puzzles = generate_puzzles(True, 1)
 # print(puzzles[0])
 # print(teams)
