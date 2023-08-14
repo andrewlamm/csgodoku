@@ -250,7 +250,7 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
     }
   }
   else if (clue1Type === 'ratingYear') {
-    if (playerData[playerID]['ratingYear'][clue1Val[0]] >= parseInt(clue1Val[1])) {
+    if (playerData[playerID]['ratingYear'][clue1Val[0]] >= parseFloat(clue1Val[1])) {
       clue1Check = true
     }
   }
@@ -260,7 +260,7 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
     }
   }
   else {
-    if (playerData[playerID][clue1Type] >= parseInt(clue1Val)) {
+    if (playerData[playerID][clue1Type] >= parseFloat(clue1Val)) {
       clue1Check = true
     }
   }
@@ -1059,7 +1059,7 @@ function findPartnerTeams(team, minPlayers) {
 }
 
 function generatePuzzle(req, res, next) {
-  const minPlayers = 2 // parseInt(req.query.minPlayers)
+  const minPlayers = 3 // parseInt(req.query.minPlayers)
   let generatingPuzzle = true
   while (generatingPuzzle) {
     const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]

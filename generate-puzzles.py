@@ -11,6 +11,8 @@ teams = []
 preferable_teams = []
 country_set = set()
 
+MIN_GRID = 4 # min player in grid
+
 PUZZLES_GRID = [(0, 3), (1, 3), (2, 3), (0, 4), (1, 4), (2, 4), (0, 5), (1, 5), (2, 5)]
 STATS = [
   ('country', country_set),
@@ -80,7 +82,7 @@ def preprocess_data():
   for i in range(len(top_teams)):
     for j in range(i+1, len(top_teams)):
       # if len(team_players[top_teams[i]].intersection(team_players[top_teams[j]])) > 0:
-      if len(team_players[top_teams[i]].intersection(team_players[top_teams[j]])) >= 2: # ensures 2+ players
+      if len(team_players[top_teams[i]].intersection(team_players[top_teams[j]])) >= MIN_GRID: # guarantees multipl players in grid
         partner_teams[top_teams[i]].add(top_teams[j])
         partner_teams[top_teams[j]].add(top_teams[i])
 
@@ -150,7 +152,7 @@ def solve_puzzle(puzzle, curr_board, curr_spot, player_set):
   clue2 = puzzle[clue_pos[1]]
 
   possible_players = generate_player_set(clue1, clue2)
-  if len(possible_players) < 2: # guarantees multiple players in grid
+  if len(possible_players) < MIN_GRID: # guarantees multiple players in grid
     return None
 
   for player in possible_players:
