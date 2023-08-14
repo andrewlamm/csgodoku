@@ -80,7 +80,8 @@ async function getParsedPage(url, loadAllPlayers=false) {
     }
     catch (err) {
       console.log('failed getting page with error', err)
-      reject(err)
+      console.log('retrying...')
+      resolve(getParsedPage(url, loadAllPlayers))
     }
   })
 }
@@ -224,7 +225,7 @@ async function main() {
       }
       playerData[id].clutchesTotal = clutchesWon
 
-      const matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name)
+      const matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name, true)
       const matchesTable = matchesPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
 
       for (let i = 0; i < matchesTable.length; i++) {
@@ -331,6 +332,7 @@ async function main() {
         console.error('error writing to file', err)
       }
     })
+    console.log('completed')
   }
   catch (err) {
     console.log(`failed loading with error`, err)

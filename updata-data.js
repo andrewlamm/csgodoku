@@ -81,7 +81,9 @@ async function getParsedPage(url, loadAllPlayers=false) {
     }
     catch (err) {
       console.log('failed getting page with error', err)
-      reject(err)
+      console.log('retrying...')
+      // reject(err)
+      resolve(getParsedPage(url, loadAllPlayers))
     }
   })
 }
@@ -301,7 +303,33 @@ async function main() {
           }
           playerData[id].clutchesTotal = clutchesWon
 
-          const matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name)
+          let matchesPage = undefined
+          if (playerData[id].majorsWon === undefined) {
+            // completely new player
+            console.log('new player')
+            matchesPage = await getParsedPage('https://www.hltv.org/stats/players/matches/' + id + '/' + name, true)
+          }
+          else {
+            const updateDate = new Date(lastUpdated)
+            updateDate.setDate(updateDate.getDate() - 1)
+            const updateDateArr = [updateDate.getFullYear(), updateDate.getMonth()+1, updateDate.getDate()]
+            if (updateDateArr[1] < 10) {
+              updateDateArr[1] = '0' + updateDateArr[1]
+            }
+            if (updateDateArr[2] < 10) {
+              updateDateArr[2] = '0' + updateDateArr[2]
+            }
+            const currDate = new Date()
+            const currDateArr = [currDate.getFullYear(), currDate.getMonth()+1, currDate.getDate()]
+            if (currDateArr[1] < 10) {
+              currDateArr[1] = '0' + currDateArr[1]
+            }
+            if (currDateArr[2] < 10) {
+              currDateArr[2] = '0' + currDateArr[2]
+            }
+
+            matchesPage = await getParsedPage(`https://www.hltv.org/stats/players/matches/${id}/${name}?startDate=${updateDateArr[0]}-${updateDateArr[1]}-${updateDateArr[2]}&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}`)
+          }
           const matchesTable = matchesPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
 
           for (let i = 0; i < matchesTable.length; i++) {
@@ -419,6 +447,8 @@ async function main() {
         console.error('error writing to file', err)
       }
     })
+
+    console.log(new Date().toLocaleTimeString() + ' - done!')
   }
   catch (err) {
     console.log(`failed loading with error`, err)

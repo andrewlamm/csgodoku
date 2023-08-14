@@ -1059,7 +1059,7 @@ function findPartnerTeams(team, minPlayers) {
 }
 
 function generatePuzzle(req, res, next) {
-  const minPlayers = 3 // parseInt(req.query.minPlayers)
+  const minPlayers = 4 // parseInt(req.query.minPlayers)
   let generatingPuzzle = true
   while (generatingPuzzle) {
     const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
