@@ -7,6 +7,7 @@ date_updated = None
 
 team_players = {}
 partner_teams = {}
+name_to_id = {}
 teams = []
 preferable_teams = []
 country_set = set()
@@ -70,11 +71,16 @@ top_teams = ['8008/Grayhound', '10503/OG', '7059/X', '11585/IHC', '7461/Copenhag
 def preprocess_data():
   for player_id in player_data:
     for team in player_data[player_id]['teams']:
-      if team not in team_players:
-        team_players[team] = set()
-        partner_teams[team] = set()
-        teams.append(team)
-      team_players[team].add(player_id)
+      team_name = team.split('/')[1]
+      if team_name not in team_players:
+        team_players[team_name] = set()
+        partner_teams[team_name] = set()
+        teams.append(team_name)
+      team_players[team_name].add(player_id)
+
+      if team_name not in name_to_id:
+        name_to_id[team_name] = []
+      name_to_id[team_name].append(team)
 
     country_set.add(player_data[player_id]['country'])
 
@@ -82,9 +88,11 @@ def preprocess_data():
   for i in range(len(top_teams)):
     for j in range(i+1, len(top_teams)):
       # if len(team_players[top_teams[i]].intersection(team_players[top_teams[j]])) > 0:
-      if len(team_players[top_teams[i]].intersection(team_players[top_teams[j]])) >= MIN_GRID: # guarantees multipl players in grid
-        partner_teams[top_teams[i]].add(top_teams[j])
-        partner_teams[top_teams[j]].add(top_teams[i])
+      team1 = top_teams[i].split('/')[1]
+      team2 = top_teams[j].split('/')[1]
+      if len(team_players[team1].intersection(team_players[team2])) >= MIN_GRID: # guarantees multiple players in grid
+        partner_teams[team1].add(team2)
+        partner_teams[team2].add(team1)
 
   # # any team
   # for i in range(len(teams)):
@@ -92,6 +100,11 @@ def preprocess_data():
   #     if len(team_players[teams[i]].intersection(team_players[teams[j]])) > 0:
   #       partner_teams[teams[i]].add(teams[j])
   #       partner_teams[teams[j]].add(teams[i])
+
+def convert_clue(clue):
+  if clue[0] == 'team':
+    return ['team', random.choice(name_to_id[clue[1]])]
+  return list(clue)
 
 def generate_player_set(clue1, clue2):
   clue1_possible = set()
@@ -174,7 +187,7 @@ def generate_puzzle():
     puzzle = [None, None, None, None, None, None]
     board = [None, None, None, None, None, None, None, None, None]
 
-    init_team = random.choice(top_teams)
+    init_team = random.choice(top_teams).split('/')[1]
     # init_team = random.choice(teams) # any team
     top_row_teams_count = None
     if len(partner_teams[init_team]) < 2:
@@ -187,7 +200,6 @@ def generate_puzzle():
     puzzle[3] = ('team', init_team)
 
     top_row = random.sample(list(partner_teams[init_team]), top_row_teams_count)
-    intersect = None
     if top_row_teams_count == 2:
       intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]])
 
@@ -243,7 +255,7 @@ def generate_puzzle():
     dupe_check = False
     for i in range(6):
       if puzzle[i][0] == 'team':
-        team_name = puzzle[i][1].split('/')[1]
+        team_name = puzzle[i][1]
         if team_name in clues:
           dupe_check = True
         clues.add(team_name)
@@ -258,7 +270,7 @@ def generate_puzzle():
     # print('attempting to solve', puzzle)
     ans = solve_puzzle(puzzle, board, 0, set())
     if ans is not None:
-      puzzle_list = [list(elm) for elm in puzzle]
+      puzzle_list = [convert_clue(elm) for elm in puzzle]
       # for elm in puzzle_list:
       #   if elm[0] == 'team':
       #     elm[1] = elm[1][elm[1].index('/')+1:]
@@ -286,6 +298,6 @@ def generate_puzzles(print_table=True, num_puzzles=10):
 read_data()
 preprocess_data()
 
-# puzzles = generate_puzzles(True, 1)
+puzzles = generate_puzzles(True, 1)
 # print(puzzles[0])
 # print(teams)
