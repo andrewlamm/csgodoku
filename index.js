@@ -1454,6 +1454,8 @@ async function infiniteConcedeHelper(req, res, next) {
   }
 }
 
+// routes
+/*
 app.get('/infinite', [findPuzzle, infinitePuzzlePlayer], (req, res) => {
   const infPossiblePlayersSet = generatePossiblePlayers(res.locals.puzzle)
   const infPossiblePlayers = [[], [], [], [], [], [], [], [], []]
@@ -1484,6 +1486,12 @@ app.post('/infiniteGuess', [checkInfinitePlayer, infiniteGuessHelper], (req, res
 
 app.post('/infiniteConcede', [checkInfinitePlayer, infiniteConcedeHelper], (req, res) => {
   res.send(res.locals.guessReturn)
+})
+*/
+
+/* 404 Page */
+app.use(function (req, res, next) {
+  res.render('404')
 })
 
 /* Start Function */
