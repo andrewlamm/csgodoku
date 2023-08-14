@@ -12,7 +12,7 @@ teams = []
 preferable_teams = []
 country_set = set()
 
-MIN_GRID = 4 # min player in grid
+MIN_GRID = 5 # min player in grid
 
 PUZZLES_GRID = [(0, 3), (1, 3), (2, 3), (0, 4), (1, 4), (2, 4), (0, 5), (1, 5), (2, 5)]
 STATS = [
@@ -156,15 +156,11 @@ def generate_player_set(clue1, clue2):
 
   return clue1_possible.intersection(clue2_possible)
 
-def solve_puzzle(puzzle, curr_board, curr_spot, player_set):
+def solve_puzzle(puzzle, curr_board, curr_spot, player_set, all_possible_players):
   if curr_spot >= 9:
     return curr_board
 
-  clue_pos = PUZZLES_GRID[curr_spot]
-  clue1 = puzzle[clue_pos[0]]
-  clue2 = puzzle[clue_pos[1]]
-
-  possible_players = generate_player_set(clue1, clue2)
+  possible_players = all_possible_players[curr_spot]
   if len(possible_players) < MIN_GRID: # guarantees multiple players in grid
     return None
 
@@ -176,7 +172,7 @@ def solve_puzzle(puzzle, curr_board, curr_spot, player_set):
     player_set_dup.add(player)
     curr_board_dup[curr_spot] = player_data[player]['name']
 
-    ans = solve_puzzle(puzzle, curr_board_dup, curr_spot+1, player_set_dup)
+    ans = solve_puzzle(puzzle, curr_board_dup, curr_spot+1, player_set_dup, all_possible_players)
     if ans is not None:
       return ans
 
@@ -267,8 +263,18 @@ def generate_puzzle():
     if dupe_check:
       continue
 
+    # code generates all possible player set
     # print('attempting to solve', puzzle)
-    ans = solve_puzzle(puzzle, board, 0, set())
+
+    all_poss_players = []
+    for pos in range(9):
+      clue_pos = PUZZLES_GRID[pos]
+      clue1 = puzzle[clue_pos[0]]
+      clue2 = puzzle[clue_pos[1]]
+
+      all_poss_players.append(generate_player_set(clue1, clue2))
+
+    ans = solve_puzzle(puzzle, board, 0, set(), all_poss_players)
     if ans is not None:
       puzzle_list = [convert_clue(elm) for elm in puzzle]
       # for elm in puzzle_list:
@@ -298,6 +304,6 @@ def generate_puzzles(print_table=True, num_puzzles=10):
 read_data()
 preprocess_data()
 
-puzzles = generate_puzzles(True, 1)
+# puzzles = generate_puzzles(True, 1)
 # print(puzzles[0])
 # print(teams)
