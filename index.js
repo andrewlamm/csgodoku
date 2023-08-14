@@ -240,7 +240,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else if (clue1Type === 'ratingYear') {
-    if (playerData[playerID]['ratingYear'][clue1Val[0]] >= parseInt(clue1Val[1])) {
+    if (playerData[playerID]['ratingYear'][clue1Val[0]] >= parseFloat(clue1Val[1])) {
       clue1Check = true
     }
   }
@@ -250,7 +250,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else {
-    if (playerData[playerID][clue1Type] >= parseInt(clue1Val)) {
+    if (playerData[playerID][clue1Type] >= parseFloat(clue1Val)) {
       clue1Check = true
     }
   }
@@ -267,7 +267,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else if (clue2Type === 'ratingYear') {
-    if (playerData[playerID]['ratingYear'][clue2Val[0]] >= parseInt(clue2Val[1])) {
+    if (playerData[playerID]['ratingYear'][clue2Val[0]] >= parseFloat(clue2Val[1])) {
       clue2Check = true
     }
   }
@@ -277,7 +277,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
     }
   }
   else {
-    if (playerData[playerID][clue2Type] >= parseInt(clue2Val)) {
+    if (playerData[playerID][clue2Type] >= parseFloat(clue2Val)) {
       clue2Check = true
     }
   }
