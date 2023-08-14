@@ -277,7 +277,7 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
     }
   }
   else if (clue2Type === 'ratingYear') {
-    if (playerData[playerID]['ratingYear'][clue2Val[0]] >= parseInt(clue2Val[1])) {
+    if (playerData[playerID]['ratingYear'][clue2Val[0]] >= parseFloat(clue2Val[1])) {
       clue2Check = true
     }
   }
@@ -287,7 +287,7 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
     }
   }
   else {
-    if (playerData[playerID][clue2Type] >= parseInt(clue2Val)) {
+    if (playerData[playerID][clue2Type] >= parseFloat(clue2Val)) {
       clue2Check = true
     }
   }
