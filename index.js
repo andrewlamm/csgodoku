@@ -7,6 +7,7 @@ const fs = require('fs')
 const { Octokit } = require("@octokit/rest")
 const Readable = require('stream').Readable
 const { Base64 } = require('js-base64')
+const { v4: uuidv4 } = require('uuid')
 
 app.set('view engine', 'ejs')
 app.use(express.static(`${__dirname}/static`))
@@ -25,9 +26,12 @@ app.use(session({
 }))
 
 const db = require('./db')
+const { get, set } = require('express/lib/response')
 
 const playerData = {}
 const playerList = {}
+
+const teamNameToID = {}
 
 async function readCSV(playerData, playerList) {
   return new Promise(async function (resolve, reject) {
@@ -73,6 +77,12 @@ async function readCSV(playerData, playerList) {
             teamSetWithID.forEach(team => {
               const teamName = team.substring(team.indexOf('/')+1)
               teamSet.add(teamName)
+
+              // code for adding team to teamNameToID
+              if (teamNameToID[teamName] === undefined) {
+                teamNameToID[teamName] = []
+              }
+              teamNameToID[teamName].push(team)
             })
             playerData[playerID][topRow[i]] = teamSet
           }
@@ -220,7 +230,7 @@ const NUMBER_OF_GUESSES = 9
 
 const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
 
-function checkPlayerGrid(playerID, clue1, clue2) {
+function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
   const clue1Type = clue1[0]
   const clue1Val = clue1[1]
   const clue2Type = clue2[0]
@@ -229,7 +239,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
   let clue2Check = false
 
   if (clue1Type === 'team') {
-    const team = clue1Val.substring(clue1Val.indexOf('/')+1)
+    const team = teamNameHasID ? clue1Val.substring(clue1Val.indexOf('/')+1) : clue1Val
     if (playerData[playerID]['teams'].has(team)) {
       clue1Check = true
     }
@@ -256,7 +266,7 @@ function checkPlayerGrid(playerID, clue1, clue2) {
   }
 
   if (clue2Type === 'team') {
-    const team = clue2Val.substring(clue2Val.indexOf('/')+1)
+    const team = teamNameHasID ? clue2Val.substring(clue2Val.indexOf('/')+1) : clue2Val
     if (playerData[playerID]['teams'].has(team)) {
       clue2Check = true
     }
@@ -551,7 +561,7 @@ async function insertGuessHelper(req, res, next) {
       }
       next()
     }
-    else if (ind < 0 || ind >= 9) {
+    else if (isNaN(ind) || ind < 0 || ind >= 9) {
       console.log('insert guess fail, invalid index', ind)
       res.locals.guessReturn = {
         guessStatus: -1,
@@ -588,7 +598,7 @@ async function insertGuessHelper(req, res, next) {
       }
       next()
     }
-    else if (playerData[guess] === undefined) {
+    else if (isNaN(guess) || playerData[guess] === undefined) {
       console.log('insert guess fail, invalid player guessed', guess)
       res.locals.guessReturn = {
         guessStatus: -1,
@@ -904,10 +914,593 @@ app.post('/concede', [checkPuzzle, checkPlayer, concedeHelper], (req, res) => {
   res.send(res.locals.guessReturn)
 })
 
+/* Infinite Mode */
+const topTeams = ['8008/Grayhound', '10503/OG', '7059/X', '11585/IHC', '7461/Copenhagen Flames', '6548/?', '7613/Red Reserve', '6902/GODSENT', '6651/Gambit', '10150/CR4ZY', '5310/HellRaisers', '8362/MAD Lions', '4991/fnatic', '4869/ENCE', '10948/Extra Salt', '5752/Cloud9', '9928/GamerLegion', '5996/TSM', '10577/SINNERS', '11616/Players', '10276/Finest', '10399/Evil Geniuses', '6375/Vexed', '7801/Ghost', '7175/Heroic', '4602/Tricked', '5973/Liquid', '7718/Movistar Riders', '5995/G2', '4773/paiN', '11595/Outsiders', '8513/Windigo', '11309/00NATION', '10831/Entropiq', '6134/Kinguin', '6137/SK', '4623/fnatic', '4863/TYLOO', '5988/FlipSid3', '6667/FaZe', '11066/Fiend', '8135/FORZE', '11811/Monte', '4674/LDLC', '6978/Singularity', '7244/K23', '9455/Imperial', '10606/c0ntact', '9215/MIBR', '6637/ex-Titan', '10514/Gen.G', '6680/Echo Fox', '8637/Sprout', '8068/AGO', '4791/Immunity', '5974/CLG', '7533/North', '9996/9z', '6372/CSGL', '7020/Spirit', '7557/Misfits', '11148/Akuma', '7367/Quantum Bellator Fire', '7701/Imperial', '5005/Complexity', '9085/Chaos', '6615/OpTic', '6211/Renegades', '11251/Eternal Fire', '9183/Winstrike', '11501/HEET', '5929/Space Soldiers', '6673/NRG', '8481/Valiance', '10671/FunPlus Phoenix', '4555/Virtus.pro', '6094/Vega Squadron', '5422/Dignitas', '5284/Titan', '8305/DreamEaters', '10386/SKADE', '4608/Natus Vincere', '5991/Envy', '11419/ECSTATIC', '8474/100 Thieves', '6290/Luminosity', '9565/Vitality', '5395/PENTA', '9806/Apeks', '6959/MK', '6226/E-frag.net', '9943/ATK', '6118/Tempo Storm', '4688/Epsilon', '7532/BIG', '11164/Into the Breach', '6773/VG.CyberZen', '10278/9INE', '4411/Ninjas in Pyjamas', '7865/HAVU', '6665/Astralis', '8297/FURIA', '11518/Bad News Eagles', '4494/MOUZ', '7010/Immortals', '6292/Conquest', '5378/Virtus.pro', '8120/AVANGAR']
+const STATS = [
+  ['country', undefined],
+  ['age', [30, 35, 40]],
+  ['rating2', [1.1, 1.2]],
+  ['rating1', [1.1, 1.2]],
+  ['maps', [1000, 2000, 3000]],
+  ['rounds', [20000, 30000, 40000]],
+  ['kills', [10000, 20000, 30000]],
+  ['deaths', [10000, 20000, 30000]],
+  ['ratingTop20', [1.1, 1.2]],
+  ['ratingYear', [[2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022], [1.1, 1.2]]],
+  ['clutchesTotal', [250, 500, 600]],
+  ['majorsWon', [1, 2]],
+  ['majorsPlayed', [1, 4, 8]],
+  ['LANsWon', [1, 5, 10]],
+  ['MVPs', [1, 3, 5, 10]],
+  ['top20s', [1, 3, 5, 10]],
+  ['top10s', [1, 3, 5]],
+  ['topPlacement', [1, 5, 10, 20]]
+]
+
+function setIntersection(setA, setB) {
+  return new Set([...setA].filter(x => setB.has(x)))
+}
+
+function generatePossiblePlayers(puzzle, teamNameHasID = true) {
+  const infPossiblePlayers = [new Set(), new Set(), new Set(), new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
+  for (const [id, player] of Object.entries(playerData)) {
+    const playerID = parseInt(id)
+    for (let pos = 0; pos < 9; pos++) {
+      if (checkPlayerGrid(playerID, puzzle[PUZZLES_GRID[pos][0]], puzzle[PUZZLES_GRID[pos][1]], teamNameHasID)) {
+        infPossiblePlayers[pos].add(playerID)
+      }
+    }
+  }
+  return infPossiblePlayers
+}
+
+// code translated from Python (generate-puzzles.py) into JS
+const countrySet = new Set()
+const teamPlayers = {}
+
+function preprocessData(playerData) {
+  for (const [id, player] of Object.entries(playerData)) {
+    player.teams.forEach(team => {
+      if (teamPlayers[team] === undefined) {
+        teamPlayers[team] = new Set()
+      }
+      teamPlayers[team].add(parseInt(id))
+    })
+
+    countrySet.add(player.country)
+  }
+
+  // set country set
+  STATS[0][1] = countrySet
+
+  /*
+  for (let i = 0; i < topTeams.length; i++) {
+    for (let j = i + 1; j < topTeams.length; j++) {
+      const team1 = topTeams[i].split('/')[1]
+      const team2 = topTeams[j].split('/')[1]
+
+      const intersect = setIntersection(teamPlayers[team1], teamPlayers[team2])
+      // uhh idt this is needed
+    }
+  }
+  */
+}
+
+function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, infPossiblePlayers, minPlayers) {
+  if (currSpot >= 9)
+    return true
+
+  const cluePos = PUZZLES_GRID[currSpot]
+  const clue1 = puzzle[cluePos[0]]
+  const clue2 = puzzle[cluePos[1]]
+
+  if (infPossiblePlayers[currSpot].size < minPlayers) {
+    // not enough players
+    return false
+  }
+
+  for (const playerID of infPossiblePlayers[currSpot]) {
+    if (playerSet.has(playerID)) {
+      // player already in puzzle
+      continue
+    }
+
+    playerSetDuplicate = new Set(playerSet)
+    currBoardDuplicate = [...currBoard]
+    playerSetDuplicate.add(playerID)
+    currBoardDuplicate[currSpot] = playerID
+
+    const ans = checkValidPuzzleHelper(puzzle, currBoardDuplicate, currSpot + 1, playerSetDuplicate, infPossiblePlayers, minPlayers)
+    if (ans) {
+      return true
+    }
+  }
+
+  return false
+}
+
+function checkValidPuzzle(puzzle, minPlayers) {
+  const infPossiblePlayers = generatePossiblePlayers(puzzle)
+  return checkValidPuzzleHelper(puzzle, [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined], 0, new Set(), infPossiblePlayers, minPlayers)
+}
+
+// https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
+function getRandomSubarray(arr, size) {
+  var shuffled = arr.slice(0), i = arr.length, min = i - size, temp, index;
+  while (i-- > min) {
+      index = Math.floor((i + 1) * Math.random());
+      temp = shuffled[index];
+      shuffled[index] = shuffled[i];
+      shuffled[i] = temp;
+  }
+  return shuffled.slice(min);
+}
+
+function convertClue(clue) {
+  if (clue[0] === 'team')
+    return ['team', getRandomSubarray(teamNameToID[clue[1]], 1)[0]]
+  return clue
+}
+
+function findPartnerTeams(team, minPlayers) {
+  const partnerTeams = new Set()
+  for (let i = 0; i < topTeams.length; i++) {
+    const teamName = topTeams[i].split('/')[1]
+    if (teamName === team)
+      continue
+
+    const intersect = setIntersection(teamPlayers[team], teamPlayers[teamName])
+    if (intersect.size >= minPlayers) {
+      partnerTeams.add(teamName)
+    }
+  }
+
+  return partnerTeams
+}
+
+function generatePuzzle(req, res, next) {
+  const minPlayers = 4 // parseInt(req.query.minPlayers)
+  let generatingPuzzle = true
+  while (generatingPuzzle) {
+    const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
+
+    const initTeamFull = getRandomSubarray(topTeams, 1)[0]
+    const initTeam = initTeamFull.split('/')[1]
+    const initPartnerTeams = findPartnerTeams(initTeam, minPlayers)
+
+    let topRowTeamsCount = undefined
+    if (initPartnerTeams.size < 2) {
+      continue
+    } else if (initPartnerTeams.size === 2) {
+      topRowTeamsCount = 2
+    } else {
+      topRowTeamsCount = Math.random < 0.75 ? 2 : 3
+    }
+
+    puzzle[3] = ['team', initTeam]
+
+    const topRow = getRandomSubarray([...initPartnerTeams], topRowTeamsCount)
+
+    let topRowIntersect = undefined
+    if (topRowTeamsCount === 2) {
+      const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers)
+      const secondTeamPartners = findPartnerTeams(topRow[1], minPlayers)
+
+      topRowIntersect = setIntersection(firstTeamPartners, secondTeamPartners)
+    }
+    else {
+      const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers)
+      const secondTeamPartners = findPartnerTeams(topRow[1], minPlayers)
+      const thirdTeamPartners = findPartnerTeams(topRow[2], minPlayers)
+
+      topRowIntersect = setIntersection(firstTeamPartners, setIntersection(secondTeamPartners, thirdTeamPartners))
+    }
+    topRowIntersect.delete(initTeam)
+
+    let leftColTeamsCount = undefined
+    if (topRowIntersect.size < 1) {
+      continue
+    } else if (topRowIntersect.size === 1) {
+      leftColTeamsCount = 1
+    } else {
+      leftColTeamsCount = Math.random < 0.5 ? 1 : 2
+    }
+
+    const leftCol = getRandomSubarray([...topRowIntersect], leftColTeamsCount)
+
+    puzzle[0] = ['team', topRow[0]]
+    puzzle[1] = ['team', topRow[1]]
+    puzzle[4] = ['team', leftCol[0]]
+
+    // code fills out last row & col
+    if (topRowTeamsCount === 2) {
+      const randomStat = getRandomSubarray([...STATS], 1)[0]
+      if (randomStat[0] === 'country') {
+        puzzle[2] = ['country', getRandomSubarray([...countrySet], 1)[0]]
+      } else if (randomStat[0] === 'ratingYear') {
+        puzzle[2] = ['ratingYear', [getRandomSubarray(randomStat[1][0], 1)[0], getRandomSubarray(randomStat[1][1], 1)[0]]]
+      } else {
+        puzzle[2] = [randomStat[0], getRandomSubarray(randomStat[1], 1)[0]]
+      }
+    } else {
+      puzzle[2] = ['team', topRow[2]]
+    }
+
+    if (leftColTeamsCount === 1) {
+      const randomStat = getRandomSubarray([...STATS], 1)[0]
+      if (randomStat[0] === 'country') {
+        puzzle[5] = ['country', getRandomSubarray([...countrySet], 1)[0]]
+      } else if (randomStat[0] === 'ratingYear') {
+        puzzle[5] = ['ratingYear', [getRandomSubarray(randomStat[1][0], 1)[0], getRandomSubarray(randomStat[1][1], 1)[0]]]
+      } else {
+        puzzle[5] = [randomStat[0], getRandomSubarray(randomStat[1], 1)[0]]
+      }
+    } else {
+      puzzle[5] = ['team', leftCol[1]]
+    }
+
+    // Naive Duplciate Check
+    const clues = new Set()
+    let dupeCheck = false
+    for (let i = 0; i < 6; i++) {
+      if (puzzle[i][0] === 'team') {
+        if (clues.has(puzzle[i][1])) {
+          dupeCheck = true
+          break
+        }
+        clues.add(puzzle[i][1])
+      }
+      else {
+        if (clues.has(puzzle[i][0])) {
+          dupeCheck = true
+          break
+        }
+        clues.add(puzzle[i][0])
+      }
+    }
+
+    if (dupeCheck)
+      continue
+
+    const fixedPuzzle = []
+    for (let i = 0; i < 6; i++) {
+      fixedPuzzle.push(convertClue(puzzle[i]))
+    }
+
+    const solved = checkValidPuzzle(fixedPuzzle, minPlayers)
+    if (solved) {
+      generatingPuzzle = false
+      res.locals.puzzle = fixedPuzzle
+
+      next()
+    }
+  }
+}
+
+async function saveInfinitePuzzle(req, res, next) {
+  res.locals.puzzleID = uuidv4()
+  const query = { _id: 'infinitePuzzles' }
+
+  const update = { $set: {} }
+  update.$set[res.locals.puzzleID] = JSON.stringify(res.locals.puzzle)
+
+  const updateRes = await db.updateOne(query, update)
+
+  next()
+}
+
+async function findPuzzle(req, res, next) {
+  const result = await db.findOne({ _id: 'infinitePuzzles' })
+  const puzzleID = req.query.id
+
+  if (result === null || result[puzzleID] === undefined) {
+    res.redirect('/loadInfinite')
+  }
+  else {
+    res.locals.puzzle = JSON.parse(result[puzzleID])
+    next()
+  }
+}
+
+function infinitePuzzlePlayer(req, res, next) {
+  if (req.session.infinitePlayer === undefined) {
+    req.session.infinitePlayer = {
+      puzzleID: req.query.id,
+      puzzle: res.locals.puzzle,
+      guessesLeft: NUMBER_OF_GUESSES,
+      gameStatus: 0,
+      board: [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined],
+      guesses: [[], [], [], [], [], [], [], [], []],
+    }
+    next()
+  }
+  else {
+    if (req.session.infinitePlayer.puzzleID !== req.query.id) {
+      // user loaded a different puzzle
+      req.session.infinitePlayer = {
+        puzzleID: req.query.id,
+        puzzle: res.locals.puzzle,
+        guessesLeft: NUMBER_OF_GUESSES,
+        gameStatus: 0,
+        board: [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined],
+        guesses: [[], [], [], [], [], [], [], [], []],
+      }
+      next()
+    }
+    else {
+      next()
+    }
+  }
+}
+
+async function checkInfinitePlayer(req, res, next) {
+  if (req.session.infinitePlayer === undefined) {
+    res.locals.guessReturn = {
+      guessStatus: -1,
+      guessesLeft: 0,
+    }
+  }
+  else {
+    // check to see if puzzleID actually matches the puzzle
+    const result = await db.findOne({ _id: 'infinitePuzzles' })
+    const puzzleID = req.session.infinitePlayer.puzzleID
+    if (result === null || result[puzzleID] === undefined) {
+      // puzzle doesnt exist in db
+      console.log('error when checking player, puzzle doesnt exist in db', req.session.infinitePlayer)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+      }
+      next()
+    }
+    else if (JSON.stringify(req.session.infinitePlayer.puzzle) !== result[puzzleID]) {
+      // puzzle doesnt match
+      console.log('error when checking player, puzzle doesnt match', req.session.infinitePlayer)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+      }
+      next()
+    }
+    else {
+      // no puzzle errors
+      next()
+    }
+  }
+}
+
+function infiniteGuessHelper(req, res, next) {
+  try {
+    const gamePuzzle = req.session.infinitePlayer.puzzle
+    const ind = parseInt(req.body.index)
+    const playerGuess = parseInt(req.body.guess)
+
+    if (req.session.infinitePlayer === undefined) {
+      console.log('infinite guess helper fail, no player')
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.infinitePlayer.guessesLeft <= 0) {
+      console.log('infinite guess helper fail, no guesses left', req.session.player)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (isNaN(ind) || ind < 0 || ind >= 9) {
+      console.log('infinite guess helper fail, invalid index', ind)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.infinitePlayer.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.infinitePlayer.board === undefined) {
+      console.log('infinite guess helper fail, no board', req.session.player)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.infinitePlayer.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.infinitePlayer.board[ind] !== undefined && req.session.infinitePlayer.board[ind] !== null) {
+      // console.log(req.session.player.board[ind])
+      console.log('infinite guess helper fail, index already guessed', req.session.infinitePlayer)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.infinitePlayer.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.infinitePlayer.guesses === undefined) {
+      console.log('infinite guess helper fail, no guesses array', req.session.infinitePlayer)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.infinitePlayer.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (isNaN(playerGuess) || playerData[playerGuess] === undefined) {
+      console.log('infinite guess helper fail, invalid player guessed', playerGuess)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.infinitePlayer.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.infinitePlayer.guesses[ind].includes(playerGuess) || req.session.infinitePlayer.board.includes(playerGuess)) {
+      console.log('infinite guess helper, already guessed', playerData[playerGuess].name)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.infinitePlayer.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else {
+      // all good
+      req.session.infinitePlayer.guesses[ind].push(playerGuess)
+      req.session.infinitePlayer.guessesLeft -= 1
+
+      const infPossiblePlayers = generatePossiblePlayers(gamePuzzle)
+
+      if (infPossiblePlayers[ind].has(playerGuess)) {
+        req.session.infinitePlayer.board[ind] = playerGuess
+      }
+
+      if (req.session.infinitePlayer.guessesLeft <= 1) {
+        // game over
+        const score = 9 - req.session.infinitePlayer.board.filter(x => x === undefined || x === null).length
+        req.session.infinitePlayer.gameStatus = score === 9 ? 1 : -1
+
+        const infPossiblePlayersArr = [[], [], [], [], [], [], [], [], []]
+        for (let i = 0; i < 9; i++) {
+          infPossiblePlayersArr[i] = [...infPossiblePlayers[i]]
+        }
+
+        res.locals.guessReturn = {
+          gameStatus: req.session.infinitePlayer.gameStatus,
+          guessStatus: infPossiblePlayers[ind].has(playerGuess) ? 1 : 0,
+          guessesLeft: req.session.infinitePlayer.guessesLeft,
+          possiblePlayers: infPossiblePlayersArr,
+          score: score,
+        }
+        next()
+      }
+      else {
+        // continue game
+        res.locals.guessReturn = {
+          gameStatus: 0,
+          guessStatus: infPossiblePlayers[ind].has(playerGuess) ? 1 : 0,
+          guessesLeft: req.session.infinitePlayer.guessesLeft,
+        }
+        next()
+      }
+    }
+  }
+  catch (err) {
+    console.log('infinite guess helper fail', err)
+    res.locals.guessReturn = {
+      guessStatus: -1,
+      guessesLeft: 0,
+      gameStatus: 0,
+    }
+    next()
+  }
+}
+
+async function infiniteConcedeHelper(req, res, next) {
+  try {
+    if (req.session.infinitePlayer === undefined) {
+      console.log('infinite concede fail, no player')
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.infinitePlayer.board === undefined) {
+      console.log('infinite concede fail, no board', req.session.infinitePlayer)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: req.session.infinitePlayer.guessesLeft,
+        gameStatus: 0,
+      }
+      next()
+    }
+    else if (req.session.infinitePlayer.gameStatus !== 0) {
+      // game has ended, do nothing
+      console.log('infinite concede fail, game ended', req.session.infinitePlayer)
+      next()
+    }
+    else {
+      req.session.infinitePlayer.guessesLeft = 0
+      req.session.infinitePlayer.gameStatus = -1
+
+      const score = 9 - req.session.infinitePlayer.board.filter(x => x === undefined || x === null).length
+
+      req.session.infinitePlayer.gameStatus = score === 9 ? 1 : -1
+
+      const infPossiblePlayers = generatePossiblePlayers(req.session.infinitePlayer.puzzle)
+      const infPossiblePlayersArr = [[], [], [], [], [], [], [], [], []]
+      for (let i = 0; i < 9; i++) {
+        infPossiblePlayersArr[i] = [...infPossiblePlayers[i]]
+      }
+
+      res.locals.guessReturn = {
+        gameStatus: -1,
+        guessesLeft: 0,
+        possiblePlayers: infPossiblePlayersArr,
+        score: score,
+      }
+      next()
+    }
+  }
+  catch (err) {
+    console.log('infinite concede fail, error', err)
+    next()
+  }
+}
+
+// routes
+/*
+app.get('/infinite', [findPuzzle, infinitePuzzlePlayer], (req, res) => {
+  const infPossiblePlayersSet = generatePossiblePlayers(res.locals.puzzle)
+  const infPossiblePlayers = [[], [], [], [], [], [], [], [], []]
+  for (let i = 0; i < 9; i++) {
+    infPossiblePlayers[i] = [...infPossiblePlayersSet[i]]
+  }
+
+  res.render('infinite', {
+    puzzle: res.locals.puzzle,
+    players: playerList,
+    lastUpdated: lastUpdated,
+    userData: req.session.infinitePlayer,
+    possiblePlayers: req.session.infinitePlayer.gameStatus !== 0 ? infPossiblePlayers : undefined,
+  })
+})
+
+app.get('/loadInfinite', (req, res) => {
+  res.render('loadingInfinite')
+})
+
+app.post('/generateInfinite', [generatePuzzle, saveInfinitePuzzle], (req, res) => {
+  res.send({ id: res.locals.puzzleID })
+})
+
+app.post('/infiniteGuess', [checkInfinitePlayer, infiniteGuessHelper], (req, res) => {
+  res.send(res.locals.guessReturn)
+})
+
+app.post('/infiniteConcede', [checkInfinitePlayer, infiniteConcedeHelper], (req, res) => {
+  res.send(res.locals.guessReturn)
+})
+*/
+
+/* 404 Page */
+app.use(function (req, res, next) {
+  res.render('404')
+})
+
+/* Start Function */
 async function start() {
   console.log('reading csv...')
   lastUpdated = await readCSV(playerData, playerList)
   console.log(`Last updated: ${lastUpdated}`)
+  console.log('preprocessing data...')
+  preprocessData(playerData)
   app.listen(process.env.PORT || 4000, () => console.log("Server is running..."))
 }
 

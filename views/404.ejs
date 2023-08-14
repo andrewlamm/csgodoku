@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <%- include('partials/helmet.ejs', {title: 'csgodoku - generating infinite puzzle'}) %>
+  <body>
+    <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
+      <div class="text-xl md:text-3xl cursor-pointer">
+        <a href="/" class="w-full h-full">CSGODOKU</a>
+      </div>
+    </div>
+    <div class="w-full h-screen flex flex-col items-center justify-center bg-gray-850">
+      <div class="text-2xl md:text-4xl text-white">this link does not exist</div>
+      <div class="text-xl md:text-3xl text-white">redirecting home in 10 seconds...</div>
+    </div>
+    <script>
+      setTimeout(sendHome, 10000)
+      function sendHome() {
+        window.location.href = '/'
+      }
+    </script>
+  </body>
+</html>
