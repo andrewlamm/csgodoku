@@ -223,6 +223,8 @@ let puzzleDate = undefined
 let possiblePlayers = undefined
 let lastUpdated = undefined
 
+let puzzleUpdating = false
+
 const TIME_OFFSET = 1690855200 // Jul 31, 10 PM EST
 const SECONDS_PER_DAY = 86400
 
@@ -347,6 +349,7 @@ async function checkPuzzle(req, res, next) {
     }
     else {
       // need to reset stats as well
+      puzzleUpdating = true
       const initPickedPlayers = [{}, {}, {}, {}, {}, {}, {}, {}, {}]
       for (let i = 0; i < 9; i++) {
         possiblePlayers[i].forEach(playerID => {
@@ -366,6 +369,7 @@ async function checkPuzzle(req, res, next) {
 
       const updateRes = await db.updateOne(query, update)
 
+      puzzleUpdating = false
       next()
     }
   }
@@ -375,6 +379,8 @@ async function checkPuzzle(req, res, next) {
       // need to have a new puzzle
 
       /* get puzzle */
+      puzzleUpdating = true
+
       puzzleDate = parseInt(currTime / SECONDS_PER_DAY)
 
       const puzzleResult = await db.findOne({ _id: 'puzzleList' })
@@ -403,6 +409,8 @@ async function checkPuzzle(req, res, next) {
       } }
 
       const updateRes = await db.updateOne(query, update)
+
+      puzzleUpdating = false
 
       next()
     }
@@ -450,6 +458,10 @@ async function initPlayer(req, res, next) {
 
 async function getPickedPlayersList() {
   // read from db
+  while (puzzleUpdating) {
+    // wait until ready
+  }
+
   const pickedPlayersSet = [{}, {}, {}, {}, {}, {}, {}, {}, {}]
   const pickedPlayersCount = [[], [], [], [], [], [], [], [], []]
   const totalPicks = [0, 0, 0, 0, 0, 0, 0, 0, 0]
