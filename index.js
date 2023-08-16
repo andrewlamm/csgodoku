@@ -1071,7 +1071,7 @@ function findPartnerTeams(team, minPlayers) {
 }
 
 function generatePuzzle(req, res, next) {
-  const minPlayers = 4 // parseInt(req.query.minPlayers)
+  const minPlayers = 3 // parseInt(req.query.minPlayers)
   let generatingPuzzle = true
   while (generatingPuzzle) {
     const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
@@ -1467,7 +1467,6 @@ async function infiniteConcedeHelper(req, res, next) {
 }
 
 // routes
-/*
 app.get('/infinite', [findPuzzle, infinitePuzzlePlayer], (req, res) => {
   const infPossiblePlayersSet = generatePossiblePlayers(res.locals.puzzle)
   const infPossiblePlayers = [[], [], [], [], [], [], [], [], []]
@@ -1499,7 +1498,6 @@ app.post('/infiniteGuess', [checkInfinitePlayer, infiniteGuessHelper], (req, res
 app.post('/infiniteConcede', [checkInfinitePlayer, infiniteConcedeHelper], (req, res) => {
   res.send(res.locals.guessReturn)
 })
-*/
 
 /* 404 Page */
 app.use(function (req, res, next) {
