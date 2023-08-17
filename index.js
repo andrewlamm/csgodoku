@@ -1371,7 +1371,7 @@ function infiniteGuessHelper(req, res, next) {
         req.session.infinitePlayer.board[ind] = playerGuess
       }
 
-      if (req.session.infinitePlayer.guessesLeft <= 1) {
+      if (req.session.infinitePlayer.guessesLeft <= 0) {
         // game over
         const score = 9 - req.session.infinitePlayer.board.filter(x => x === undefined || x === null).length
         req.session.infinitePlayer.gameStatus = score === 9 ? 1 : -1
