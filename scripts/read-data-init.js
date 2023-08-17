@@ -327,7 +327,7 @@ async function main() {
     }
 
     console.log(new Date().toLocaleTimeString() + ' - writing to csv...')
-    fs.writeFile('playerData.csv', dataToWrite, err => {
+    fs.writeFile('data/playerData.csv', dataToWrite, err => {
       if (err) {
         console.error('error writing to file', err)
       }

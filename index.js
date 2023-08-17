@@ -256,17 +256,26 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
     }
   }
   else if (clue1Type === 'ratingYear') {
-    if (playerData[playerID]['ratingYear'][clue1Val[0]] >= parseFloat(clue1Val[1])) {
+    if (playerData[playerID]['ratingYear'][clue1Val[0]] === undefined) {
+      clue1Check = false
+    }
+    else if (playerData[playerID]['ratingYear'][clue1Val[0]] >= parseFloat(clue1Val[1])) {
       clue1Check = true
     }
   }
   else if (clue1Type === 'topPlacement') {
-    if (playerData[playerID]['topPlacement'] <= parseInt(clue1Val)) {
+    if (playerData[playerID]['topPlacement'] === undefined) {
+      clue1Check = false
+    }
+    else if (playerData[playerID]['topPlacement'] <= parseInt(clue1Val)) {
       clue1Check = true
     }
   }
   else {
-    if (playerData[playerID][clue1Type] >= parseFloat(clue1Val)) {
+    if (playerData[playerID][clue1Type] === undefined) {
+      clue1Check = false
+    }
+    else if (playerData[playerID][clue1Type] >= parseFloat(clue1Val)) {
       clue1Check = true
     }
   }
@@ -283,17 +292,26 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
     }
   }
   else if (clue2Type === 'ratingYear') {
-    if (playerData[playerID]['ratingYear'][clue2Val[0]] >= parseFloat(clue2Val[1])) {
+    if (playerData[playerID]['ratingYear'][clue2Val[0]] === undefined) {
+      clue2Check = false
+    }
+    else if (playerData[playerID]['ratingYear'][clue2Val[0]] >= parseFloat(clue2Val[1])) {
       clue2Check = true
     }
   }
   else if (clue2Type === 'topPlacement') {
-    if (playerData[playerID]['topPlacement'] <= parseInt(clue2Val)) {
+    if (playerData[playerID]['topPlacement'] === undefined) {
+      clue2Check = false
+    }
+    else if (playerData[playerID]['topPlacement'] <= parseInt(clue2Val)) {
       clue2Check = true
     }
   }
   else {
-    if (playerData[playerID][clue2Type] >= parseFloat(clue2Val)) {
+    if (playerData[playerID][clue2Type] === undefined) {
+      clue2Check = false
+    }
+    else if (playerData[playerID][clue2Type] >= parseFloat(clue2Val)) {
       clue2Check = true
     }
   }

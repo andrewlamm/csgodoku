@@ -7,6 +7,7 @@ import time
 import requests
 import os
 import ast
+import json
 
 def get_parsed_page(url):
 	headers = {
@@ -32,13 +33,13 @@ if os.path.exists(top_teams_path):
     prev_top_teams_list = ast.literal_eval(file_string)
   with open(all_teams_path, 'r', encoding="utf8") as file:
     file_string = file.read()
-    all_teams = ast.literal_eval(file_string)
+    prev_all_teams_list = ast.literal_eval(file_string)
 
 prev_all_teams = set(prev_all_teams_list)
 prev_top_teams = set(prev_top_teams_list)
 
 all_teams = set()
-top_teams = set(prev_all_teams_list)
+top_teams = set(prev_top_teams_list)
 
 THRESHOLD = 20
 
@@ -80,9 +81,9 @@ for team in all_teams:
       top_teams.add(team)
 
 f = open(top_teams_path, 'w', encoding="utf8")
-f.write(str(list(top_teams)))
+f.write(json.dumps(list(top_teams)))
 f.close()
 
 f = open(all_teams_path, 'w', encoding="utf8")
-f.write(str(list(all_teams)))
+f.write(json.dumps(list(all_teams)))
 f.close()
