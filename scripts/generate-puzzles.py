@@ -1,6 +1,7 @@
 import csv
 import random
 from prettytable import PrettyTable, ALL
+import os
 
 player_data = {}
 date_updated = None
@@ -37,7 +38,7 @@ STATS = [
 ]
 
 def read_data():
-  with open("playerData.csv", 'r', encoding="utf8") as file:
+  with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'playerData.csv'), 'r', encoding="utf8") as file:
     csvreader = csv.reader(file)
     top_row = next(csvreader)
     parse_type = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']

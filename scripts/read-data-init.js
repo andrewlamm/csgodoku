@@ -337,7 +337,7 @@ async function main() {
   catch (err) {
     console.log(`failed loading with error`, err)
 
-    fs.writeFile('playerData.csv', dataToWrite, err => {
+    fs.writeFile('../data/playerData.csv', dataToWrite, err => {
       if (err) {
         console.error('error writing to file', err)
       }

@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import csv
 import time
 import requests
+import os
 
 def get_parsed_page(url):
 	headers = {
@@ -27,7 +28,7 @@ top_teams = set()
 THRESHOLD = 20
 
 def read_data():
-  with open("playerData.csv", 'r', encoding="utf8") as file:
+  with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'playerData.csv'), 'r', encoding="utf8") as file:
     csvreader = csv.reader(file)
     top_row = next(csvreader)
 
