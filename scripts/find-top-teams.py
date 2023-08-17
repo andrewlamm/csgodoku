@@ -6,6 +6,7 @@ import csv
 import time
 import requests
 import os
+import ast
 
 def get_parsed_page(url):
 	headers = {
@@ -20,10 +21,24 @@ def get_parsed_page(url):
 	return BeautifulSoup(res.text, 'html.parser')
 
 prev_top_teams_list = []
+prev_all_teams_list = []
+
+top_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-teams.txt')
+all_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'all-teams.txt')
+if os.path.exists(top_teams_path):
+  # previous data exists, load it
+  with open(top_teams_path, 'r', encoding="utf8") as file:
+    file_string = file.read()
+    prev_top_teams_list = ast.literal_eval(file_string)
+  with open(all_teams_path, 'r', encoding="utf8") as file:
+    file_string = file.read()
+    all_teams = ast.literal_eval(file_string)
+
+prev_all_teams = set(prev_all_teams_list)
 prev_top_teams = set(prev_top_teams_list)
 
 all_teams = set()
-top_teams = set()
+top_teams = set(prev_all_teams_list)
 
 THRESHOLD = 20
 
@@ -44,10 +59,10 @@ for team in all_teams:
   print('loading team ' + team + ' (team ' + str(team_count+1) + ' of ' + str(len(all_teams)) + ')')
   team_count += 1
 
-  # uncomment code if want to cache teams for faster code
-  # if team in prev_top_teams:
-  #   top_teams.add(team)
-  #   continue
+  if team in prev_all_teams:
+    # team has already been processed, skip
+    print('already processed team, skip')
+    continue
 
   team_id = team.split('/')[0]
 
@@ -64,4 +79,10 @@ for team in all_teams:
     if rank < THRESHOLD:
       top_teams.add(team)
 
-print(list(top_teams))
+f = open(top_teams_path, 'w', encoding="utf8")
+f.write(str(list(top_teams)))
+f.close()
+
+f = open(all_teams_path, 'w', encoding="utf8")
+f.write(str(list(all_teams)))
+f.close()

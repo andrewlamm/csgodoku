@@ -45,7 +45,7 @@ async function readCSV(playerData, playerList) {
     const res = await octokit.repos.getContent({
       owner: 'superandybean',
       repo: 'csgodoku',
-      path: 'playerData.csv',
+      path: 'data/playerData.csv',
     })
     const data = Base64.decode(res.data.content)
 
