@@ -1,3 +1,7 @@
+// copy of index.js used for testing
+// reads from local csv instead of github
+// never updates the database
+
 const express = require('express')
 const app = express()
 const session = require('cookie-session')
@@ -52,8 +56,8 @@ async function readCSV(playerData, playerList) {
     const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
     let lastUpdated = undefined
     let topRow = undefined
-    // fs.createReadStream('playerData.csv')
-    Readable.from(data)
+    fs.createReadStream('playerData.csv')
+    // Readable.from(data)
       .pipe(csv())
       .on('headers', (headers) => {
         topRow = headers
@@ -229,7 +233,7 @@ let lastUpdated = undefined
 
 let puzzleUpdating = false
 
-const TIME_OFFSET = 1690855200 // Jul 31, 10 PM EST
+const TIME_OFFSET = 1690855200 + 4140 // CHANGE HERE
 const SECONDS_PER_DAY = 86400
 
 const NUMBER_OF_GUESSES = 9
@@ -371,7 +375,9 @@ async function checkPuzzle(req, res, next) {
         pickedPlayers: initPickedPlayers,
       } }
 
-      const updateRes = await db.updateOne(query, update)
+      // const updateRes = await db.updateOne(query, update)
+
+      await delay(1000)
 
       puzzleUpdating = false
       next()
@@ -412,7 +418,9 @@ async function checkPuzzle(req, res, next) {
         pickedPlayers: initPickedPlayers,
       } }
 
-      const updateRes = await db.updateOne(query, update)
+      // const updateRes = await db.updateOne(query, update)
+
+      await delay(1000) // sim delay
 
       puzzleUpdating = false
 
@@ -464,6 +472,7 @@ async function getPickedPlayersList() {
   // read from db
   while (puzzleUpdating) {
     // wait until ready
+    console.log(new Date().toLocaleTimeString(), 'waiting for puzzle update')
     await delay(100)
     await getPickedPlayersList()
   }
@@ -484,14 +493,22 @@ async function getPickedPlayersList() {
     })
   }
 
-  const query = { _id: 'currentPuzzleStats' }
-  const result = await db.findOne(query)
+  // DO NOT USE DATABASE
+  // const query = { _id: 'currentPuzzleStats' }
+  // const result = await db.findOne(query)
+
+  // for (let ind = 0; ind < 9; ind++) {
+  //   for (const [playerID, count] of Object.entries(result.pickedPlayers[ind])) {
+  //     pickedPlayersSet[ind][playerID].count = count
+  //     totalPicks[ind] += count
+  //   }
+  // }
 
   for (let ind = 0; ind < 9; ind++) {
-    for (const [playerID, count] of Object.entries(result.pickedPlayers[ind])) {
-      pickedPlayersSet[ind][playerID].count = count
-      totalPicks[ind] += count
-    }
+    possiblePlayers[ind].forEach(playerID => {
+      pickedPlayersSet[ind][playerID].count = 1
+      totalPicks[ind] += 1
+    })
   }
 
   for (let ind = 0; ind < 9; ind++) {
@@ -522,7 +539,7 @@ async function updateGlobalFinalScores(score, unique) {
   update.$inc.numberGames = 1
   update.$inc.totalUniqueness = unique
 
-  const updateRes = await db.updateOne(query, update)
+  // const updateRes = await db.updateOne(query, update)
 }
 
 async function getFinalScores() {
@@ -679,7 +696,7 @@ async function insertGuessHelper(req, res, next) {
           }
         }
 
-        const resultDoc = await db.updateOne(query, update)
+        // const resultDoc = await db.updateOne(query, update)
 
         const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
@@ -784,7 +801,7 @@ async function concedeHelper(req, res, next) {
         }
       }
 
-      const resultDoc = await db.updateOne(query, update)
+      // const resultDoc = await db.updateOne(query, update)
 
       const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
@@ -1202,7 +1219,7 @@ async function saveInfinitePuzzle(req, res, next) {
   const update = { $set: {} }
   update.$set[res.locals.puzzleID] = JSON.stringify(res.locals.puzzle)
 
-  const updateRes = await db.updateOne(query, update)
+  // const updateRes = await db.updateOne(query, update)
 
   next()
 }
