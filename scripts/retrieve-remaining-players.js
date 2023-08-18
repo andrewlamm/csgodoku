@@ -194,7 +194,7 @@ async function main() {
           const playerLink = player.find('a').attrs.href.split('/')
 
           const id = playerLink[playerLink.length - 2]
-          const name = playerLink[playerLink.length - 1]
+          const name = player.find('a').text
 
           if (playerData[id] === undefined) {
             console.log(new Date().toLocaleTimeString(), ' - getting stats for', `${id}/${name}`)
@@ -243,10 +243,15 @@ async function main() {
             playerData[id].fullName = statsPage.find('div', {'class': 'summaryRealname'}).text
 
             playerData[id].age = parseInt(statsPage.find('div', {'class': 'summaryPlayerAge'}).text.split(' ')[0])
+            if (playerData[id].age.isNaN()) {
+              playerData[id].age = undefined
+            }
+
+            playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title
 
             const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
 
-            if (statsDivs.length !== 14 || statsDivs.length !== 10) {
+            if (statsDivs.length !== 14 && statsDivs.length !== 10) {
               console.log('failed to get stats for', `${id}/${name}`, '(incorrect divs)')
               continue
             }
@@ -288,6 +293,7 @@ async function main() {
               }
               else {
                 playerData[id].rating2 = 'N/A'
+                playerData[id].rating1 = parseFloat(ratingBox.findAll('span')[1].text)
               }
 
               const mapsBox = statsDivs[6]
@@ -311,6 +317,8 @@ async function main() {
               const adrBox = statsDivs[4]
               playerData[id].adr = parseFloat(adrBox.findAll('span')[1].text)
             }
+
+            playerData[id].KDDiff = playerData[id].kills - playerData[id].deaths
 
             const ratingBoxes = statsPage.findAll('div', {'class': 'rating-breakdown'})
             if (ratingBoxes[2].find('div').text === '-') {

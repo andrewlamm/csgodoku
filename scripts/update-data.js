@@ -258,6 +258,9 @@ async function main() {
           playerData[id].fullName = statsPage.find('div', {'class': 'summaryRealname'}).text
 
           playerData[id].age = parseInt(statsPage.find('div', {'class': 'summaryPlayerAge'}).text.split(' ')[0])
+          if (playerData[id].age.isNaN) {
+            playerData[id].age = 'N/A'
+          }
 
           playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title
 
@@ -267,6 +270,7 @@ async function main() {
           }
           else {
             playerData[id].rating2 = 'N/A'
+            playerData[id].rating1 = parseFloat(ratingBox.findAll('span')[1].text)
           }
 
           const KDRatioBox = statsDivs[3]
