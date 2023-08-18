@@ -223,17 +223,41 @@ async function main() {
 
         const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
 
-        const mapsBox = statsDivs[6]
-        const playerMaps = parseInt(mapsBox.findAll('span')[1].text)
+        let mapsBox = undefined
+        let playerMaps = undefined
+        let roundsBox = undefined
+        let playerRounds = undefined
+        let killsBox = undefined
+        let playerKills = undefined
+        let deathsBox = undefined
+        let playerDeaths = undefined
 
-        const roundsBox = statsDivs[7]
-        const playerRounds = parseInt(roundsBox.findAll('span')[1].text)
+        if (statsDivs.length === 10) {
+          mapsBox = statsDivs[4]
+          playerMaps = parseInt(mapsBox.findAll('span')[1].text)
 
-        const killsBox = statsDivs[0]
-        const playerKills = parseInt(killsBox.findAll('span')[1].text)
+          roundsBox = statsDivs[5]
+          playerRounds = parseInt(roundsBox.findAll('span')[1].text)
 
-        const deathsBox = statsDivs[2]
-        const playerDeaths = parseInt(deathsBox.findAll('span')[1].text)
+          killsBox = statsDivs[0]
+          playerKills = parseInt(killsBox.findAll('span')[1].text)
+
+          deathsBox = statsDivs[2]
+          playerDeaths = parseInt(deathsBox.findAll('span')[1].text)
+        }
+        else {
+          mapsBox = statsDivs[6]
+          playerMaps = parseInt(mapsBox.findAll('span')[1].text)
+
+          roundsBox = statsDivs[7]
+          playerRounds = parseInt(roundsBox.findAll('span')[1].text)
+
+          killsBox = statsDivs[0]
+          playerKills = parseInt(killsBox.findAll('span')[1].text)
+
+          deathsBox = statsDivs[2]
+          playerDeaths = parseInt(deathsBox.findAll('span')[1].text)
+        }
 
         if (playerData[id].maps === playerMaps && playerData[id].rounds === playerRounds && playerData[id].kills === playerKills && playerData[id].deaths === playerDeaths) {
           console.log(new Date().toLocaleTimeString() + ' - justkidding, skipping ' + name)
@@ -264,7 +288,7 @@ async function main() {
 
           playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title
 
-          const ratingBox = statsDivs[13]
+          const ratingBox = statsDivs.length === 10 ? statsDivs[9] : statsDivs[13]
           if (ratingBox.text.includes('2.0')) {
             playerData[id].rating2 = parseFloat(ratingBox.findAll('span')[1].text)
           }
@@ -280,7 +304,7 @@ async function main() {
           playerData[id].HSRatio = parseFloat(HSRatioBox.findAll('span')[1].text)
 
           const adrBox = statsDivs[4]
-          playerData[id].adr = parseFloat(adrBox.findAll('span')[1].text)
+          playerData[id].adr = statsDivs.length === 10 ? 'N/A' : parseFloat(adrBox.findAll('span')[1].text)
 
           const ratingBoxes = statsPage.findAll('div', {'class': 'rating-breakdown'})
           if (ratingBoxes[2].find('div').text === '-') {
