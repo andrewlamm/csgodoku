@@ -331,7 +331,11 @@ async function main() {
             const careerPage = await getParsedPage('https://www.hltv.org/stats/players/career/' + id + '/' + name)
 
             const ratingYear = careerPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
-            for (let i = 0; i < ratingYear.length-1; i++) {
+            for (let i = 0; i < ratingYear.length; i++) {
+              if (isNaN(ratingYear[i].findAll('td')[0].text)) {
+                // not a number (probably last 3 months text)
+                continue
+              }
               const year = parseInt(ratingYear[i].findAll('td')[0].text)
               const rating = parseFloat(ratingYear[i].findAll('td')[1].find('span').text)
               playerData[id].ratingYear[year] = rating
