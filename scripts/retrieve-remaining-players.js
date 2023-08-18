@@ -243,8 +243,8 @@ async function main() {
             playerData[id].fullName = statsPage.find('div', {'class': 'summaryRealname'}).text
 
             playerData[id].age = parseInt(statsPage.find('div', {'class': 'summaryPlayerAge'}).text.split(' ')[0])
-            if (playerData[id].age.isNaN()) {
-              playerData[id].age = undefined
+            if (isNaN(playerData[id].age)) {
+              playerData[id].age = 'N/A'
             }
 
             playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title

@@ -258,7 +258,7 @@ async function main() {
           playerData[id].fullName = statsPage.find('div', {'class': 'summaryRealname'}).text
 
           playerData[id].age = parseInt(statsPage.find('div', {'class': 'summaryPlayerAge'}).text.split(' ')[0])
-          if (playerData[id].age.isNaN) {
+          if (isNaN(playerData[id].age)) {
             playerData[id].age = 'N/A'
           }
 
