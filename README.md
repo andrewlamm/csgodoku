@@ -1,5 +1,6 @@
 # csgodoku
 ## Immaculate Grid for CS:GO
+#### https://csgodoku.onrender.com/
 
 ### Scripts
 #### **`read-data-init.js`**
@@ -25,12 +26,12 @@ Script that prints all the valid players for each grid spot given a puzzle, as s
 When generating the `playerData.csv` file for the first time, run
 1. `node scripts/read-data-init.js`
 2. `python3 scripts/find-top-teams.py`
-3. `python3 scripts/retrieve-remaining-players.js`
+3. `node scripts/retrieve-remaining-players.js`
 
 When updating the `playerData.csv` file, run
 1. `node scripts/update-data.js`
 2. `python3 scripts/find-top-teams.py`
-3. `python3 scripts/retrieve-remaining-players.js`
+3. `node scripts/retrieve-remaining-players.js`
 
 ### Website
 To run the website locally, run the following commands:
@@ -41,9 +42,9 @@ node index.js
 Then, you may visit it at `http://localhost:4000/`
 
 ### Enviornment Variables
-`MONGO_DB_URL` - link to connect to mongoDB database
-`SESSION_SECRET` - secret used in `cookie-session`
-`GH_TOKEN` - github token, used to connect to github and read csv file
+`MONGO_DB_URL` - link to connect to mongoDB database       
+`SESSION_SECRET` - secret used in `cookie-session`       
+`GH_TOKEN` - github token, used to connect to github and read csv file       
 
 ### Database
 ```
@@ -60,11 +61,11 @@ Then, you may visit it at `http://localhost:4000/`
   puzzleDate: Integer
 }
 ```
-`numberGames` stores the number of total games played today
-`pickedPlayers` is an array of objects. Each object contains all the possible players for that grid position (by the player's ID) and the number of times it has been picked
-`scores` is an array of integer. Each index contains the number of games that had that score
-`totalUniqueness` stores the total uniqueness score across all games played today
-`puzzleDate` contains the date of the current puzzle
+`numberGames` stores the number of total games played today          
+`pickedPlayers` is an array of objects. Each object contains all the possible players for that grid position (by the player's ID) and the number of times it has been picked      
+`scores` is an array of integer. Each index contains the number of games that had that score        
+`totalUniqueness` stores the total uniqueness score across all games played today        
+`puzzleDate` contains the date of the current puzzle        
 ```
 {
   _id: "puzzleList"
