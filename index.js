@@ -951,7 +951,7 @@ app.post('/concede', [checkPuzzle, checkPlayer, concedeHelper], (req, res) => {
 })
 
 /* Infinite Mode */
-const topTeams = ['8008/Grayhound', '10503/OG', '7059/X', '11585/IHC', '7461/Copenhagen Flames', '6548/?', '7613/Red Reserve', '6902/GODSENT', '6651/Gambit', '10150/CR4ZY', '5310/HellRaisers', '8362/MAD Lions', '4991/fnatic', '4869/ENCE', '10948/Extra Salt', '5752/Cloud9', '9928/GamerLegion', '5996/TSM', '10577/SINNERS', '11616/Players', '10276/Finest', '10399/Evil Geniuses', '6375/Vexed', '7801/Ghost', '7175/Heroic', '4602/Tricked', '5973/Liquid', '7718/Movistar Riders', '5995/G2', '4773/paiN', '11595/Outsiders', '8513/Windigo', '11309/00NATION', '10831/Entropiq', '6134/Kinguin', '6137/SK', '4623/fnatic', '4863/TYLOO', '5988/FlipSid3', '6667/FaZe', '11066/Fiend', '8135/FORZE', '11811/Monte', '4674/LDLC', '6978/Singularity', '7244/K23', '9455/Imperial', '10606/c0ntact', '9215/MIBR', '6637/ex-Titan', '10514/Gen.G', '6680/Echo Fox', '8637/Sprout', '8068/AGO', '4791/Immunity', '5974/CLG', '7533/North', '9996/9z', '6372/CSGL', '7020/Spirit', '7557/Misfits', '11148/Akuma', '7367/Quantum Bellator Fire', '7701/Imperial', '5005/Complexity', '9085/Chaos', '6615/OpTic', '6211/Renegades', '11251/Eternal Fire', '9183/Winstrike', '11501/HEET', '5929/Space Soldiers', '6673/NRG', '8481/Valiance', '10671/FunPlus Phoenix', '4555/Virtus.pro', '6094/Vega Squadron', '5422/Dignitas', '5284/Titan', '8305/DreamEaters', '10386/SKADE', '4608/Natus Vincere', '5991/Envy', '11419/ECSTATIC', '8474/100 Thieves', '6290/Luminosity', '9565/Vitality', '5395/PENTA', '9806/Apeks', '6959/MK', '6226/E-frag.net', '9943/ATK', '6118/Tempo Storm', '4688/Epsilon', '7532/BIG', '11164/Into the Breach', '6773/VG.CyberZen', '10278/9INE', '4411/Ninjas in Pyjamas', '7865/HAVU', '6665/Astralis', '8297/FURIA', '11518/Bad News Eagles', '4494/MOUZ', '7010/Immortals', '6292/Conquest', '5378/Virtus.pro', '8120/AVANGAR']
+let topTeams = undefined
 const STATS = [
   ['country', undefined],
   ['age', [30, 35, 40]],
@@ -972,6 +972,29 @@ const STATS = [
   ['top10s', [1, 3, 5]],
   ['topPlacement', [1, 5, 10, 20]]
 ]
+
+async function getTopTeams() {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const octokit = new Octokit({
+        auth: process.env.GH_TOKEN,
+      })
+      const res = await octokit.repos.getContent({
+        owner: 'superandybean',
+        repo: 'csgodoku',
+        path: 'data/top-teams.txt',
+      })
+      const data = Base64.decode(res.data.content)
+
+      topTeams = JSON.parse(data)
+      resolve(1)
+    }
+    catch (err) {
+      console.log('error reading top teams with error', err)
+      reject(err)
+    }
+  })
+}
 
 function setIntersection(setA, setB) {
   return new Set([...setA].filter(x => setB.has(x)))
@@ -1533,8 +1556,13 @@ async function start() {
   console.log('reading csv...')
   lastUpdated = await readCSV(playerData, playerList)
   console.log(`Last updated: ${lastUpdated}`)
+
+  console.log('reading top teams...')
+  await getTopTeams()
+
   console.log('preprocessing data...')
   preprocessData(playerData)
+
   app.listen(process.env.PORT || 4000, () => console.log("Server is running..."))
 }
 
