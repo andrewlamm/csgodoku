@@ -18,17 +18,23 @@ async function downloadImage(url, category, id) {
 
   // console.log(fixedURL)
 
-  const picture = await (await fetch(fixedURL)).blob()
-  const arrayBuffer = await picture.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
+  if (fixedURL.contains('player_silhouette.png') || fixedURL.contains('placeholder.svg')) {
+    // skip downloading image
+    return
+  }
+  else {
+    const picture = await (await fetch(fixedURL)).blob()
+    const arrayBuffer = await picture.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
 
-  sharp(buffer).png().toFile(`static/images/${category}/${id}.png`, (err, info) => {
-    if (err) console.log(err)
-  })
+    sharp(buffer).png().toFile(`static/images/${category}/${id}.png`, (err, info) => {
+      if (err) console.log(err)
+    })
 
-  // fs.writeFile(`static/images/${category}/${id}.png`, buffer, err => {
-  //   if (err) console.log(err)
-  // })
+    // fs.writeFile(`static/images/${category}/${id}.png`, buffer, err => {
+    //   if (err) console.log(err)
+    // })
+  }
 }
 
 async function getTeamImage(url) {
@@ -36,9 +42,9 @@ async function getTeamImage(url) {
   if (url === '6548/?')
     url = '6548/-'
 
-  const page = await (await fetch(`https://www.hltv.org/team/${url}`)).text()
+  const page = await (await fetch(`https://www.hltv.org/stats/teams/${url}/a`)).text()
   const soupPage = new JSSoup(page)
-  const imageURL = soupPage.find('div', {'class': 'profile-team-logo-container'}).find('img').attrs.src
+  const imageURL = soupPage.find('div', {'class': 'context.item'}).find('img').attrs.src
 
   const id = url.split('/')[0]
 

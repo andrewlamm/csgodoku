@@ -96,7 +96,7 @@
                 <% for (let i = 0; i < 9; i++) { %>
                   <% if (currGame.board[i]) { %>
                     <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors">
-                      <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png">
+                      <img class="w-full h-full" src="/images/player/<%= players[currGame.board[i]].id %>.png" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
                       <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
                         <%= players[currGame.board[i]].name %>
                       </div>
@@ -113,7 +113,7 @@
               <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="stats-common-board">
                 <% for (let i = 0; i < 9; i++) { %>
                   <div class="flex flex-col h-28 w-28 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors cursor-pointer hover:bg-gray-700" onclick="openStatsPopup(<%= i %>)">
-                    <img class="w-full h-full" src="/images/player/<%= pickedPlayers[i][0].playerID %>.png">
+                    <img class="w-full h-full" src="/images/player/<%= pickedPlayers[i][0].playerID %>.png" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
                     <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
                       <%= pickedPlayers[i][0].name %>
                     </div>

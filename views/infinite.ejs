@@ -69,14 +69,14 @@
               <% for (let i = 0; i < 9; i++) { %>
                 <% if (userData.board[i]) { %>
                   <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
-                    <img class="w-full h-full" src="/images/player/<%= players[userData.board[i]].id %>.png">
+                    <img class="w-full h-full" src="/images/player/<%= players[userData.board[i]].id %>.png" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
                     <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
                       <%= players[userData.board[i]].name %>
                     </div>
                   </div>
                 <% } else { %>
                   <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> <%= userData.gameStatus === 0 ? 'cursor-pointer hover:bg-slate-600' : '' %> bg-slate-800 transition-colors" <% if (userData.gameStatus === 0) { %>onclick="openPopup(<%= i %>)"<% } %> id="grid-spot-<%= i %>">
-                    <img class="w-full h-full" id="grid-image-<%= i %>">
+                    <img class="w-full h-full" id="grid-image-<%= i %>" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
                     <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center text-sm md:text-base" id="grid-name-<%= i %>">
                     </div>
                   </div>
@@ -86,7 +86,7 @@
             <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-board">
               <% for (let i = 0; i < 9; i++) { %>
                 <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> cursor-pointer bg-slate-600 hover:bg-gray-700 transition-colors" onclick="openStatsPopup(<%= i %>)" id="stats-spot-<%= i %>">
-                  <img class="w-full h-full" id="stats-image-<%= i %>">
+                  <img class="w-full h-full" id="stats-image-<%= i %>" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
                   <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center text-sm md:text-base" id="stats-name-<%= i %>">
                   </div>
                 </div>
