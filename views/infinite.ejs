@@ -3,14 +3,14 @@
   <%- include('partials/helmet.ejs', {title: 'csgodoku - infinite mode'}) %>
   <body>
     <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
-      <div class="text-xl md:text-3xl">
+      <div class="text-xl md:text-3xl text-center md:text-left">
         <a href="/" class="w-full h-full">CSGODOKU</a> - infinite mode
       </div>
-      <div class="flex flex-row">
-        <div class="text-base md:text-xl cursor-pointer mr-8">
+      <div class="flex flex-row items-center">
+        <div class="text-base md:text-xl cursor-pointer mr-2 md:mr-8 text-center md:text-left">
           <a href="/" class="w-full h-full">back to original</a>
         </div>
-        <div class="text-base md:text-xl cursor-pointer" onclick="openHowToPlay()">
+        <div class="text-base md:text-xl cursor-pointer text-center md:text-left" onclick="openHowToPlay()">
           how to play
         </div>
       </div>
@@ -43,7 +43,7 @@
       </div>
     </div>
     <div class="w-full h-screen flex flex-col justify-center items-center bg-gray-850" id="game-screen">
-      <div class="w-full md:w-1/2 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold text-white <%= userData.gameStatus === 0 ? 'hidden' : '' %>" id="board-select-container">
+      <div class="w-full md:w-1/2 xl:w-1/4 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold text-white <%= userData.gameStatus === 0 ? 'hidden' : '' %>" id="board-select-container">
         <div class="w-1/2 text-center border-r border-slate-500 py-2 transition-colors bg-gray-500 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
           your board
         </div>
