@@ -168,6 +168,7 @@ async function getDataString() {
 }
 
 async function main() {
+  let dataToWrite = await getDataString()
   try {
     const downloadedCountryImages = {}
     const downloadTeamLinks = new Set()
@@ -177,8 +178,6 @@ async function main() {
 
     const lastUpdated = await readCSV(playerData, idToName)
     const topTeams = await getTopTeams()
-
-    let dataToWrite = await getDataString()
 
     for (let i = 0; i < topTeams.length; i++) {
       const teamName = topTeams[i]
@@ -463,6 +462,13 @@ async function main() {
   }
   catch (err) {
     console.log('failed with error', err)
+    console.log(new Date().toLocaleTimeString() + ' - writing to csv...')
+    fs.writeFile('data/playerData.csv', dataToWrite, err => {
+      if (err) {
+        console.error('error writing to file', err)
+      }
+    })
+    console.log(new Date().toLocaleTimeString() + ' - completed')
   }
 }
 

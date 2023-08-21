@@ -41,7 +41,7 @@ prev_top_teams = set(prev_top_teams_list)
 all_teams = set()
 top_teams = set(prev_top_teams_list)
 
-THRESHOLD = 20
+THRESHOLD = 30
 
 def read_data():
   with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'playerData.csv'), 'r', encoding="utf8") as file:
@@ -60,7 +60,7 @@ for team in all_teams:
   print('loading team ' + team + ' (team ' + str(team_count+1) + ' of ' + str(len(all_teams)) + ')')
   team_count += 1
 
-  if team in prev_all_teams:
+  if team in prev_top_teams: # if team in prev_all_teams:
     # team has already been processed, skip
     print('already processed team, skip')
     continue
@@ -77,7 +77,7 @@ for team in all_teams:
   if len(team_page.find('div', {'class': 'team-chart-container'}).find_all('span', {'class': 'value'})) > 1:
     rank = int(team_page.find('div', {'class': 'team-chart-container'}).find_all('span', {'class': 'value'})[1].text[1:])
 
-    if rank < THRESHOLD:
+    if rank <= THRESHOLD:
       top_teams.add(team)
 
 f = open(top_teams_path, 'w', encoding="utf8")
