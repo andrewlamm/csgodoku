@@ -86,9 +86,9 @@ async function readCSV(playerData, playerList) {
 
               // code for adding team to teamNameToID
               if (teamNameToID[teamName] === undefined) {
-                teamNameToID[teamName] = []
+                teamNameToID[teamName] = new Set()
               }
-              teamNameToID[teamName].push(team)
+              teamNameToID[teamName].add(team)
 
               // for infinite puzzle team ids
               playerData[playerID]['teamIDs'].add(team)
@@ -240,6 +240,7 @@ const SECONDS_PER_DAY = 86400
 const NUMBER_OF_GUESSES = 9
 
 const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
+const PUZZLE_TO_GRID = [[0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 1, 2], [3, 4, 5], [6, 7, 8]]
 
 function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
   const clue1Type = clue1[0]
@@ -1102,7 +1103,7 @@ function getRandomSubarray(arr, size) {
 
 function convertClue(clue) {
   if (clue[0] === 'team')
-    return ['team', getRandomSubarray(teamNameToID[clue[1]], 1)[0]]
+    return ['team', getRandomSubarray([...teamNameToID[clue[1]]], 1)[0]]
   return clue
 }
 
@@ -1111,29 +1112,45 @@ function replacePuzzleTeams(puzzle, possiblePlayers) {
   for (let i = 0; i < 6; i++) {
     if (puzzle[i][0] === 'team') {
       const teamCount = {}
-      teamNameToID[puzzle[i][1]].map(teamName => {
-        teamCount[teamName] = 0
-        possiblePlayers[i].forEach(playerID => {
-          if (playerData[playerID].teamIDs.has(teamName))
-            teamCount[teamName] += 1
-        })
-      })
+      const team = puzzle[i][1].substring(puzzle[i][1].indexOf('/') + 1)
 
-      let maxTeam = undefined
-      let maxCount = 0
-      for (const [teamName, count] of Object.entries(teamCount)) {
-        if (count > maxCount) {
-          maxCount = count
-          maxTeam = teamName
-        }
+      if (teamNameToID[team].size === 1) {
+        newPuzzle.push(puzzle[i])
       }
+      else {
+        teamNameToID[team].forEach(teamName => {
+          teamCount[teamName] = 0
+          for (let j = 0; j < PUZZLE_TO_GRID[i].length; j++) {
+            const ind = PUZZLE_TO_GRID[i][j]
 
-      newPuzzle.push(['team', maxTeam])
+            possiblePlayers[ind].forEach(playerID => {
+              if (playerData[playerID].teamIDs.has(teamName))
+                teamCount[teamName] += 1
+            })
+          }
+        })
+
+        // console.log(teamCount)
+
+        let maxTeam = undefined
+        let maxCount = 0
+        for (const [teamName, count] of Object.entries(teamCount)) {
+          if (count > maxCount) {
+            maxCount = count
+            maxTeam = teamName
+          }
+        }
+
+        newPuzzle.push(['team', maxTeam])
+      }
     }
     else {
       newPuzzle.push(puzzle[i])
     }
   }
+
+  // console.log(puzzle, newPuzzle)
+  return newPuzzle
 }
 
 function findPartnerTeams(team, minPlayers) {
@@ -1264,7 +1281,7 @@ function generatePuzzle(req, res, next) {
     const solved = checkValidPuzzle(fixedPuzzle, minPlayers)
     if (solved) {
       generatingPuzzle = false
-      res.locals.puzzle = fixedPuzzle
+      res.locals.puzzle = replacePuzzleTeams(fixedPuzzle, generatePossiblePlayers(fixedPuzzle))
 
       next()
     }
