@@ -107,9 +107,15 @@ def preprocess_data():
   #       partner_teams[teams[i]].add(teams[j])
   #       partner_teams[teams[j]].add(teams[i])
 
-def convert_clue(clue):
+def convert_clue(clue, poss_players):
   if clue[0] == 'team':
-    return ['team', random.choice(name_to_id[clue[1]])]
+    team_count = {}
+    for team in name_to_id[clue[1]]:
+      team_count[team] = 0
+      for player in poss_players:
+        if team in player_data[player]['teams']:
+          team_count[team] += 1
+    return ['team', max(team_count, key=lambda key: team_count[key])]
   return list(clue)
 
 def generate_player_set(clue1, clue2):
@@ -282,7 +288,7 @@ def generate_puzzle():
 
     ans = solve_puzzle(puzzle, board, 0, set(), all_poss_players)
     if ans is not None:
-      puzzle_list = [convert_clue(elm) for elm in puzzle]
+      puzzle_list = [convert_clue(elm, all_poss_players[ind]) for ind, elm in enumerate(puzzle)]
       # for elm in puzzle_list:
       #   if elm[0] == 'team':
       #     elm[1] = elm[1][elm[1].index('/')+1:]
@@ -310,6 +316,6 @@ def generate_puzzles(print_table=True, num_puzzles=10):
 read_data()
 preprocess_data()
 
-# puzzles = generate_puzzles(True, 1)
+puzzles = generate_puzzles(True, 1)
 # print(puzzles[0])
 # print(teams)

@@ -78,6 +78,8 @@ async function readCSV(playerData, playerList) {
           else if (parseType[i] === 'set') {
             const teamSetWithID = new Set(JSON.parse(rowData[i]))
             const teamSet = new Set()
+
+            playerData[playerID]['teamIDs'] = new Set()
             teamSetWithID.forEach(team => {
               const teamName = team.substring(team.indexOf('/')+1)
               teamSet.add(teamName)
@@ -87,6 +89,9 @@ async function readCSV(playerData, playerList) {
                 teamNameToID[teamName] = []
               }
               teamNameToID[teamName].push(team)
+
+              // for infinite puzzle team ids
+              playerData[playerID]['teamIDs'].add(team)
             })
             playerData[playerID][topRow[i]] = teamSet
           }
@@ -1101,6 +1106,36 @@ function convertClue(clue) {
   return clue
 }
 
+function replacePuzzleTeams(puzzle, possiblePlayers) {
+  const newPuzzle = []
+  for (let i = 0; i < 6; i++) {
+    if (puzzle[i][0] === 'team') {
+      const teamCount = {}
+      teamNameToID[puzzle[i][1]].map(teamName => {
+        teamCount[teamName] = 0
+        possiblePlayers[i].forEach(playerID => {
+          if (playerData[playerID].teamIDs.has(teamName))
+            teamCount[teamName] += 1
+        })
+      })
+
+      let maxTeam = undefined
+      let maxCount = 0
+      for (const [teamName, count] of Object.entries(teamCount)) {
+        if (count > maxCount) {
+          maxCount = count
+          maxTeam = teamName
+        }
+      }
+
+      newPuzzle.push(['team', maxTeam])
+    }
+    else {
+      newPuzzle.push(puzzle[i])
+    }
+  }
+}
+
 function findPartnerTeams(team, minPlayers) {
   const partnerTeams = new Set()
   for (let i = 0; i < topTeams.length; i++) {
@@ -1133,7 +1168,7 @@ function generatePuzzle(req, res, next) {
     } else if (initPartnerTeams.size === 2) {
       topRowTeamsCount = 2
     } else {
-      topRowTeamsCount = Math.random < 0.75 ? 2 : 3
+      topRowTeamsCount = Math.random() < 0.75 ? 2 : 3
     }
 
     puzzle[3] = ['team', initTeam]
@@ -1162,7 +1197,7 @@ function generatePuzzle(req, res, next) {
     } else if (topRowIntersect.size === 1) {
       leftColTeamsCount = 1
     } else {
-      leftColTeamsCount = Math.random < 0.5 ? 1 : 2
+      leftColTeamsCount = Math.random() < 0.5 ? 1 : 2
     }
 
     const leftCol = getRandomSubarray([...topRowIntersect], leftColTeamsCount)
