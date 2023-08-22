@@ -1169,10 +1169,8 @@ function findPartnerTeams(team, minPlayers) {
   return partnerTeams
 }
 
-function generatePuzzle(req, res, next) {
-  const minPlayers = 3 // parseInt(req.query.minPlayers)
-  let generatingPuzzle = true
-  while (generatingPuzzle) {
+async function generatePuzzle(minPlayers) {
+  return new Promise(async (resolve, reject) => {
     const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
 
     const initTeamFull = getRandomSubarray(topTeams, 1)[0]
@@ -1181,7 +1179,7 @@ function generatePuzzle(req, res, next) {
 
     let topRowTeamsCount = undefined
     if (initPartnerTeams.size < 2) {
-      continue
+      resolve(undefined)
     } else if (initPartnerTeams.size === 2) {
       topRowTeamsCount = 2
     } else {
@@ -1210,7 +1208,7 @@ function generatePuzzle(req, res, next) {
 
     let leftColTeamsCount = undefined
     if (topRowIntersect.size < 1) {
-      continue
+      resolve(undefined)
     } else if (topRowIntersect.size === 1) {
       leftColTeamsCount = 1
     } else {
@@ -1271,21 +1269,37 @@ function generatePuzzle(req, res, next) {
     }
 
     if (dupeCheck)
-      continue
+      resolve(undefined)
 
     const fixedPuzzle = []
     for (let i = 0; i < 6; i++) {
       fixedPuzzle.push(convertClue(puzzle[i]))
     }
 
+    // console.log('trying', fixedPuzzle)
     const solved = checkValidPuzzle(fixedPuzzle, minPlayers)
     if (solved) {
-      generatingPuzzle = false
-      res.locals.puzzle = replacePuzzleTeams(fixedPuzzle, generatePossiblePlayers(fixedPuzzle))
-
-      next()
+      resolve(replacePuzzleTeams(fixedPuzzle, generatePossiblePlayers(fixedPuzzle)))
+      // resolve(undefined)
     }
+
+    resolve(undefined)
+  })
+}
+
+async function generatePuzzleHelper(minPlayers) {
+  const puzzle = await generatePuzzle(minPlayers)
+  if (puzzle === undefined) {
+    await delay(100)
+    return await generatePuzzleHelper(minPlayers)
   }
+  return puzzle
+}
+
+async function generatePuzzleMiddleware(req, res, next) {
+  const minPlayers = 3 // parseInt(req.query.minPlayers)
+  res.locals.puzzle = await generatePuzzleHelper(minPlayers)
+  next()
 }
 
 async function saveInfinitePuzzle(req, res, next) {
@@ -1586,7 +1600,7 @@ app.get('/loadInfinite', (req, res) => {
   res.render('loadingInfinite')
 })
 
-app.post('/generateInfinite', [generatePuzzle, saveInfinitePuzzle], (req, res) => {
+app.post('/generateInfinite', [generatePuzzleMiddleware, saveInfinitePuzzle], (req, res) => {
   res.send({ id: res.locals.puzzleID })
 })
 
