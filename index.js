@@ -1329,7 +1329,8 @@ async function findPuzzle(req, res, next) {
 
 function infinitePuzzlePlayer(req, res, next) {
   if (req.session.infinitePlayer === undefined) {
-    req.session.infinitePlayer = {
+    req.session.infinitePlayer = {}
+    req.session.infinitePlayer[req.query.id] = {
       puzzleID: req.query.id,
       puzzle: res.locals.puzzle,
       guessesLeft: NUMBER_OF_GUESSES,
@@ -1340,9 +1341,9 @@ function infinitePuzzlePlayer(req, res, next) {
     next()
   }
   else {
-    if (req.session.infinitePlayer.puzzleID !== req.query.id) {
-      // user loaded a different puzzle
-      req.session.infinitePlayer = {
+    if (req.session.infinitePlayer[req.query.id] === undefined) {
+      // puzzle has not been loadded before
+      req.session.infinitePlayer[req.query.id] = {
         puzzleID: req.query.id,
         puzzle: res.locals.puzzle,
         guessesLeft: NUMBER_OF_GUESSES,
@@ -1350,15 +1351,24 @@ function infinitePuzzlePlayer(req, res, next) {
         board: [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined],
         guesses: [[], [], [], [], [], [], [], [], []],
       }
-      next()
     }
-    else {
-      next()
+
+    // now delete all puzzles that have been completed
+    const infiniteCopy = {}
+    for (const [puzzleID, puzzle] of Object.entries(req.session.infinitePlayer)) {
+      if (puzzle.gameStatus === 0) {
+        infiniteCopy[puzzleID] = puzzle
+      }
     }
+
+    req.session.infinitePlayer = infiniteCopy
+
+    next()
   }
 }
 
 async function checkInfinitePlayer(req, res, next) {
+  // TODO: need puzzleID from req
   if (req.session.infinitePlayer === undefined) {
     res.locals.guessReturn = {
       guessStatus: -1,
