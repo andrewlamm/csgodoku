@@ -13,6 +13,7 @@ parser.add_argument('-d', '--date', type=int, help='puzzle date # to use')
 # parser.add_argument('-i', '--index', type=int, help='puzzle index # in database')
 parser.add_argument('-f', '--fromDay', type=int, help="use the puzzle N days from now (negative to go backwards)")
 # parser.add_argument('--table', action='store_true', help='print the puzzle in the form of a table')
+parser.add_argument('-p', '--puzzle', help="input own puzzle")
 args = parser.parse_args()
 
 load_dotenv()
@@ -172,7 +173,12 @@ def convert_possible_player_set(poss_players):
 read_data()
 preprocess_data()
 
-puzzle = db_puzzles[puzzle_index]
+puzzle = None
+if args.puzzle is not None:
+  puzzle = args.puzzle
+else:
+  puzzle = db_puzzles[puzzle_index]
+
 puzzle = [convert_clue(clue) for clue in puzzle]
 poss_players = all_possible_players(puzzle)
 poss_players = [convert_possible_player_set(poss_player) for poss_player in poss_players]

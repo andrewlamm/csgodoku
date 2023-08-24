@@ -108,12 +108,12 @@ def preprocess_data():
   #       partner_teams[teams[i]].add(teams[j])
   #       partner_teams[teams[j]].add(teams[i])
 
-def convert_clue(clue, puzzleID, poss_players):
+def convert_clue(clue, puzzleIdx, poss_players):
   if clue[0] == 'team':
     team_count = {}
     for team in name_to_id[clue[1]]:
       team_count[team] = 0
-      for ind in PUZZLE_TO_GRID[puzzleID]:
+      for ind in PUZZLE_TO_GRID[puzzleIdx]:
         for player in poss_players[ind]:
           if team in player_data[player]['teams']:
             team_count[team] += 1
@@ -318,6 +318,6 @@ def generate_puzzles(print_table=True, num_puzzles=10):
 read_data()
 preprocess_data()
 
-puzzles = generate_puzzles(True, 1)
+# puzzles = generate_puzzles(True, 1)
 # print(puzzles[0])
 # print(teams)

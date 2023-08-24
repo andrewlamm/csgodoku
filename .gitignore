@@ -2,3 +2,4 @@ node_modules/
 AppData/
 __pycache__/
 .env
+.DS_Store
