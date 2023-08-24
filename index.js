@@ -1315,15 +1315,20 @@ async function saveInfinitePuzzle(req, res, next) {
 }
 
 async function findPuzzle(req, res, next) {
-  const result = await db.findOne({ _id: 'infinitePuzzles' })
-  const puzzleID = req.query.id
-
-  if (result === null || result[puzzleID] === undefined) {
+  if (req.query.id === undefined) {
     res.redirect('/loadInfinite')
   }
   else {
-    res.locals.puzzle = JSON.parse(result[puzzleID])
-    next()
+    const result = await db.findOne({ _id: 'infinitePuzzles' })
+    const puzzleID = req.query.id
+
+    if (result === null || result[puzzleID] === undefined) {
+      res.redirect('/loadInfinite')
+    }
+    else {
+      res.locals.puzzle = JSON.parse(result[puzzleID])
+      next()
+    }
   }
 }
 
