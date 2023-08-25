@@ -488,7 +488,7 @@ async function getPickedPlayersList() {
   // read from db
   while (puzzleUpdating) {
     // wait until ready
-    await delay(100)
+    await delay(1000)
     await getPickedPlayersList()
   }
 
@@ -1304,6 +1304,18 @@ async function generatePuzzleMiddleware(req, res, next) {
 
 async function saveInfinitePuzzle(req, res, next) {
   res.locals.puzzleID = uuidv4()
+  const doc = {
+    _id: res.locals.puzzleID,
+    puzzle: JSON.stringify(res.locals.puzzle),
+  }
+
+  const insertRes = await db.insertOne(doc)
+
+  // console.log(insertRes)
+
+  next()
+
+  /*
   const query = { _id: 'infinitePuzzles' }
 
   const update = { $set: {} }
@@ -1312,27 +1324,47 @@ async function saveInfinitePuzzle(req, res, next) {
   const updateRes = await db.updateOne(query, update)
 
   next()
+  */
 }
 
 async function findPuzzle(req, res, next) {
   if (req.query.id === undefined) {
+    req.session.infinitePlayerLoading = false
     res.redirect('/loadInfinite')
   }
   else {
-    const result = await db.findOne({ _id: 'infinitePuzzles' })
     const puzzleID = req.query.id
+    const result = await db.findOne({ _id: puzzleID })
 
-    if (result === null || result[puzzleID] === undefined) {
+    if (result === null || result.puzzle === undefined) {
+      eq.session.infinitePlayerLoading = false
       res.redirect('/loadInfinite')
     }
     else {
-      res.locals.puzzle = JSON.parse(result[puzzleID])
+      res.locals.puzzle = JSON.parse(result.puzzle)
       next()
     }
   }
 }
 
-function infinitePuzzlePlayer(req, res, next) {
+async function setLoading(req, res, next) {
+  // console.log(req.session.infinitePlayerLoading)
+  if (!req.session.infinitePlayerLoading) {
+    req.session.infinitePlayerLoading = true
+    next()
+  }
+  else {
+    await delay(500)
+    res.redirect(`/infinite?id=${req.query.id}`)
+  }
+}
+
+function unsetLoading(req, res, next) {
+  req.session.infinitePlayerLoading = false
+  next()
+}
+
+async function infinitePuzzlePlayer(req, res, next) {
   if (req.session.infinitePlayer === undefined) {
     req.session.infinitePlayer = {}
     req.session.infinitePlayer[req.query.id] = {
@@ -1358,15 +1390,20 @@ function infinitePuzzlePlayer(req, res, next) {
       }
     }
 
+    // console.log('before delete', Object.keys(req.session.infinitePlayer))
+    const deleteKeys = []
     // now delete all puzzles that have been completed
-    const infiniteCopy = {}
     for (const [puzzleID, puzzle] of Object.entries(req.session.infinitePlayer)) {
-      if (puzzle.gameStatus === 0) {
-        infiniteCopy[puzzleID] = puzzle
+      if (puzzle.gameStatus !== 0 && puzzleID !== req.query.id) {
+        deleteKeys.push(puzzleID)
       }
     }
 
-    req.session.infinitePlayer = infiniteCopy
+    for (let i = 0; i < deleteKeys.length; i++) {
+      delete req.session.infinitePlayer[deleteKeys[i]]
+    }
+
+    // console.log('after delete', Object.keys(req.session.infinitePlayer))
 
     next()
   }
@@ -1378,24 +1415,24 @@ async function checkInfinitePlayer(req, res, next) {
       guessStatus: -1,
       guessesLeft: 0,
     }
+    next()
   }
   else {
-    /*
     // check to see if puzzleID actually matches the puzzle
-    const result = await db.findOne({ _id: 'infinitePuzzles' })
-    const puzzleID = req.session.infinitePlayer.puzzleID
-    if (result === null || result[puzzleID] === undefined) {
+    const puzzleID = req.session.infinitePlayer[req.body.puzzleID].puzzleID
+    const result = await db.findOne({ _id: puzzleID })
+    if (result === null || result.puzzle === undefined) {
       // puzzle doesnt exist in db
-      console.log('error when checking player, puzzle doesnt exist in db', req.session.infinitePlayer)
+      console.log('error when checking player, puzzle doesnt exist in db', req.session.infinitePlayer[req.body.puzzleID])
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
       }
       next()
     }
-    else if (JSON.stringify(req.session.infinitePlayer.puzzle) !== result[puzzleID]) {
+    else if (JSON.stringify(req.session.infinitePlayer[req.body.puzzleID].puzzle) !== result.puzzle) {
       // puzzle doesnt match
-      console.log('error when checking player, puzzle doesnt match', req.session.infinitePlayer)
+      console.log('error when checking player, puzzle doesnt match', req.session.infinitePlayer[req.body.puzzleID])
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
@@ -1405,8 +1442,7 @@ async function checkInfinitePlayer(req, res, next) {
     else {
       // no puzzle errors
       next()
-    } */
-    next()
+    }
   }
 }
 
@@ -1414,11 +1450,12 @@ function infiniteGuessHelper(req, res, next) {
   try {
     // console.log(new Date().toTimeString())
     const puzzleID = req.body.puzzleID
+    // console.log(req.session.infinitePlayer[puzzleID])
     const gamePuzzle = req.session.infinitePlayer[puzzleID].puzzle
     const ind = parseInt(req.body.index)
     const playerGuess = parseInt(req.body.guess)
 
-    if (req.session.infinitePlayer === undefined) {
+    if (req.session.infinitePlayer === undefined || req.session.infinitePlayer[puzzleID] === undefined || gamePuzzle === undefined) {
       console.log('infinite guess helper fail, no player')
       res.locals.guessReturn = {
         guessStatus: -1,
@@ -1571,11 +1608,11 @@ async function infiniteConcedeHelper(req, res, next) {
     }
     else {
       req.session.infinitePlayer[puzzleID].guessesLeft = 0
-      req.session.infinitePlayer[puzzleID].gameStatus = -1
+      // req.session.infinitePlayer[puzzleID].gameStatus = -1
 
       const score = 9 - req.session.infinitePlayer[puzzleID].board.filter(x => x === undefined || x === null).length
 
-      req.session.infinitePlayer.gameStatus = score === 9 ? 1 : -1
+      req.session.infinitePlayer[puzzleID].gameStatus = score === 9 ? 1 : -1
 
       const infPossiblePlayers = generatePossiblePlayers(req.session.infinitePlayer[puzzleID].puzzle)
       const infPossiblePlayersArr = [[], [], [], [], [], [], [], [], []]
@@ -1599,7 +1636,7 @@ async function infiniteConcedeHelper(req, res, next) {
 }
 
 // routes
-app.get('/infinite', [findPuzzle, infinitePuzzlePlayer], (req, res) => {
+app.get('/infinite', [setLoading, findPuzzle, infinitePuzzlePlayer, unsetLoading], (req, res) => {
   const infPossiblePlayersSet = generatePossiblePlayers(res.locals.puzzle)
   const infPossiblePlayers = [[], [], [], [], [], [], [], [], []]
   for (let i = 0; i < 9; i++) {
