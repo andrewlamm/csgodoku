@@ -488,7 +488,7 @@ async function getPickedPlayersList() {
   // read from db
   while (puzzleUpdating) {
     // wait until ready
-    await delay(1000)
+    await delay(500)
     await getPickedPlayersList()
   }
 
