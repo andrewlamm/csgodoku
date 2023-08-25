@@ -346,6 +346,7 @@
       async function confirmConcede() {
         const res = await (await fetch(`/infiniteConcede`, {
           method: 'POST',
+          body: `puzzleID=${puzzleID}`,
           credentials: 'include',
           headers: new Headers({
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -457,7 +458,7 @@
 
         const res = await (await fetch(`/infiniteGuess`, {
           method: 'POST',
-          body: `guess=${playerID}&index=${ind}`,
+          body: `guess=${playerID}&index=${ind}&puzzleID=${puzzleID}`,
           credentials: 'include',
           headers: new Headers({
             'Content-Type': 'application/x-www-form-urlencoded'
