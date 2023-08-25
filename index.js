@@ -1337,7 +1337,7 @@ async function findPuzzle(req, res, next) {
     const result = await db.findOne({ _id: puzzleID })
 
     if (result === null || result.puzzle === undefined) {
-      eq.session.infinitePlayerLoading = false
+      req.session.infinitePlayerLoading = false
       res.redirect('/loadInfinite')
     }
     else {
