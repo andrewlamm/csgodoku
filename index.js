@@ -1418,6 +1418,7 @@ async function checkInfinitePlayer(req, res, next) {
     next()
   }
   else {
+    /*
     // check to see if puzzleID actually matches the puzzle
     const puzzleID = req.session.infinitePlayer[req.body.puzzleID].puzzleID
     const result = await db.findOne({ _id: puzzleID })
@@ -1442,7 +1443,8 @@ async function checkInfinitePlayer(req, res, next) {
     else {
       // no puzzle errors
       next()
-    }
+    } */
+    next()
   }
 }
 
