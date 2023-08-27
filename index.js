@@ -1297,7 +1297,7 @@ async function generatePuzzleHelper(minPlayers) {
 }
 
 async function generatePuzzleMiddleware(req, res, next) {
-  const minPlayers = 3 // parseInt(req.query.minPlayers)
+  const minPlayers = req.session.infiniteSettings.minPlayers // parseInt(req.query.minPlayers)
   res.locals.puzzle = await generatePuzzleHelper(minPlayers)
   next()
 }
@@ -1330,7 +1330,7 @@ async function saveInfinitePuzzle(req, res, next) {
 async function findPuzzle(req, res, next) {
   if (req.query.id === undefined) {
     req.session.infinitePlayerLoading = false
-    res.redirect('/loadInfinite')
+    res.redirect('/infiniteSettings')
   }
   else {
     const puzzleID = req.query.id
@@ -1338,7 +1338,7 @@ async function findPuzzle(req, res, next) {
 
     if (result === null || result.puzzle === undefined) {
       req.session.infinitePlayerLoading = false
-      res.redirect('/loadInfinite')
+      res.redirect('/infiniteSettings')
     }
     else {
       res.locals.puzzle = JSON.parse(result.puzzle)
@@ -1637,6 +1637,46 @@ async function infiniteConcedeHelper(req, res, next) {
   }
 }
 
+function defaultInfiniteSettings(req, res, next) {
+  if (req.session.infiniteSettings === undefined) {
+    req.session.infiniteSettings = {
+      minPlayers: 5,
+      teamRank: 30,
+    }
+  }
+  next()
+}
+
+function setInfiniteSettings(req, res, next) {
+  if (req.query.minPlayers === "1") {
+    req.session.infiniteSettings.minPlayers = 1
+  }
+  else if (req.query.minPlayers === "3") {
+    req.session.infiniteSettings.minPlayers = 3
+  }
+  else if (req.query.minPlayers === "10") {
+    req.session.infiniteSettings.minPlayers = 10
+  }
+  else {
+    req.session.infiniteSettings.minPlayers = 5
+  }
+
+  if (req.query.teamRank === "10") {
+    req.session.infiniteSettings.teamRank = 10
+  }
+  else if (req.query.teamRank === "20") {
+    req.session.infiniteSettings.teamRank = 20
+  }
+  else if (req.query.teamRank === "any") {
+    req.session.infiniteSettings.teamRank = 'any'
+  }
+  else {
+    req.session.infiniteSettings.teamRank = 30
+  }
+
+  next()
+}
+
 // routes
 app.get('/infinite', [setLoading, findPuzzle, infinitePuzzlePlayer, unsetLoading], (req, res) => {
   const infPossiblePlayersSet = generatePossiblePlayers(res.locals.puzzle)
@@ -1654,7 +1694,13 @@ app.get('/infinite', [setLoading, findPuzzle, infinitePuzzlePlayer, unsetLoading
   })
 })
 
-app.get('/loadInfinite', (req, res) => {
+app.get('/infiniteSettings', [defaultInfiniteSettings], (req, res) => {
+  res.render('infiniteSettings', {
+    infiniteSettings: req.session.infiniteSettings,
+  })
+})
+
+app.get('/loadInfinite', [setInfiniteSettings], (req, res) => {
   res.render('loadingInfinite')
 })
 

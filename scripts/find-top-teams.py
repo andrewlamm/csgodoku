@@ -24,7 +24,9 @@ def get_parsed_page(url):
 prev_top_teams_list = []
 prev_all_teams_list = []
 
-top_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-teams.txt')
+THRESHOLD = 10
+
+top_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-' + str(THRESHOLD) + '-teams.txt')
 all_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'all-teams.txt')
 if os.path.exists(top_teams_path):
   # previous data exists, load it
@@ -40,8 +42,6 @@ prev_top_teams = set(prev_top_teams_list)
 
 all_teams = set()
 top_teams = set(prev_top_teams_list)
-
-THRESHOLD = 30
 
 def read_data():
   with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'playerData.csv'), 'r', encoding="utf8") as file:
@@ -80,7 +80,9 @@ for team in all_teams:
     if rank <= THRESHOLD:
       top_teams.add(team)
 
-f = open(top_teams_path, 'w', encoding="utf8")
+write_to_top_team_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-' + str(THRESHOLD) + '-teams.txt')
+
+f = open(write_to_top_team_path, 'w', encoding="utf8")
 f.write(json.dumps(list(top_teams)))
 f.close()
 
