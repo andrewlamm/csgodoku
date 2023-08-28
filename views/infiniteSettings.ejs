@@ -36,8 +36,13 @@
           <% }) %>
         </div>
       </div>
-      <div class="font-bold text-xl rounded-lg bg-blue-500 mt-6 px-4 py-2 cursor-pointer" onclick="generatePuzzle()">
-        generate!
+      <div class="flex flex-row gap-8">
+        <div class="font-bold text-xl rounded-lg bg-gray-400 mt-6 px-4 py-2 cursor-pointer" onclick="resetToDefault()">
+          reset settings
+        </div>
+        <div class="font-bold text-xl rounded-lg bg-blue-500 mt-6 px-4 py-2 cursor-pointer" onclick="generatePuzzle()">
+          generate!
+        </div>
       </div>
     </div>
     <script>
@@ -58,11 +63,16 @@
         document.getElementById(`top-team-${num}`).classList.add("font-bold")
       }
 
+      function resetToDefault() {
+        changeMinPlayers(5)
+        changeTopTeam(30)
+      }
+
       function generatePuzzle() {
         const minPlayers = document.querySelector('.min-player-selector.font-bold').id.split('-')[2]
         const topTeam = document.querySelector('.top-team-selector.font-bold').id.split('-')[2]
 
-        window.location.href = `/loadInfinite?minPlayers=${minPlayers}&topTeam=${topTeam}`
+        window.location.href = `/loadInfinite?minPlayers=${minPlayers}&teamRank=${topTeam}`
       }
     </script>
   </body>
