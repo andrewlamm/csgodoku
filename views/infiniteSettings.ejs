@@ -11,7 +11,7 @@
           <div class="font-bold" id="next-puzzle-timer"></div>
           <div class="font-semibold">until next puzzle</div>
         </div> -->
-        <div class="text-base md:text-xl cursor-pointer">
+        <div class="text-base md:text-xl cursor-pointer text-center">
           <a href="/" class="w-full h-full">back to original</a>
         </div>
       </div>
@@ -20,27 +20,27 @@
       <div class="text-3xl md:text-5xl text-white mb-8 font-bold">infinite mode settings</div>
       <div class="flex flex-col items-center justify-center">
         <div class="text-xl md:text-2xl text-white font-semibold">minimum possible players per spot</div>
-        <div class="text-base md:text-lg text-white">every spot in the grid must have at least <span class="font-bold">X</span> valid players</div>
+        <div class="text-sm text-center md:text-lg text-white">every spot in the grid must have at least <span class="font-bold">X</span> valid players</div>
         <div class="flex flex-row justify-center mt-1 gap-12">
           <% [1, 3, 5, 10].forEach((num) => { %>
-            <div class="text-white text-4xl hover:font-bold cursor-pointer min-player-selector" id="min-players-<%= num %>" onclick="changeMinPlayers(<%= num %>)"><%= num %></div>
+            <div class="text-white text-2xl md:text-4xl font-light hover:font-bold cursor-pointer min-player-selector" id="min-players-<%= num %>" onclick="changeMinPlayers(<%= num %>)"><%= num %></div>
           <% }) %>
         </div>
       </div>
       <div class="flex flex-col items-center justify-center mt-6">
         <div class="text-xl md:text-2xl text-white font-semibold">historically top ranking teams</div>
-        <div class="text-base md:text-lg text-white">only use teams that have been in the top <span class="font-bold">X</span> ranking of teams</div>
+        <div class="text-sm text-center md:text-lg text-white">only use teams that have been in the top <span class="font-bold">X</span> ranking of teams</div>
         <div class="flex flex-row justify-center mt-1 gap-12">
           <% [10, 20, 30, 'any'].forEach((num) => { %>
-            <div class="text-white text-4xl hover:font-bold cursor-pointer top-team-selector" id="top-team-<%= num %>" onclick="changeTopTeam('<%= num %>')"><%= num %></div>
+            <div class="text-white text-2xl md:text-4xl font-light hover:font-bold cursor-pointer top-team-selector" id="top-team-<%= num %>" onclick="changeTopTeam('<%= num %>')"><%= num %></div>
           <% }) %>
         </div>
       </div>
       <div class="flex flex-row gap-8">
-        <div class="font-bold text-xl rounded-lg bg-gray-400 mt-6 px-4 py-2 cursor-pointer" onclick="resetToDefault()">
+        <div class="font-bold md:text-xl rounded-lg bg-gray-400 mt-6 px-4 py-2 cursor-pointer" onclick="resetToDefault()">
           reset settings
         </div>
-        <div class="font-bold text-xl rounded-lg bg-blue-500 mt-6 px-4 py-2 cursor-pointer" onclick="generatePuzzle()">
+        <div class="font-bold md:text-xl rounded-lg bg-blue-500 mt-6 px-4 py-2 cursor-pointer" onclick="generatePuzzle()">
           generate!
         </div>
       </div>
@@ -48,12 +48,15 @@
     <script>
       document.getElementById("min-players-<%= infiniteSettings.minPlayers %>").classList.add("font-bold")
       document.getElementById("top-team-<%= infiniteSettings.teamRank %>").classList.add("font-bold")
+      document.getElementById("min-players-<%= infiniteSettings.minPlayers %>").classList.remove("font-light")
+      document.getElementById("top-team-<%= infiniteSettings.teamRank %>").classList.remove("font-light")
 
       function changeMinPlayers(num) {
         document.querySelectorAll('.min-player-selector').forEach((elm) => {
           elm.classList.remove("font-bold")
         })
         document.getElementById(`min-players-${num}`).classList.add("font-bold")
+        document.getElementById(`min-players-${num}`).classList.remove("font-light")
       }
 
       function changeTopTeam(num) {
@@ -61,6 +64,7 @@
           elm.classList.remove("font-bold")
         })
         document.getElementById(`top-team-${num}`).classList.add("font-bold")
+        document.getElementById(`top-team-${num}`).classList.remove("font-light")
       }
 
       function resetToDefault() {

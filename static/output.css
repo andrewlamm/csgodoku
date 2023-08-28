@@ -1015,6 +1015,14 @@ video {
   font-weight: 600;
 }
 
+.font-light {
+  font-weight: 300;
+}
+
+.font-black {
+  font-weight: 900;
+}
+
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
@@ -1138,6 +1146,10 @@ video {
 
 .hover\:font-bold:hover {
   font-weight: 700;
+}
+
+.hover\:font-black:hover {
+  font-weight: 900;
 }
 
 @media (min-width: 768px) {
