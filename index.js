@@ -1364,7 +1364,7 @@ async function generatePuzzle(minPlayers, teamList) {
 }
 
 async function generatePuzzleHelper(minPlayers, teamList) {
-  console.log(new Date().toTimeString(), 'generating puzzle')
+  // console.log(new Date().toTimeString(), 'generating puzzle')
   const puzzle = await generatePuzzle(minPlayers, teamList)
   if (puzzle === undefined) {
     await delay(100)
