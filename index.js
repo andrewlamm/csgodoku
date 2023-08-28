@@ -957,7 +957,10 @@ app.post('/concede', [checkPuzzle, checkPlayer, concedeHelper], (req, res) => {
 })
 
 /* Infinite Mode */
-let topTeams = undefined
+let top10Teams = undefined
+let top20Teams = undefined
+let top30Teams = undefined
+let allTeams = undefined
 const STATS = [
   ['country', undefined],
   ['age', [30, 35, 40]],
@@ -979,7 +982,7 @@ const STATS = [
   ['topPlacement', [1, 5, 10, 20]]
 ]
 
-async function getTopTeams() {
+async function getAllTeams() {
   return new Promise(async (resolve, reject) => {
     try {
       const octokit = new Octokit({
@@ -988,11 +991,80 @@ async function getTopTeams() {
       const res = await octokit.repos.getContent({
         owner: 'superandybean',
         repo: 'csgodoku',
-        path: 'data/top-teams.txt',
+        path: 'data/all-teams.txt',
       })
       const data = Base64.decode(res.data.content)
 
-      topTeams = JSON.parse(data)
+      allTeams = JSON.parse(data)
+      resolve(1)
+    }
+    catch (err) {
+      console.log('error reading top teams with error', err)
+      reject(err)
+    }
+  })
+}
+
+async function getTop30Teams() {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const octokit = new Octokit({
+        auth: process.env.GH_TOKEN,
+      })
+      const res = await octokit.repos.getContent({
+        owner: 'superandybean',
+        repo: 'csgodoku',
+        path: 'data/top-30-teams.txt',
+      })
+      const data = Base64.decode(res.data.content)
+
+      top30Teams = JSON.parse(data)
+      resolve(1)
+    }
+    catch (err) {
+      console.log('error reading top teams with error', err)
+      reject(err)
+    }
+  })
+}
+
+async function getTop20Teams() {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const octokit = new Octokit({
+        auth: process.env.GH_TOKEN,
+      })
+      const res = await octokit.repos.getContent({
+        owner: 'superandybean',
+        repo: 'csgodoku',
+        path: 'data/top-20-teams.txt',
+      })
+      const data = Base64.decode(res.data.content)
+
+      top20Teams = JSON.parse(data)
+      resolve(1)
+    }
+    catch (err) {
+      console.log('error reading top teams with error', err)
+      reject(err)
+    }
+  })
+}
+
+async function getTop10Teams() {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const octokit = new Octokit({
+        auth: process.env.GH_TOKEN,
+      })
+      const res = await octokit.repos.getContent({
+        owner: 'superandybean',
+        repo: 'csgodoku',
+        path: 'data/top-10-teams.txt',
+      })
+      const data = Base64.decode(res.data.content)
+
+      top10Teams = JSON.parse(data)
       resolve(1)
     }
     catch (err) {
@@ -1051,7 +1123,7 @@ function preprocessData(playerData) {
   */
 }
 
-function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, infPossiblePlayers, minPlayers) {
+async function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, infPossiblePlayers, minPlayers) {
   if (currSpot >= 9)
     return true
 
@@ -1075,7 +1147,8 @@ function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, infPossi
     playerSetDuplicate.add(playerID)
     currBoardDuplicate[currSpot] = playerID
 
-    const ans = checkValidPuzzleHelper(puzzle, currBoardDuplicate, currSpot + 1, playerSetDuplicate, infPossiblePlayers, minPlayers)
+    await delay(5)
+    const ans = await checkValidPuzzleHelper(puzzle, currBoardDuplicate, currSpot + 1, playerSetDuplicate, infPossiblePlayers, minPlayers)
     if (ans) {
       return true
     }
@@ -1084,9 +1157,10 @@ function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, infPossi
   return false
 }
 
-function checkValidPuzzle(puzzle, minPlayers) {
+async function checkValidPuzzle(puzzle, minPlayers) {
   const infPossiblePlayers = generatePossiblePlayers(puzzle)
-  return checkValidPuzzleHelper(puzzle, [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined], 0, new Set(), infPossiblePlayers, minPlayers)
+  const poss = await checkValidPuzzleHelper(puzzle, [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined], 0, new Set(), infPossiblePlayers, minPlayers)
+  return poss
 }
 
 // https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
@@ -1153,10 +1227,10 @@ function replacePuzzleTeams(puzzle, possiblePlayers) {
   return newPuzzle
 }
 
-function findPartnerTeams(team, minPlayers) {
+function findPartnerTeams(team, minPlayers, teamList) {
   const partnerTeams = new Set()
-  for (let i = 0; i < topTeams.length; i++) {
-    const teamName = topTeams[i].split('/')[1]
+  for (let i = 0; i < teamList.length; i++) {
+    const teamName = teamList[i].split('/')[1]
     if (teamName === team)
       continue
 
@@ -1169,13 +1243,13 @@ function findPartnerTeams(team, minPlayers) {
   return partnerTeams
 }
 
-async function generatePuzzle(minPlayers) {
+async function generatePuzzle(minPlayers, teamList) {
   return new Promise(async (resolve, reject) => {
     const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
 
-    const initTeamFull = getRandomSubarray(topTeams, 1)[0]
+    const initTeamFull = getRandomSubarray(teamList, 1)[0]
     const initTeam = initTeamFull.split('/')[1]
-    const initPartnerTeams = findPartnerTeams(initTeam, minPlayers)
+    const initPartnerTeams = findPartnerTeams(initTeam, minPlayers, teamList)
 
     let topRowTeamsCount = undefined
     if (initPartnerTeams.size < 2) {
@@ -1192,15 +1266,15 @@ async function generatePuzzle(minPlayers) {
 
     let topRowIntersect = undefined
     if (topRowTeamsCount === 2) {
-      const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers)
-      const secondTeamPartners = findPartnerTeams(topRow[1], minPlayers)
+      const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers, teamList)
+      const secondTeamPartners = findPartnerTeams(topRow[1], minPlayers, teamList)
 
       topRowIntersect = setIntersection(firstTeamPartners, secondTeamPartners)
     }
     else {
-      const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers)
-      const secondTeamPartners = findPartnerTeams(topRow[1], minPlayers)
-      const thirdTeamPartners = findPartnerTeams(topRow[2], minPlayers)
+      const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers, teamList)
+      const secondTeamPartners = findPartnerTeams(topRow[1], minPlayers, teamList)
+      const thirdTeamPartners = findPartnerTeams(topRow[2], minPlayers, teamList)
 
       topRowIntersect = setIntersection(firstTeamPartners, setIntersection(secondTeamPartners, thirdTeamPartners))
     }
@@ -1277,7 +1351,9 @@ async function generatePuzzle(minPlayers) {
     }
 
     // console.log('trying', fixedPuzzle)
-    const solved = checkValidPuzzle(fixedPuzzle, minPlayers)
+    // console.log(new Date().toTimeString(), 'trying to solve puzzle')
+    const solved = await checkValidPuzzle(fixedPuzzle, minPlayers)
+    // console.log(fixedPuzzle, solved)
     if (solved) {
       resolve(replacePuzzleTeams(fixedPuzzle, generatePossiblePlayers(fixedPuzzle)))
       // resolve(undefined)
@@ -1287,18 +1363,36 @@ async function generatePuzzle(minPlayers) {
   })
 }
 
-async function generatePuzzleHelper(minPlayers) {
-  const puzzle = await generatePuzzle(minPlayers)
+async function generatePuzzleHelper(minPlayers, teamList) {
+  // console.log(new Date().toTimeString(), 'generating puzzle')
+  const puzzle = await generatePuzzle(minPlayers, teamList)
   if (puzzle === undefined) {
     await delay(100)
-    return await generatePuzzleHelper(minPlayers)
+    return await generatePuzzleHelper(minPlayers, teamList)
   }
   return puzzle
 }
 
 async function generatePuzzleMiddleware(req, res, next) {
-  const minPlayers = 3 // parseInt(req.query.minPlayers)
-  res.locals.puzzle = await generatePuzzleHelper(minPlayers)
+  const minPlayers = req.session.infiniteSettings.minPlayers // parseInt(req.query.minPlayers)
+  let teamList = undefined
+
+  if (req.session.infiniteSettings.teamRank === 10) {
+    teamList = top10Teams
+  }
+  else if (req.session.infiniteSettings.teamRank === 20) {
+    teamList = top20Teams
+  }
+  else if (req.session.infiniteSettings.teamRank === 'any') {
+    teamList = allTeams
+  }
+  else {
+    teamList = top30Teams
+  }
+
+  // console.log(teamList)
+
+  res.locals.puzzle = await generatePuzzleHelper(minPlayers, teamList)
   next()
 }
 
@@ -1330,7 +1424,7 @@ async function saveInfinitePuzzle(req, res, next) {
 async function findPuzzle(req, res, next) {
   if (req.query.id === undefined) {
     req.session.infinitePlayerLoading = false
-    res.redirect('/loadInfinite')
+    res.redirect('/infiniteSettings')
   }
   else {
     const puzzleID = req.query.id
@@ -1338,7 +1432,7 @@ async function findPuzzle(req, res, next) {
 
     if (result === null || result.puzzle === undefined) {
       req.session.infinitePlayerLoading = false
-      res.redirect('/loadInfinite')
+      res.redirect('/infiniteSettings')
     }
     else {
       res.locals.puzzle = JSON.parse(result.puzzle)
@@ -1637,6 +1731,46 @@ async function infiniteConcedeHelper(req, res, next) {
   }
 }
 
+function defaultInfiniteSettings(req, res, next) {
+  if (req.session.infiniteSettings === undefined) {
+    req.session.infiniteSettings = {
+      minPlayers: 5,
+      teamRank: 30,
+    }
+  }
+  next()
+}
+
+function setInfiniteSettings(req, res, next) {
+  if (req.query.minPlayers === "1") {
+    req.session.infiniteSettings.minPlayers = 1
+  }
+  else if (req.query.minPlayers === "3") {
+    req.session.infiniteSettings.minPlayers = 3
+  }
+  else if (req.query.minPlayers === "10") {
+    req.session.infiniteSettings.minPlayers = 10
+  }
+  else {
+    req.session.infiniteSettings.minPlayers = 5
+  }
+
+  if (req.query.teamRank === "10") {
+    req.session.infiniteSettings.teamRank = 10
+  }
+  else if (req.query.teamRank === "20") {
+    req.session.infiniteSettings.teamRank = 20
+  }
+  else if (req.query.teamRank === "any") {
+    req.session.infiniteSettings.teamRank = 'any'
+  }
+  else {
+    req.session.infiniteSettings.teamRank = 30
+  }
+
+  next()
+}
+
 // routes
 app.get('/infinite', [setLoading, findPuzzle, infinitePuzzlePlayer, unsetLoading], (req, res) => {
   const infPossiblePlayersSet = generatePossiblePlayers(res.locals.puzzle)
@@ -1654,7 +1788,13 @@ app.get('/infinite', [setLoading, findPuzzle, infinitePuzzlePlayer, unsetLoading
   })
 })
 
-app.get('/loadInfinite', (req, res) => {
+app.get('/infiniteSettings', [defaultInfiniteSettings], (req, res) => {
+  res.render('infiniteSettings', {
+    infiniteSettings: req.session.infiniteSettings,
+  })
+})
+
+app.get('/loadInfinite', [defaultInfiniteSettings, setInfiniteSettings], (req, res) => {
   res.render('loadingInfinite')
 })
 
@@ -1681,8 +1821,14 @@ async function start() {
   lastUpdated = await readCSV(playerData, playerList)
   console.log(`Last updated: ${lastUpdated}`)
 
-  console.log('reading top teams...')
-  await getTopTeams()
+  console.log('reading all teams...')
+  await getAllTeams()
+  console.log('reading top 30 teams')
+  await getTop30Teams()
+  console.log('reading top 20 teams')
+  await getTop20Teams()
+  console.log('reading top 10 teams')
+  await getTop10Teams()
 
   console.log('preprocessing data...')
   preprocessData(playerData)
