@@ -1124,8 +1124,6 @@ function preprocessData(playerData) {
 }
 
 async function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, infPossiblePlayers, minPlayers) {
-  checkValidPuzzleHelper(puzzle, currBoardDuplicate, currSpot + 1, playerSetDuplicate, infPossiblePlayers, minPlayers)
-
   if (currSpot >= 9)
     return true
 
@@ -1150,7 +1148,7 @@ async function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, in
     currBoardDuplicate[currSpot] = playerID
 
     await delay(5)
-    const ans = checkValidPuzzleHelper(puzzle, currBoardDuplicate, currSpot + 1, playerSetDuplicate, infPossiblePlayers, minPlayers)
+    const ans = await checkValidPuzzleHelper(puzzle, currBoardDuplicate, currSpot + 1, playerSetDuplicate, infPossiblePlayers, minPlayers)
     if (ans) {
       return true
     }
@@ -1159,9 +1157,10 @@ async function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, in
   return false
 }
 
-function checkValidPuzzle(puzzle, minPlayers) {
+async function checkValidPuzzle(puzzle, minPlayers) {
   const infPossiblePlayers = generatePossiblePlayers(puzzle)
-  return checkValidPuzzleHelper(puzzle, [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined], 0, new Set(), infPossiblePlayers, minPlayers)
+  const poss = await checkValidPuzzleHelper(puzzle, [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined], 0, new Set(), infPossiblePlayers, minPlayers)
+  return poss
 }
 
 // https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
@@ -1353,7 +1352,8 @@ async function generatePuzzle(minPlayers, teamList) {
 
     // console.log('trying', fixedPuzzle)
     // console.log(new Date().toTimeString(), 'trying to solve puzzle')
-    const solved = checkValidPuzzle(fixedPuzzle, minPlayers)
+    const solved = await checkValidPuzzle(fixedPuzzle, minPlayers)
+    // console.log(fixedPuzzle, solved)
     if (solved) {
       resolve(replacePuzzleTeams(fixedPuzzle, generatePossiblePlayers(fixedPuzzle)))
       // resolve(undefined)
@@ -1794,7 +1794,7 @@ app.get('/infiniteSettings', [defaultInfiniteSettings], (req, res) => {
   })
 })
 
-app.get('/loadInfinite', [setInfiniteSettings], (req, res) => {
+app.get('/loadInfinite', [defaultInfiniteSettings, setInfiniteSettings], (req, res) => {
   res.render('loadingInfinite')
 })
 
