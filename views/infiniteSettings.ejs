@@ -19,8 +19,8 @@
     <div class="w-full h-screen flex flex-col items-center justify-center bg-gray-850">
       <div class="text-3xl md:text-5xl text-white mb-8 font-bold">infinite mode settings</div>
       <div class="flex flex-col items-center justify-center">
-        <div class="text-xl md:text-2xl text-white font-semibold">minimum possible players per spot</div>
-        <div class="text-sm text-center md:text-lg text-white">every spot in the grid must have at least <span class="font-bold">X</span> valid players</div>
+        <div class="text-xl md:text-2xl text-white font-semibold px-2 text-center">minimum possible players per spot</div>
+        <div class="text-sm text-center md:text-lg text-white px-2">every spot in the grid must have at least <span class="font-bold">X</span> valid players</div>
         <div class="flex flex-row justify-center mt-1 gap-12">
           <% [1, 3, 5, 10].forEach((num) => { %>
             <div class="text-white text-2xl md:text-4xl font-light hover:font-bold cursor-pointer min-player-selector" id="min-players-<%= num %>" onclick="changeMinPlayers(<%= num %>)"><%= num %></div>
@@ -28,8 +28,8 @@
         </div>
       </div>
       <div class="flex flex-col items-center justify-center mt-6">
-        <div class="text-xl md:text-2xl text-white font-semibold">historically top ranking teams</div>
-        <div class="text-sm text-center md:text-lg text-white">only use teams that have been in the top <span class="font-bold">X</span> ranking of teams</div>
+        <div class="text-xl md:text-2xl text-white font-semibold px-2 text-center">historically top ranking teams</div>
+        <div class="text-sm text-center md:text-lg text-white px-2">only use teams that have been in the top <span class="font-bold">X</span> ranking of teams</div>
         <div class="flex flex-row justify-center mt-1 gap-12">
           <% [10, 20, 30, 'any'].forEach((num) => { %>
             <div class="text-white text-2xl md:text-4xl font-light hover:font-bold cursor-pointer top-team-selector" id="top-team-<%= num %>" onclick="changeTopTeam('<%= num %>')"><%= num %></div>
