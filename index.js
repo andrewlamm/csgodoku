@@ -1147,6 +1147,7 @@ async function checkValidPuzzleHelper(puzzle, currBoard, currSpot, playerSet, in
     playerSetDuplicate.add(playerID)
     currBoardDuplicate[currSpot] = playerID
 
+    await delay(1)
     const ans = await checkValidPuzzleHelper(puzzle, currBoardDuplicate, currSpot + 1, playerSetDuplicate, infPossiblePlayers, minPlayers)
     // await delay(1)
     if (ans) {
