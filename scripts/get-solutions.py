@@ -7,6 +7,7 @@ import argparse
 from datetime import datetime
 import time
 import csv
+import ast
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--date', type=int, help='puzzle date # to use')
@@ -175,7 +176,7 @@ preprocess_data()
 
 puzzle = None
 if args.puzzle is not None:
-  puzzle = args.puzzle
+  puzzle = ast.literal_eval(args.puzzle)
 else:
   puzzle = db_puzzles[puzzle_index]
 
