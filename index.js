@@ -15,6 +15,13 @@ app.use(express.urlencoded({ extended: false }))
 
 app.use(bodyParser.urlencoded({ extended: true }))
 
+app.set('etag', false)
+
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store')
+  next()
+})
+
 require('dotenv').config()
 
 app.use(session({
@@ -585,15 +592,15 @@ async function insertGuessHelper(req, res, next) {
       }
       next()
     }
-    // else if (JSON.stringify(req.session.player.puzzle) !== JSON.stringify(puzzle)) {
-    //   console.log('insert guess fail, puzzle incorrect', req.session.player)
-    //   res.locals.guessReturn = {
-    //     guessStatus: -1,
-    //     guessesLeft: 0,
-    //     gameStatus: 0,
-    //   }
-    //   next()
-    // }
+    else if (JSON.stringify(req.session.player.puzzle) !== JSON.stringify(puzzle)) {
+      console.log('insert guess fail, puzzle incorrect', req.session.player)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+        gameStatus: 0,
+      }
+      next()
+    }
     else if (req.session.player.guessesLeft <= 0) {
       console.log('insert guess fail, no guesses left', req.session.player)
       res.locals.guessReturn = {
@@ -760,15 +767,15 @@ async function concedeHelper(req, res, next) {
       }
       next()
     }
-    // else if (JSON.stringify(req.session.player.puzzle) !== JSON.stringify(puzzle)) {
-    //   console.log('concede fail, puzzle incorrect', req.session.player)
-    //   res.locals.guessReturn = {
-    //     guessStatus: -1,
-    //     guessesLeft: 0,
-    //     gameStatus: 0,
-    //   }
-    //   next()
-    // }
+    else if (JSON.stringify(req.session.player.puzzle) !== JSON.stringify(puzzle)) {
+      console.log('concede fail, puzzle incorrect', req.session.player)
+      res.locals.guessReturn = {
+        guessStatus: -1,
+        guessesLeft: 0,
+        gameStatus: 0,
+      }
+      next()
+    }
     else if (req.session.player.board === undefined) {
       console.log('concede fail, no board', req.session.player)
       res.locals.guessReturn = {
