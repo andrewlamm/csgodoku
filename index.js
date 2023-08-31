@@ -1403,7 +1403,7 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   }
 
   // console.log('trying', fixedPuzzle)
-  // console.log(new Date().toTimeString(), 'trying to solve puzzle', fixedPuzzle)
+  console.log(new Date().toTimeString(), 'trying to solve puzzle', fixedPuzzle)
   const solved = await checkValidPuzzle(fixedPuzzle, minPlayers)
   // console.log(fixedPuzzle, solved)
   if (solved) {
@@ -1415,17 +1415,18 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
 }
 
 async function generatePuzzleHelper(minPlayers, teamList, initTeamList) {
-  // console.log(new Date().toTimeString(), 'generating puzzle')
+  console.log(new Date().toTimeString(), 'generating puzzle', minPlayers)
   const puzzle = await generatePuzzle(minPlayers, teamList, initTeamList)
   if (puzzle === undefined) {
     await delay(100)
     return await generatePuzzleHelper(minPlayers, teamList, initTeamList)
   }
+  console.log(new Date().toTimeString(), 'generated puzzle', minPlayers)
   return puzzle
 }
 
 async function generatePuzzleMiddleware(req, res, next) {
-  const minPlayers = req.session.infiniteSettings.minPlayers // parseInt(req.query.minPlayers)
+  const minPlayers = req.session.infiniteSettings === undefined ? 30 : req.session.infiniteSettings.minPlayers // parseInt(req.query.minPlayers)
   let teamList = undefined
 
   if (req.session.infiniteSettings.teamRank === 10) {
@@ -1733,7 +1734,7 @@ async function infiniteConcedeHelper(req, res, next) {
   const puzzleID = req.body.puzzleID
   try {
     if (req.session.infinitePlayer === undefined || req.session.infinitePlayer[puzzleID] === undefined) {
-      console.log('infinite concede fail, no player')
+      console.log('infinite concede fail, no player', req.session.infinitePlayer)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
@@ -1826,6 +1827,7 @@ function setInfiniteSettings(req, res, next) {
 
 // routes
 app.get('/infinite', [setLoading, findPuzzle, infinitePuzzlePlayer, unsetLoading], (req, res) => {
+  // console.log('infinite load!')
   const infPossiblePlayersSet = generatePossiblePlayers(res.locals.puzzle)
   const infPossiblePlayers = [[], [], [], [], [], [], [], [], []]
   for (let i = 0; i < 9; i++) {
