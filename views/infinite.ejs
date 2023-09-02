@@ -377,6 +377,10 @@
         // }
         const res = concedeFunction()
 
+        if (res.refresh) {
+          window.location.reload()
+        }
+
         // console.log(res)
 
         gameOverSequence(res)
