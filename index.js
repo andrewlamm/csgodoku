@@ -969,6 +969,31 @@ let top20Teams = undefined
 let top30Teams = undefined
 let allTeams = undefined
 
+let top10TeamsInit = {
+  1: undefined,
+  3: undefined,
+  5: undefined,
+  10: undefined,
+}
+let top20TeamsInit = {
+  1: undefined,
+  3: undefined,
+  5: undefined,
+  10: undefined,
+}
+let top30TeamsInit = {
+  1: undefined,
+  3: undefined,
+  5: undefined,
+  10: undefined,
+}
+let allTeamsInit = {
+  1: undefined,
+  3: undefined,
+  5: undefined,
+  10: undefined,
+}
+
 const STATS = [
   ['country', undefined],
   ['age', [30, 35, 40]],
@@ -1079,6 +1104,15 @@ async function getTop10Teams() {
       console.log('error reading top teams with error', err)
       reject(err)
     }
+  })
+}
+
+function createInitTeams() {
+  [1, 3, 5, 10].forEach(num => {
+    top10TeamsInit[num] = createBetterTeamList(num, top10Teams)
+    top20TeamsInit[num] = createBetterTeamList(num, top20Teams)
+    top30TeamsInit[num] = createBetterTeamList(num, top30Teams)
+    allTeamsInit[num] = createBetterTeamList(num, allTeams)
   })
 }
 
@@ -1426,25 +1460,28 @@ async function generatePuzzleHelper(minPlayers, teamList, initTeamList) {
 }
 
 async function generatePuzzleMiddleware(req, res, next) {
-  const minPlayers = req.session.infiniteSettings === undefined ? 30 : req.session.infiniteSettings.minPlayers // parseInt(req.query.minPlayers)
+  const minPlayers = req.session.infiniteSettings === undefined ? 5 : req.session.infiniteSettings.minPlayers // parseInt(req.query.minPlayers)
   let teamList = undefined
+  let initTeamList = undefined
 
   if (req.session.infiniteSettings.teamRank === 10) {
     teamList = top10Teams
+    initTeamList = top10TeamsInit[minPlayers]
   }
   else if (req.session.infiniteSettings.teamRank === 20) {
     teamList = top20Teams
+    initTeamList = top20TeamsInit[minPlayers]
   }
   else if (req.session.infiniteSettings.teamRank === 'any') {
     teamList = allTeams
+    initTeamList = allTeamsInit[minPlayers]
   }
   else {
     teamList = top30Teams
+    initTeamList = top30TeamsInit[minPlayers]
   }
 
   // console.log(teamList)
-
-  const initTeamList = createBetterTeamList(minPlayers, teamList)
 
   res.locals.puzzle = await generatePuzzleHelper(minPlayers, teamList, initTeamList)
   next()
@@ -1887,6 +1924,9 @@ async function start() {
 
   console.log('preprocessing data...')
   preprocessData(playerData)
+
+  console.log('creating init team lists')
+  createInitTeams()
 
   app.listen(process.env.PORT || 4000, () => console.log("Server is running..."))
 }
