@@ -2,7 +2,7 @@
 <html>
   <%- include('partials/helmet.ejs', {title: 'csgodoku - infinite mode'}) %>
   <body>
-    <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
+    <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white bg-gray-850">
       <div class="text-xl md:text-3xl text-center md:text-left">
         <a href="/" class="w-full h-full">CSGODOKU</a> - infinite mode
       </div>
@@ -44,7 +44,7 @@
       </div>
     </div>
     <div class="w-full h-screen flex flex-col justify-center items-center bg-gray-850" id="game-screen">
-      <div class="w-full md:w-1/2 xl:w-1/4 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold text-white <%= userData.gameStatus === 0 ? 'hidden' : '' %>" id="board-select-container">
+      <div class="w-full md:w-1/2 xl:w-1/4 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold text-white" id="board-select-container">
         <div class="w-1/2 text-center border-r border-slate-500 py-2 transition-colors bg-gray-500 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
           your board
         </div>
@@ -68,20 +68,11 @@
             </div>
             <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="user-board">
               <% for (let i = 0; i < 9; i++) { %>
-                <% if (userData.board[i]) { %>
-                  <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
-                    <img class="w-full h-full" src="/images/player/<%= players[userData.board[i]].id %>.png" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
-                    <div class="w-full absolute bottom-0 px-1 md:px-2 bg-black font-bold text-white text-center text-sm md:text-base">
-                      <%= players[userData.board[i]].name %>
-                    </div>
+                <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors" id="grid-spot-<%= i %>">
+                  <img class="w-full h-full" id="grid-image-<%= i %>" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
+                  <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center text-sm md:text-base" id="grid-name-<%= i %>">
                   </div>
-                <% } else { %>
-                  <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> <%= userData.gameStatus === 0 ? 'cursor-pointer hover:bg-slate-600' : '' %> bg-slate-800 transition-colors" <% if (userData.gameStatus === 0) { %>onclick="openPopup(<%= i %>)"<% } %> id="grid-spot-<%= i %>">
-                    <img class="w-full h-full" id="grid-image-<%= i %>" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
-                    <div class="w-full absolute bottom-0 px-2 bg-black font-bold text-white text-center text-sm md:text-base" id="grid-name-<%= i %>">
-                    </div>
-                  </div>
-                <% } %>
+                </div>
               <% } %>
             </div>
             <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-board">
@@ -97,17 +88,17 @@
         </div>
         <div class="flex flex-col justify-center items-center text-base md:text-2xl md:ml-6 text-white pt-12 md:pt-36">
           <div>
-            round<span id="rounds-plural"><% if (userData.guessesLeft !== 1) { %>s<% } %></span> left
+            round<span id="rounds-plural"></span> left
           </div>
           <div class="text-xl md:text-6xl font-bold" id="rounds-left">
-            <%= userData.guessesLeft %>
+
           </div>
-          <div class="w-full flex justify-center mt-4 md:mt-8 <%= userData.guessesLeft > 0 ? 'hidden' : '' %>" id="show-recap-button">
+          <div class="w-full flex justify-center mt-4 md:mt-8" id="show-recap-button">
             <div class="rounded-lg bg-blue-500 w-1/2 md:w-full text-center py-2 font-semibold cursor-pointer" onclick="openRecapPopup()">
               recap
             </div>
           </div>
-          <div class="w-full flex justify-center mt-4 md:mt-4 <%= userData.guessesLeft === 0 ? 'hidden' : '' %>" id="show-concede-button">
+          <div class="w-full flex justify-center mt-4 md:mt-4" id="show-concede-button">
             <div class="rounded-lg bg-red-500 w-1/2 md:w-full text-center py-2 font-semibold cursor-pointer" onclick="openConcede()">
               give up
             </div>
@@ -150,13 +141,13 @@
         </div>
         <div class="w-full flex flex-row justify-center mt-2">
           <div class="flex flex-col items-center w-full">
-            <div class="font-bold text-2xl" id="score-text"><%= userData.board.filter(x => x !== undefined && x !== null).length %> / 9</div>
+            <div class="font-bold text-2xl" id="score-text"></div>
             <div class="font-semibold">your score</div>
           </div>
         </div>
         <div class="my-4 grid grid-cols-3 gap-4">
           <% for (let i = 0; i < 9; i++) { %>
-            <div class="w-20 h-20 rounded-lg <% if (userData.board[i]) { %> bg-green-500 <% } else { %> bg-gray-500 <% } %>" id="recap-grid-<%= i %>">
+            <div class="w-20 h-20 rounded-lg" id="recap-grid-<%= i %>">
             </div>
           <% } %>
         </div>
@@ -197,12 +188,19 @@
     </div>
     <script>
       const puzzle = <%- JSON.stringify(puzzle) %>
-      const puzzleID = "<%= userData.puzzleID %>"
+      const puzzleID = "<%= puzzleID %>"
       const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
+      const NUMBER_OF_GUESSES = <%= NUMBER_OF_GUESSES %>
       let indexSelected = undefined
       let currListener = undefined
 
-      let possiblePlayers = <% if (possiblePlayers === undefined) { %> undefined <% } else { %> <%- JSON.stringify(possiblePlayers) %> <% } %>
+      let possiblePlayers = <%- JSON.stringify(possiblePlayers) %>
+      const possiblePlayersSet = [new Set(), new Set(), new Set(), new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < possiblePlayers[i].length; j++) {
+          possiblePlayersSet[i].add(possiblePlayers[i][j])
+        }
+      }
 
       let copyString = ""
 
@@ -344,14 +342,7 @@
       }
 
       async function confirmConcede() {
-        const res = await (await fetch(`/infiniteConcede`, {
-          method: 'POST',
-          body: `puzzleID=${puzzleID}`,
-          credentials: 'include',
-          headers: new Headers({
-            'Content-Type': 'application/x-www-form-urlencoded'
-          })
-        })).json()
+        const res = concedeFunction()
 
         // console.log(res)
 
@@ -423,8 +414,6 @@
           document.getElementById(`grid-spot-${i}`).classList.remove('cursor-pointer', 'hover:bg-slate-600')
         }
 
-        possiblePlayers = res.possiblePlayers
-
         setPossiblePlayers()
 
         // show everything
@@ -456,16 +445,7 @@
 
         player.guessed[ind] = true
 
-        const res = await (await fetch(`/infiniteGuess`, {
-          method: 'POST',
-          body: `guess=${playerID}&index=${ind}&puzzleID=${puzzleID}`,
-          credentials: 'include',
-          headers: new Headers({
-            'Content-Type': 'application/x-www-form-urlencoded'
-          })
-        })).json()
-
-        // console.log(res)
+        const res = checkGuess(playerID, ind)
 
         document.getElementById('rounds-left').innerHTML = res.guessesLeft
         if (res.guessesLeft === 1) {
@@ -620,23 +600,158 @@
         players[id].correct = false
       }
 
-      <% for (let i = 0; i < 9; i++) { %>
-        <% for (let j = 0; j < userData.guesses[i].length; j++) { %>
-          players[<%= userData.guesses[i][j] %>].guessed[<%= i %>] = true
-        <% } %>
-      <% } %>
+      /* Infinite Mode Functions */
+      if (localStorage.getItem(puzzleID) === null) {
+        const data = {
+          puzzleID: puzzleID,
+          puzzle: puzzle,
+          guessesLeft: NUMBER_OF_GUESSES,
+          gameStatus: 0,
+          board: [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined],
+          guesses: [[], [], [], [], [], [], [], [], []],
+        }
+        localStorage.setItem(puzzleID, JSON.stringify(data))
+      }
 
-      <% for (let i = 0; i < userData.board.length; i++) { %>
-        <% if (userData.board[i] !== undefined && userData.board[i] !== null) { %>
-          players[<%= userData.board[i] %>].correct = true
-        <% } %>
-      <% } %>
+      const userData = JSON.parse(localStorage.getItem(puzzleID))
+      if (userData.gameStatus === 0) {
+        document.getElementById('board-select-container').classList.add('hidden')
+      }
 
-      <% if (userData.guessesLeft <= 0) { %>
+      for (let i = 0; i < 9; i++) {
+        if (userData.board[i]) {
+          document.getElementById(`grid-image-${i}`).src = `/images/player/${players[userData.board[i]].id}.png`
+          document.getElementById(`grid-name-${i}`).innerHTML = players[userData.board[i]].name
+          document.getElementById(`grid-spot-${i}`).classList.remove('bg-slate-800')
+          document.getElementById(`grid-spot-${i}`).classList.add('bg-slate-600')
+
+          document.getElementById(`recap-grid-${i}`).classList.add('bg-green-500')
+        }
+        else {
+          document.getElementById(`recap-grid-${i}`).classList.add('bg-gray-500')
+
+          if (userData.gameStatus === 0) {
+            document.getElementById(`grid-spot-${i}`).classList.add('cursor-pointer', 'hover:bg-slate-600')
+            document.getElementById(`grid-spot-${i}`).onclick = function() {
+              openPopup(i)
+            }
+          }
+        }
+      }
+
+      if (userData.gueesesLeft !== 1) {
+        document.getElementById('rounds-plural').innerHTML = 's'
+      }
+      else {
+        document.getElementById('rounds-plural').innerHTML = ''
+      }
+
+      document.getElementById('rounds-left').innerHTML = userData.guessesLeft
+
+      if (userData.guessesLeft > 0) {
+        document.getElementById('show-recap-button').classList.add('hidden')
+      }
+      if (userData.guessesLeft === 0) {
+        document.getElementById('show-concede-button').classList.add('hidden')
+      }
+
+      document.getElementById('score-text').innerHTML = `${userData.board.filter(x => x !== undefined && x !== null).length} / 9`
+
+      function checkGuess(playerID, index) {
+        try {
+          const ind = parseInt(index)
+          const playerGuess = parseInt(playerID)
+
+          const gameData = JSON.parse(localStorage.getItem(puzzleID))
+          gameData.guesses[ind].push(playerGuess)
+          gameData.guessesLeft -= 1
+
+          if (possiblePlayersSet[ind].has(playerGuess)) {
+            gameData.board[ind] = playerGuess
+          }
+
+          console.log(gameData)
+
+          if (gameData.guessesLeft <= 0) {
+            const score = gameData.board.filter(x => x !== undefined && x !== null).length
+            gameData.gameStatus = score === 9 ? 1 : -1
+
+            localStorage.setItem(puzzleID, JSON.stringify(gameData))
+
+            const returnObj = {
+              gameStatus: gameData.gameStatus,
+              guessStatus: possiblePlayersSet[ind].has(playerGuess) ? 1 : 0,
+              guessesLeft: gameData.guessesLeft,
+              score: score,
+            }
+            return returnObj
+          }
+          else {
+            localStorage.setItem(puzzleID, JSON.stringify(gameData))
+
+            const returnObj = {
+              gameStatus: 0,
+              guessStatus: possiblePlayersSet[ind].has(playerGuess) ? 1 : 0,
+              guessesLeft: gameData.guessesLeft,
+            }
+            return returnObj
+          }
+        }
+        catch (e) {
+          console.log(e)
+          const returnObj = {
+            guessStatus: -1,
+            guessesLeft: 0,
+            gameStatus: 0,
+          }
+          return returnObj
+        }
+      }
+
+      function concedeFunction() {
+        try {
+          const gameData = JSON.parse(localStorage.getItem(puzzleID))
+
+          gameData.guessesLeft = 0
+          const score = gameData.board.filter(x => x !== undefined && x !== null).length
+          gameData.gameStatus = -1
+
+          localStorage.setItem(puzzleID, JSON.stringify(gameData))
+
+          const returnObj = {
+            gameStatus: -1,
+            guessesLeft: 0,
+            score: score,
+          }
+          return returnObj
+        }
+        catch (e) {
+          const returnObj = {
+            gameStatus: -1,
+            guessesLeft: 0,
+            score: 0,
+          }
+          return returnObj
+        }
+      }
+
+      if (userData.guessesLeft <= 0) {
         setPossiblePlayers()
 
         openRecapPopup()
-      <% } %>
+      }
+
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < userData.guesses[i].length; j++) {
+          players[userData.guesses[i][j]].guessed[i] = true
+        }
+      }
+
+      for (let i = 0; i < userData.board.length; i++) {
+        if (userData.board[i] !== undefined && userData.board[i] !== null) {
+          players[userData.board[i]].correct = true
+        }
+      }
     </script>
   </body>
 </html>
