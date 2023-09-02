@@ -43,8 +43,29 @@
         </div>
       </div>
     </div>
+    <div class="flex flex-col py-4 justify-center items-center absolute z-10 top-0 w-full h-screen hidden" id="msg-bg" onclick="closeMessage()">
+      <div class="flex flex-col max-h-full items-center justify-center p-4 w-80 md:w-96 relative z-20 bg-gray-400 rounded-xl" id="msg-popup" onclick="event.stopPropagation()">
+        <div class="w-full font-bold text-xl text-center">
+          announcement
+        </div>
+        <div class="w-full my-4 overflow-y-auto">
+          hey! hopefully i didnt interrupt you in the middle of a game, but i just wanted to let you all know that i have fixed a bug causing user data to be deleted if too many infinite mode games were opened. unfortunately, this change will have <b>removed all data from your currently unfinished infinite mode games</b>. however, all infinite mode games <b>will now be saved</b>, and your data (hopefully) shouldnt get wiped if you open too many of them!!
+        </div>
+        <div class="w-full mb-4 overflow-y-auto">
+          again, if you find any bugs, please report to me on reddit at u/superandywaffle or create a github issue <a href="https://github.com/superandybean/csgodoku/issues/new" target="_blank" rel="noopener noreferrer" class="text-blue-700">here</a>! thank you for playing!
+        </div>
+        <!-- <div class="w-full my-1 overflow-y-auto text-sm">
+          <sup>1</sup>: For those wanting the technical details: all user data (including unfinished infinite mode games) were stored in a cookie. When this cookie got too large, things start to break. I have now moved all infinite mode game data to be stored in the local storage
+        </div> -->
+        <div class="flex flex-row mt-2 w-full gap-4">
+          <div class="rounded-lg bg-slate-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeMessage()">
+            close
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="w-full h-screen flex flex-col justify-center items-center bg-gray-850" id="game-screen">
-      <div class="w-full md:w-1/2 xl:w-1/4 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold text-white" id="board-select-container">
+      <div class="w-full md:w-1/2 xl:w-1/4 flex flex-row items-center border border-slate-500 rounded-lg overflow-hidden font-bold text-white hidden" id="board-select-container">
         <div class="w-1/2 text-center border-r border-slate-500 py-2 transition-colors bg-gray-500 duration-500" id="own-board-select" onclick="toggleOwnBoard()">
           your board
         </div>
@@ -293,8 +314,17 @@
         localStorage.setItem('infiniteHowToPlay', 'true')
       }
 
+      function closeMessage() {
+        document.getElementById('msg-bg').classList.add('hidden')
+        localStorage.setItem('infiniteSept03Message', 'true')
+      }
+
+      // announcements
       if (localStorage.getItem('infiniteHowToPlay') !== 'true') {
         openHowToPlay()
+      }
+      else if (localStorage.getItem('infiniteSept03Message') !== 'true') {
+        document.getElementById('msg-bg').classList.remove('hidden')
       }
 
       function toggleAllBoard() {
@@ -342,6 +372,9 @@
       }
 
       async function confirmConcede() {
+        // if (res.refresh) {
+        //   window.location.reload()
+        // }
         const res = concedeFunction()
 
         // console.log(res)
@@ -614,8 +647,8 @@
       }
 
       const userData = JSON.parse(localStorage.getItem(puzzleID))
-      if (userData.gameStatus === 0) {
-        document.getElementById('board-select-container').classList.add('hidden')
+      if (userData.gameStatus !== 0) {
+        document.getElementById('board-select-container').classList.remove('hidden')
       }
 
       for (let i = 0; i < 9; i++) {
