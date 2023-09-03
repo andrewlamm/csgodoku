@@ -969,30 +969,10 @@ let top20Teams = undefined
 let top30Teams = undefined
 let allTeams = undefined
 
-let top10TeamsInit = {
-  1: undefined,
-  3: undefined,
-  5: undefined,
-  10: undefined,
-}
-let top20TeamsInit = {
-  1: undefined,
-  3: undefined,
-  5: undefined,
-  10: undefined,
-}
-let top30TeamsInit = {
-  1: undefined,
-  3: undefined,
-  5: undefined,
-  10: undefined,
-}
-let allTeamsInit = {
-  1: undefined,
-  3: undefined,
-  5: undefined,
-  10: undefined,
-}
+let top10TeamsInit = undefined
+let top20TeamsInit = undefined
+let top30TeamsInit = undefined
+let allTeamsInit = undefined
 
 const STATS = [
   ['country', undefined],
@@ -1108,12 +1088,10 @@ async function getTop10Teams() {
 }
 
 function createInitTeams() {
-  [1, 3, 5, 10].forEach(num => {
-    top10TeamsInit[num] = createBetterTeamList(num, top10Teams)
-    top20TeamsInit[num] = createBetterTeamList(num, top20Teams)
-    top30TeamsInit[num] = createBetterTeamList(num, top30Teams)
-    allTeamsInit[num] = createBetterTeamList(num, allTeams)
-  })
+  top10TeamsInit = createBetterTeamList(top10Teams)
+  top20TeamsInit = createBetterTeamList(top20Teams)
+  top30TeamsInit = createBetterTeamList(top30Teams)
+  allTeamsInit = createBetterTeamList(allTeams)
 }
 
 function setIntersection(setA, setB) {
@@ -1278,11 +1256,16 @@ function replacePuzzleTeams(puzzle, possiblePlayers) {
   return newPuzzle
 }
 
-function createBetterTeamList(minPlayers, teamList) {
+function createBetterTeamList(teamList) {
+  const minPlayers = [1, 3, 5, 10]
+
   const partnerTeamCount = {}
   for (let i = 0; i < teamList.length; i++) {
     const teamName = teamList[i].split('/')[1]
-    partnerTeamCount[teamName] = new Set()
+    partnerTeamCount[teamName] = {}
+    minPlayers.forEach(minPlayer => {
+      partnerTeamCount[teamName][minPlayer] = new Set()
+    })
   }
 
   for (let i = 0; i < teamList.length; i++) {
@@ -1294,20 +1277,29 @@ function createBetterTeamList(minPlayers, teamList) {
         continue
 
       const intersect = setIntersection(teamPlayers[team1Name], teamPlayers[team2Name])
-      if (intersect.size >= minPlayers) {
-        partnerTeamCount[team1Name].add(team2Name)
-        partnerTeamCount[team2Name].add(team1Name)
-      }
+      minPlayers.forEach(minPlayer => {
+        if (intersect.size >= minPlayer) {
+          partnerTeamCount[team1Name][minPlayer].add(team2Name)
+          partnerTeamCount[team2Name][minPlayer].add(team1Name)
+        }
+      })
     }
   }
 
-  const betterTeamList = []
-  for (const [teamName, teamSet] of Object.entries(partnerTeamCount)) {
-    if (teamSet.size >= 2) {
-      // console.log(teamName, teamSet, `${[...teamNameToID[teamName]][0]}`)
-      betterTeamList.push(`${[...teamNameToID[teamName]][0]}`)
-    }
+  const betterTeamList = {}
+  minPlayers.forEach(minPlayer => {
+    betterTeamList[minPlayer] = []
+  })
+
+  for (const [teamName, teamDict] of Object.entries(partnerTeamCount)) {
+    minPlayers.forEach(minPlayer => {
+      if (teamDict[minPlayer].size >= 2) {
+        betterTeamList[minPlayer].push(`${[...teamNameToID[teamName]][0]}`)
+      }
+    })
   }
+
+  // console.log(betterTeamList)
 
   return betterTeamList
 }
@@ -1330,6 +1322,8 @@ function findPartnerTeams(team, minPlayers, teamList) {
 
 async function generatePuzzle(minPlayers, teamList, initTeamList) {
   const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
+
+  // console.log(initTeamList)
 
   const initTeamFull = getRandomSubarray(initTeamList, 1)[0]
   const initTeam = initTeamFull.split('/')[1]
@@ -1437,7 +1431,7 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   }
 
   // console.log('trying', fixedPuzzle)
-  console.log(new Date().toTimeString(), 'trying to solve puzzle', fixedPuzzle)
+  // console.log(new Date().toTimeString(), 'trying to solve puzzle', fixedPuzzle)
   const solved = await checkValidPuzzle(fixedPuzzle, minPlayers)
   // console.log(fixedPuzzle, solved)
   if (solved) {
@@ -1449,13 +1443,13 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
 }
 
 async function generatePuzzleHelper(minPlayers, teamList, initTeamList) {
-  console.log(new Date().toTimeString(), 'generating puzzle', minPlayers)
+  // console.log(new Date().toTimeString(), 'generating puzzle', minPlayers)
   const puzzle = await generatePuzzle(minPlayers, teamList, initTeamList)
   if (puzzle === undefined) {
     await delay(100)
     return await generatePuzzleHelper(minPlayers, teamList, initTeamList)
   }
-  console.log(new Date().toTimeString(), 'generated puzzle', minPlayers)
+  // console.log(new Date().toTimeString(), 'generated puzzle', minPlayers)
   return puzzle
 }
 
@@ -1481,7 +1475,7 @@ async function generatePuzzleMiddleware(req, res, next) {
     initTeamList = top30TeamsInit[minPlayers]
   }
 
-  // console.log(teamList)
+  // console.log(initTeamList)
 
   res.locals.puzzle = await generatePuzzleHelper(minPlayers, teamList, initTeamList)
   next()
