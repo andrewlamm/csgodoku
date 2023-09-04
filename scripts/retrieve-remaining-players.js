@@ -18,7 +18,7 @@ async function downloadImage(url, category, id) {
 
   // console.log(fixedURL)
 
-  if (fixedURL.contains('player_silhouette.png') || fixedURL.contains('placeholder.svg')) {
+  if (fixedURL.includes('player_silhouette.png') || fixedURL.includes('placeholder.svg')) {
     // skip downloading image
     return
   }
@@ -42,9 +42,9 @@ async function getTeamImage(url) {
   if (url === '6548/?')
     url = '6548/-'
 
-  const page = await (await fetch(`https://www.hltv.org/stats/teams/${url}/a`)).text()
-  const soupPage = new JSSoup(page)
-  const imageURL = soupPage.find('div', {'class': 'context.item'}).find('img').attrs.src
+    const page = await getParsedPage(`https://www.hltv.org/stats/teams/${url}`)
+    // const soupPage = new JSSoup(page)
+    const imageURL = page.find('div', {'class': 'context-item'}).find('img').attrs.src
 
   const id = url.split('/')[0]
 
@@ -148,7 +148,7 @@ async function readCSV(playerData, idToName) {
 
 async function getTopTeams() {
   return new Promise(async function (resolve, reject) {
-    fs.readFile('data/top-teams.txt', 'utf8', function (err, data) {
+    fs.readFile('data/top-30-teams.txt', 'utf8', function (err, data) {
       if (err) {
         console.log('failed to read top teams file')
         reject(err)

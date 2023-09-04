@@ -77,10 +77,3 @@ Then, you may visit it at `http://localhost:4000/`
 }
 ```
 `puzzles` contains the list of puzzles. Each puzzle is a length 6 array of a length 2 array of strings. The first string identifies the type of clue and the second string is the value of the clue. For example, if the first string is `team`, then the second string is a team name.
-```
-{
-  _id: 'infinitePuzzles'
-  <uuid4>: String
-}
-```
-Each key in this page is a uuid4 string containing to a randomly generated infinite puzzle. The value for each key is the stringifyed version of the puzzle corresponding to that uuid.

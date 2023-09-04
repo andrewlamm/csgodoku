@@ -21,27 +21,32 @@ def get_parsed_page(url):
 
 	return BeautifulSoup(res.text, 'html.parser')
 
-prev_top_teams_list = []
+THRESHOLDS = [30, 20, 10]
+
 prev_all_teams_list = []
-
-THRESHOLD = 10
-
-top_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-' + str(THRESHOLD) + '-teams.txt')
 all_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'all-teams.txt')
-if os.path.exists(top_teams_path):
-  # previous data exists, load it
-  with open(top_teams_path, 'r', encoding="utf8") as file:
-    file_string = file.read()
-    prev_top_teams_list = ast.literal_eval(file_string)
-  with open(all_teams_path, 'r', encoding="utf8") as file:
-    file_string = file.read()
-    prev_all_teams_list = ast.literal_eval(file_string)
-
+with open(all_teams_path, 'r', encoding="utf8") as file:
+  file_string = file.read()
+  prev_all_teams_list = ast.literal_eval(file_string)
 prev_all_teams = set(prev_all_teams_list)
-prev_top_teams = set(prev_top_teams_list)
+
+prev_top_teams = {}
+top_teams = {}
+
+for THRESHOLD in THRESHOLDS:
+  prev_top_teams_list = []
+
+  top_teams_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-' + str(THRESHOLD) + '-teams.txt')
+  if os.path.exists(top_teams_path):
+    # previous data exists, load it
+    with open(top_teams_path, 'r', encoding="utf8") as file:
+      file_string = file.read()
+      prev_top_teams_list = ast.literal_eval(file_string)
+
+  prev_top_teams[THRESHOLD] = set(prev_top_teams_list)
+  top_teams[THRESHOLD] = set(prev_top_teams_list)
 
 all_teams = set()
-top_teams = set(prev_top_teams_list)
 
 def read_data():
   with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'playerData.csv'), 'r', encoding="utf8") as file:
@@ -60,7 +65,7 @@ for team in all_teams:
   print('loading team ' + team + ' (team ' + str(team_count+1) + ' of ' + str(len(all_teams)) + ')')
   team_count += 1
 
-  if team in prev_top_teams: # if team in prev_all_teams:
+  if team in prev_top_teams[THRESHOLDS[-1]]:
     # team has already been processed, skip
     print('already processed team, skip')
     continue
@@ -77,15 +82,19 @@ for team in all_teams:
   if len(team_page.find('div', {'class': 'team-chart-container'}).find_all('span', {'class': 'value'})) > 1:
     rank = int(team_page.find('div', {'class': 'team-chart-container'}).find_all('span', {'class': 'value'})[1].text[1:])
 
-    if rank <= THRESHOLD:
-      top_teams.add(team)
+    for THRESHOLD in THRESHOLDS:
+      if rank <= THRESHOLD:
+        top_teams[THRESHOLD].add(team)
 
-write_to_top_team_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-' + str(THRESHOLD) + '-teams.txt')
-
-f = open(write_to_top_team_path, 'w', encoding="utf8")
-f.write(json.dumps(list(top_teams)))
-f.close()
-
+print('writing to all teams file')
 f = open(all_teams_path, 'w', encoding="utf8")
 f.write(json.dumps(list(all_teams)))
 f.close()
+
+for THRESHOLD in THRESHOLDS:
+  print('writing to top ' + str(THRESHOLD) + ' teams file')
+  write_to_top_team_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'top-' + str(THRESHOLD) + '-teams.txt')
+  f = open(write_to_top_team_path, 'w', encoding="utf8")
+  f.write(json.dumps(list(top_teams[THRESHOLD])))
+  f.close()
+
