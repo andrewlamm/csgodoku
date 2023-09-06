@@ -1613,18 +1613,6 @@ app.post('/generateInfinite', [generatePuzzleMiddleware, saveInfinitePuzzle], (r
   res.send({ id: res.locals.puzzleID })
 })
 
-app.post('/infiniteGuess', (req, res) => {
-  res.send({
-    refresh: true,
-  })
-})
-
-app.post('/infiniteConcede', (req, res) => {
-  res.send({
-    refresh: true,
-  })
-})
-
 /* 404 Page */
 app.use(function (req, res, next) {
   res.render('404')
