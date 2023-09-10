@@ -1462,7 +1462,11 @@ async function generatePuzzleMiddleware(req, res, next) {
   let teamList = undefined
   let initTeamList = undefined
 
-  if (req.session.infiniteSettings.teamRank === 10) {
+  if (req.session.infiniteSettings === undefined) {
+    teamList = top30Teams
+    initTeamList = top30TeamsInit[minPlayers]
+  }
+  else if (req.session.infiniteSettings.teamRank === 10) {
     teamList = top10Teams
     initTeamList = top10TeamsInit[minPlayers]
   }
