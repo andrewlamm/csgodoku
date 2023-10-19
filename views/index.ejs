@@ -379,6 +379,13 @@
           document.getElementById(`grid-spot-${i}`).classList.remove('cursor-pointer', 'hover:bg-slate-600')
         }
 
+        localStorage.setItem(`day${puzzleStartDay}`, JSON.stringify({
+          board: <%= JSON.stringify(currGame.board) %>,
+          guesses: <%= JSON.stringify(currGame.guesses) %>,
+          score: <%= currGame.userScore[0] %>,
+          uniqueness: <%= currGame.userScore[1] %>
+        }))
+
         // show everything
         closePopup()
         document.getElementById('show-recap-button').classList.remove('hidden')
@@ -547,6 +554,20 @@
 
       <% if (currGame.guessesLeft <= 0) { %>
         openRecapPopup()
+
+        if (localStorage.getItem(`day${puzzleStartDay}`) !== null) {
+          const data = JSON.parse(localStorage.getItem(`day${puzzleStartDay}`))
+          data.uniqueness = <%= currGame.userScore[1] %>
+          localStorage.setItem(`day${puzzleStartDay}`, JSON.stringify(data))
+        }
+        else {
+          localStorage.setItem(`day${puzzleStartDay}`, JSON.stringify({
+            board: <%= JSON.stringify(currGame.board) %>,
+            guesses: <%= JSON.stringify(currGame.guesses) %>,
+            score: <%= currGame.userScore[0] %>,
+            uniqueness: <%= currGame.userScore[1] %>
+          }))
+        }
       <% } %>
 
       /* Timer Functions */

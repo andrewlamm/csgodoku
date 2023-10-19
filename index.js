@@ -404,6 +404,15 @@ async function checkPuzzle(req, res, next) {
 
       const updateRes = await db.updateOne(query, update)
 
+      const puzzleStatsQuery = { _id: 'historicalPuzzleData' }
+      const puzzleUpdate = { $set: {
+      } }
+      puzzleUpdate.$set[`puzzles.${statsResult.puzzleDate}`] = {
+        numberGames: statsResult.numberGames,
+        scores: statsResult.scores,
+      }
+      const puzzleStatsUpdateRes = await db.updateOne(puzzleStatsQuery, puzzleUpdate)
+
       puzzleUpdating = false
       next()
     }
@@ -421,6 +430,8 @@ async function checkPuzzle(req, res, next) {
       const puzzleResult = await db.findOne({ _id: 'puzzleList' })
       const puzzleList = puzzleResult.puzzles
       puzzle = puzzleList[puzzleDate]
+
+      const statsResult = await db.findOne({ _id: 'currentPuzzleStats' })
 
       /* get possible players */
       findAllPossiblePlayers(puzzle)
@@ -444,6 +455,15 @@ async function checkPuzzle(req, res, next) {
       } }
 
       const updateRes = await db.updateOne(query, update)
+
+      const puzzleStatsQuery = { _id: 'historicalPuzzleData' }
+      const puzzleUpdate = { $set: {
+      } }
+      puzzleUpdate.$set[`puzzles.${statsResult.puzzleDate}`] = {
+        numberGames: statsResult.numberGames,
+        scores: statsResult.scores,
+      }
+      const puzzleStatsUpdateRes = await db.updateOne(puzzleStatsQuery, puzzleUpdate)
 
       puzzleUpdating = false
 
