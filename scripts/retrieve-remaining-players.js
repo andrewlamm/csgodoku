@@ -187,7 +187,7 @@ async function main() {
 
     for (let i = 0; i < topTeams.length; i++) {
       const teamName = topTeams[i]
-      console.log('retrieving data for team', teamName)
+      console.log(new Date().toLocaleTimeString(), ' - retrieving data for team', teamName)
       const teamID = teamName.substring(0, teamName.lastIndexOf('/'))
 
       const teamPage = await getParsedPage(`https://www.hltv.org/stats/teams/${teamID}/a`)

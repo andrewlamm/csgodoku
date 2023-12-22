@@ -3,12 +3,13 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 from prettytable import PrettyTable, ALL
+import certifi
 
 load_dotenv()
 
 generate_puzzles = importlib.import_module("generate-puzzles")
 
-client = MongoClient(os.getenv("MONGO_DB_URL"))
+client = MongoClient(os.getenv("MONGO_DB_URL"), tlsCAFile=certifi.where())
 db = client["csgodoku"]["game"]
 
 page = db.find_one({ "_id": "puzzleList" })

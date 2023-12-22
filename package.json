@@ -22,7 +22,7 @@
     "jssoup": "^0.0.15",
     "mongodb": "^5.8.1",
     "path": "^0.12.7",
-    "puppeteer": "^20.9.0",
+    "puppeteer": "^1.20.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "sharp": "^0.32.4",

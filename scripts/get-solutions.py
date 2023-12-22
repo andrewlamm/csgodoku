@@ -8,6 +8,7 @@ from datetime import datetime
 import time
 import csv
 import ast
+import certifi
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--date', type=int, help='puzzle date # to use')
@@ -19,7 +20,7 @@ args = parser.parse_args()
 
 load_dotenv()
 
-client = MongoClient(os.getenv("MONGO_DB_URL"))
+client = MongoClient(os.getenv("MONGO_DB_URL"), tlsCAFile=certifi.where())
 db = client["csgodoku"]["game"]
 
 page = db.find_one({ "_id": "puzzleList" })

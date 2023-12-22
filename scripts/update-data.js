@@ -8,8 +8,16 @@ const { executablePath } = require('puppeteer')
 const csv = require('csv-parser')
 const sharp = require('sharp')
 
+puppeteer.use(StealthPlugin())
+
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function wait(ms) {
+  return new Promise(function(resolve, reject) {
+    setTimeout(resolve, ms, 'TIMED_OUT');
+  })
 }
 
 async function downloadImage(url, category, id) {
@@ -59,8 +67,10 @@ async function getParsedPage(url, loadAllPlayers=false) {
   return new Promise(async function (resolve, reject) {
     await delay(2000)
 
+    console.log(new Date().toLocaleTimeString() + ' - getting page', url)
+
     try {
-      const browser = await puppeteer.launch({ headless: 'new' })
+      const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage'] })
 
       const browserPage = await browser.newPage()
 
@@ -76,16 +86,27 @@ async function getParsedPage(url, loadAllPlayers=false) {
         }
       })
 
+      console.log(new Date().toLocaleTimeString() + ' - go to page', url)
       await browserPage.goto(url, { waitUntil: 'domcontentloaded' })
-      const fullPage = await browserPage.evaluate(() => document.body.innerHTML)
+      console.log(new Date().toLocaleTimeString() + ' - docloaded', url)
+      // const fullPage = await browserPage.content()
+      const fullPage = await Promise.race([browserPage.content(), wait(5000)])
+      if (fullPage === 'TIMED_OUT') {
+        console.log(new Date().toLocaleTimeString() + ' - timed out, trying again', url)
+        resolve(getParsedPage(url, loadAllPlayers))
+      }
+      console.log(new Date().toLocaleTimeString() + ' - got content', url)
       browser.close()
+      console.log(new Date().toLocaleTimeString() + ' - done going to page', url)
 
       if (loadAllPlayers) {
-        const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'), fullPage.indexOf('</table>')) + '</table></div></div></div></div></div></body></html>' // reduce page size to only relevant content
+        const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'), fullPage.indexOf('</table>')) + '</table></div></div></div></div></div></body></html>' // reduce page size to only relevant
+        console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
         resolve(new JSSoup(page))
       }
       else {
         const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'))
+        console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
         resolve(new JSSoup(page))
       }
     }
@@ -147,6 +168,42 @@ async function readCSV(playerData, idToName) {
       .on('end', () => {
         resolve(lastUpdated)
       })
+  })
+}
+
+async function writeData(playerData, lastUpdated, done) {
+  let dataToWrite = `${new Date(lastUpdated).toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
+  if (done) {
+    dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
+  }
+
+
+  for (const [id, data] of Object.entries(playerData)) {
+    let addString = ''
+
+    for (const [stat, statline] of Object.entries(playerData[id])) {
+      if (stat === 'teams') {
+        addString += `"${JSON.stringify([...statline]).replaceAll('"', '""')}",`
+      }
+      else if (stat === 'ratingYear') {
+        addString += `"${JSON.stringify(statline).replaceAll('"', '""')}",`
+      }
+      else {
+        addString += statline + ','
+      }
+    }
+
+    dataToWrite += `${addString.substring(0, addString.length-1)}\n`
+  }
+
+  if (done)
+    console.log(new Date().toLocaleTimeString() + ' - writing to csv (with final date)...')
+  else
+    console.log(new Date().toLocaleTimeString() + ' - writing to csv...')
+  fs.writeFile('data/playerData.csv', dataToWrite, err => {
+    if (err) {
+      console.error('error writing to file', err)
+    }
   })
 }
 
@@ -227,6 +284,10 @@ async function main() {
   try {
     // loading all player data
     for (const [id, name] of Object.entries(idToName)) {
+      // if (id < 17000) {
+      //   console.log(new Date().toLocaleTimeString() + ' - skipping ' + name + ' id ' + id)
+      //   continue
+      // }
       if (playerData[id] === undefined || playerCache[id] === undefined || playerCache[id].maps !== playerData[id].maps || playerCache[id].rounds !== playerData[id].rounds || playerCache[id].KDDiff !== playerData[id].KDDiff) {
         console.log(new Date().toLocaleTimeString() + ' - getting stats for ' + name)
 
@@ -479,29 +540,17 @@ async function main() {
         console.log('skipping ' + name)
       }
 
-      // writing to string
-      let addString = ''
-      for (const [stat, statline] of Object.entries(playerData[id])) {
-        if (stat === 'teams') {
-          addString += `"${JSON.stringify([...statline]).replaceAll('"', '""')}",`
-        }
-        else if (stat === 'ratingYear') {
-          addString += `"${JSON.stringify(statline).replaceAll('"', '""')}",`
-        }
-        else {
-          addString += statline + ','
-        }
-      }
-
-      dataToWrite += `${addString.substring(0, addString.length-1)}\n`
+      await writeData(playerData, lastUpdated, false)
     }
 
-    console.log(new Date().toLocaleTimeString() + ' - writing to csv...')
-    fs.writeFile('data/playerData.csv', dataToWrite, err => {
-      if (err) {
-        console.error('error writing to file', err)
-      }
-    })
+    await writeData(playerData, lastUpdated, true)
+
+    // console.log(new Date().toLocaleTimeString() + ' - writing to csv (with final date)...')
+    // fs.writeFile('data/playerData.csv', dataToWrite, err => {
+    //   if (err) {
+    //     console.error('error writing to file', err)
+    //   }
+    // })
 
     console.log(new Date().toLocaleTimeString() + ' - done!')
   }
