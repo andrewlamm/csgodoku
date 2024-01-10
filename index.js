@@ -1324,6 +1324,17 @@ function findPartnerTeams(team, minPlayers, teamList) {
   return partnerTeams
 }
 
+function generateRandomStat() {
+  const randomStat = getRandomSubarray([...STATS], 1)[0]
+  if (randomStat[0] === 'country') {
+    return ['country', getRandomSubarray([...countrySet], 1)[0]]
+  } else if (randomStat[0] === 'ratingYear') {
+    return ['ratingYear', [getRandomSubarray(randomStat[1][0], 1)[0], getRandomSubarray(randomStat[1][1], 1)[0]]]
+  } else {
+    return [randomStat[0], getRandomSubarray(randomStat[1], 1)[0]]
+  }
+}
+
 async function generatePuzzle(minPlayers, teamList, initTeamList) {
   const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
 
@@ -1336,12 +1347,14 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   // console.log(initTeamFull, initPartnerTeams)
 
   let topRowTeamsCount = undefined
-  if (initPartnerTeams.size < 2) {
+  if (initPartnerTeams.size < 1) {
     return undefined
+  } else if (initPartnerTeams.size === 1) {
+    topRowTeamsCount = 1
   } else if (initPartnerTeams.size === 2) {
     topRowTeamsCount = 2
   } else {
-    topRowTeamsCount = Math.random() < 0.75 ? 2 : 3
+    topRowTeamsCount = Math.random() < 0.25 ? 3 : (Math.random() < 0.7 ? 2 : 1)
   }
 
   puzzle[3] = ['team', initTeam]
@@ -1349,7 +1362,13 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   const topRow = getRandomSubarray([...initPartnerTeams], topRowTeamsCount)
 
   let topRowIntersect = undefined
-  if (topRowTeamsCount === 2) {
+  if (topRowTeamsCount === 1) {
+    const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers, teamList)
+    const secondTeamPartners = findPartnerTeams(topRow[0], minPlayers, teamList)
+
+    topRowIntersect = setIntersection(firstTeamPartners, secondTeamPartners)
+  }
+  else if (topRowTeamsCount === 2) {
     const firstTeamPartners = findPartnerTeams(topRow[0], minPlayers, teamList)
     const secondTeamPartners = findPartnerTeams(topRow[1], minPlayers, teamList)
 
@@ -1376,32 +1395,23 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   const leftCol = getRandomSubarray([...topRowIntersect], leftColTeamsCount)
 
   puzzle[0] = ['team', topRow[0]]
-  puzzle[1] = ['team', topRow[1]]
   puzzle[4] = ['team', leftCol[0]]
 
   // code fills out last row & col
-  if (topRowTeamsCount === 2) {
-    const randomStat = getRandomSubarray([...STATS], 1)[0]
-    if (randomStat[0] === 'country') {
-      puzzle[2] = ['country', getRandomSubarray([...countrySet], 1)[0]]
-    } else if (randomStat[0] === 'ratingYear') {
-      puzzle[2] = ['ratingYear', [getRandomSubarray(randomStat[1][0], 1)[0], getRandomSubarray(randomStat[1][1], 1)[0]]]
-    } else {
-      puzzle[2] = [randomStat[0], getRandomSubarray(randomStat[1], 1)[0]]
-    }
+  if (topRowTeamsCount === 1) {
+    puzzle[1] = generateRandomStat()
+  } else {
+    puzzle[1] = ['team', topRow[1]]
+  }
+
+  if (topRowTeamsCount <= 2) {
+    puzzle[2] = generateRandomStat()
   } else {
     puzzle[2] = ['team', topRow[2]]
   }
 
   if (leftColTeamsCount === 1) {
-    const randomStat = getRandomSubarray([...STATS], 1)[0]
-    if (randomStat[0] === 'country') {
-      puzzle[5] = ['country', getRandomSubarray([...countrySet], 1)[0]]
-    } else if (randomStat[0] === 'ratingYear') {
-      puzzle[5] = ['ratingYear', [getRandomSubarray(randomStat[1][0], 1)[0], getRandomSubarray(randomStat[1][1], 1)[0]]]
-    } else {
-      puzzle[5] = [randomStat[0], getRandomSubarray(randomStat[1], 1)[0]]
-    }
+    puzzle[5] = generateRandomStat()
   } else {
     puzzle[5] = ['team', leftCol[1]]
   }

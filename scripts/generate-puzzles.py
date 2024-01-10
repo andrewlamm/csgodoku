@@ -192,6 +192,15 @@ def solve_puzzle(puzzle, curr_board, curr_spot, player_set, all_possible_players
 
   return None
 
+def gen_random_stat():
+  random_stat = random.choice(STATS)
+  if random_stat[0] == 'country':
+    return ('country', random.choice(list(country_set)))
+  elif random_stat[0] == 'ratingYear':
+    return ('ratingYear', [random.choice(random_stat[1][0]), random.choice(random_stat[1][1])])
+  else:
+    return (random_stat[0], random.choice(random_stat[1]))
+
 def generate_puzzle():
   while True:
     puzzle = [None, None, None, None, None, None]
@@ -200,19 +209,22 @@ def generate_puzzle():
     init_team = random.choice(top_teams).split('/')[1]
     # init_team = random.choice(teams) # any team
     top_row_teams_count = None
-    if len(partner_teams[init_team]) < 2:
+    if len(partner_teams[init_team]) < 1:
       continue
+    elif len(partner_teams[init_team]) == 1:
+      top_row_teams_count = 1
     elif len(partner_teams[init_team]) == 2:
       top_row_teams_count = 2
     else:
-      top_row_teams_count = 2 if random.random() < 0.75 else 3
+      top_row_teams_count = 3 if random.random() < 0.25 else 2 if random.random() < 0.7 else 1
 
     puzzle[3] = ('team', init_team)
 
     top_row = random.sample(list(partner_teams[init_team]), top_row_teams_count)
-    if top_row_teams_count == 2:
+    if top_row_teams_count == 1:
+      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[0]])
+    elif top_row_teams_count == 2:
       intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]])
-
     else:
       intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]]).intersection(partner_teams[top_row[2]])
 
@@ -235,28 +247,20 @@ def generate_puzzle():
     left_col = random.sample(list(intersect), left_col_teams_count)
 
     puzzle[0] = ('team', top_row[0])
-    puzzle[1] = ('team', top_row[1])
     puzzle[4] = ('team', left_col[0])
 
-    if top_row_teams_count == 2:
-      random_stat = random.choice(STATS)
-      if random_stat[0] == 'country':
-        puzzle[2] = ('country', random.choice(list(country_set)))
-      elif random_stat[0] == 'ratingYear':
-        puzzle[2] = ('ratingYear', [random.choice(random_stat[1][0]), random.choice(random_stat[1][1])])
-      else:
-        puzzle[2] = (random_stat[0], random.choice(random_stat[1]))
+    if top_row_teams_count == 1:
+      puzzle[1] = gen_random_stat()
+    else:
+      puzzle[1] = ('team', top_row[1])
+
+    if top_row_teams_count <= 2:
+      puzzle[2] = gen_random_stat()
     else:
       puzzle[2] = ('team', top_row[2])
 
     if left_col_teams_count == 1:
-      random_stat = random.choice(STATS)
-      if random_stat[0] == 'country':
-        puzzle[5] = ('country', random.choice(list(country_set)))
-      elif random_stat[0] == 'ratingYear':
-        puzzle[5] = ('ratingYear', [random.choice(random_stat[1][0]), random.choice(random_stat[1][1])])
-      else:
-        puzzle[5] = (random_stat[0], random.choice(random_stat[1]))
+      puzzle[5] = gen_random_stat()
     else:
       puzzle[5] = ('team', left_col[1])
 
