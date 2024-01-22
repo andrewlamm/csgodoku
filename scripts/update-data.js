@@ -284,7 +284,7 @@ async function main() {
   try {
     // loading all player data
     for (const [id, name] of Object.entries(idToName)) {
-      // if (id < 17000) {
+      // if (id < 20000) {
       //   console.log(new Date().toLocaleTimeString() + ' - skipping ' + name + ' id ' + id)
       //   continue
       // }
