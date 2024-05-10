@@ -12,6 +12,12 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+function wait(ms) {
+  return new Promise(function(resolve, reject) {
+    setTimeout(resolve, ms, 'TIMED_OUT');
+  })
+}
+
 async function downloadImage(url, category, id) {
   await delay(2000)
   const fixedURL = url.replaceAll('&amp;', '&')
@@ -51,12 +57,14 @@ async function getTeamImage(url) {
   downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'team', id)
 }
 
-async function getParsedPage(url, loadAllPlayers=false) {
+async function getParsedPageHelper(url, loadAllPlayers=false) {
   return new Promise(async function (resolve, reject) {
     await delay(2000)
 
+    // console.log(new Date().toLocaleTimeString() + ' - getting page', url)
+
     try {
-      const browser = await puppeteer.launch({ headless: 'new' })
+      const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage'] })
 
       const browserPage = await browser.newPage()
 
@@ -72,23 +80,73 @@ async function getParsedPage(url, loadAllPlayers=false) {
         }
       })
 
+      // console.log(new Date().toLocaleTimeString() + ' - go to page', url)
       await browserPage.goto(url, { waitUntil: 'domcontentloaded' })
-      const fullPage = await browserPage.evaluate(() => document.body.innerHTML)
+      // console.log(new Date().toLocaleTimeString() + ' - docloaded', url)
+      // const fullPage = await browserPage.content()
+      const fullPage = await Promise.race([browserPage.content(), wait(5000)])
+      if (fullPage === 'TIMED_OUT') {
+        console.log(new Date().toLocaleTimeString() + ' - timed out, trying again', url)
+        resolve(getParsedPageHelper(url, loadAllPlayers))
+      }
+      // console.log(new Date().toLocaleTimeString() + ' - got content', url)
       browser.close()
+      // console.log(new Date().toLocaleTimeString() + ' - done going to page', url)
 
       if (loadAllPlayers) {
-        const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'), fullPage.indexOf('</table>')) + '</table></div></div></div></div></div></body></html>' // reduce page size to only relevant content
-        resolve(new JSSoup(page))
+        const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'), fullPage.indexOf('</table>')) + '</table></div></div></div></div></div></body></html>' // reduce page size to only relevant
+        console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
+        const soup = new JSSoup(page)
+        if (soup === undefined) {
+          console.log('undefined soup, retrying...', url)
+          resolve(getParsedPageHelper(url, loadAllPlayers))
+        }
+        else {
+          resolve(soup)
+        }
       }
       else {
         const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'))
-        resolve(new JSSoup(page))
+        // console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
+        const soup = new JSSoup(page)
+        if (soup === undefined) {
+          console.log('undefined soup, retrying...', url)
+          resolve(getParsedPageHelper(url, loadAllPlayers))
+        }
+        else {
+          resolve(soup)
+        }
       }
     }
     catch (err) {
       console.log('failed getting page with error', err)
-      console.log('retrying...')
+      console.log('retrying...', url)
       // reject(err)
+      resolve(getParsedPageHelper(url, loadAllPlayers))
+    }
+  })
+}
+
+async function getParsedPage(url, loadAllPlayers=false) {
+  return new Promise(async function (resolve, reject) {
+    let timeout;
+    try {
+      let timeoutPromise = new Promise((resolve, reject) => {
+          timeout = setTimeout(() => {
+            clearTimeout(timeout)
+            console.log("Function took longer than 10 seconds. Recalling...")
+            reject(new Error("Timeout reached"))
+          }, 10000);
+      })
+
+      const page = await Promise.race([getParsedPageHelper(url, loadAllPlayers), timeoutPromise])
+
+      clearTimeout(timeout)
+      resolve(page)
+    }
+    catch (error) {
+      console.error("get parsed page error:", error)
+      clearTimeout(timeout)
       resolve(getParsedPage(url, loadAllPlayers))
     }
   })

@@ -63,7 +63,7 @@ async function getPlayerProfile(url) {
   return new JSSoup(page)
 }
 
-async function getParsedPage(url, loadAllPlayers=false) {
+async function getParsedPageHelper(url, loadAllPlayers=false) {
   return new Promise(async function (resolve, reject) {
     await delay(2000)
 
@@ -93,7 +93,7 @@ async function getParsedPage(url, loadAllPlayers=false) {
       const fullPage = await Promise.race([browserPage.content(), wait(5000)])
       if (fullPage === 'TIMED_OUT') {
         console.log(new Date().toLocaleTimeString() + ' - timed out, trying again', url)
-        resolve(getParsedPage(url, loadAllPlayers))
+        resolve(getParsedPageHelper(url, loadAllPlayers))
       }
       console.log(new Date().toLocaleTimeString() + ' - got content', url)
       browser.close()
@@ -102,18 +102,57 @@ async function getParsedPage(url, loadAllPlayers=false) {
       if (loadAllPlayers) {
         const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'), fullPage.indexOf('</table>')) + '</table></div></div></div></div></div></body></html>' // reduce page size to only relevant
         console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
-        resolve(new JSSoup(page))
+        const soup = new JSSoup(page)
+        if (soup === undefined) {
+          console.log('undefined soup, retrying...', url)
+          resolve(getParsedPageHelper(url, loadAllPlayers))
+        }
+        else {
+          resolve(soup)
+        }
       }
       else {
         const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'))
         console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
-        resolve(new JSSoup(page))
+        const soup = new JSSoup(page)
+        if (soup === undefined) {
+          console.log('undefined soup, retrying...', url)
+          resolve(getParsedPageHelper(url, loadAllPlayers))
+        }
+        else {
+          resolve(soup)
+        }
       }
     }
     catch (err) {
       console.log('failed getting page with error', err)
       console.log('retrying...', url)
       // reject(err)
+      resolve(getParsedPageHelper(url, loadAllPlayers))
+    }
+  })
+}
+
+async function getParsedPage(url, loadAllPlayers=false) {
+  return new Promise(async function (resolve, reject) {
+    let timeout;
+    try {
+      let timeoutPromise = new Promise((resolve, reject) => {
+          timeout = setTimeout(() => {
+            clearTimeout(timeout)
+            console.log("Function took longer than 10 seconds. Recalling...")
+            reject(new Error("Timeout reached"))
+          }, 10000);
+      })
+
+      const page = await Promise.race([getParsedPageHelper(url, loadAllPlayers), timeoutPromise])
+
+      clearTimeout(timeout)
+      resolve(page)
+    }
+    catch (error) {
+      console.error("get parsed page error:", error)
+      clearTimeout(timeout)
       resolve(getParsedPage(url, loadAllPlayers))
     }
   })
@@ -207,7 +246,7 @@ async function writeData(playerData, lastUpdated, done) {
   })
 }
 
-async function main() {
+async function main(skip) {
   const downloadedCountryImages = {}
   const downloadTeamLinks = new Set()
 
@@ -215,79 +254,83 @@ async function main() {
   const playerData = {}
   const playerCache = {}
 
-  const player_list = await getParsedPage('https://www.hltv.org/stats/players', true)
-  const players = player_list.find('table', {'class': 'stats-table'} ).find('tbody').findAll('tr')
-
-  players.map(player => {
-    const playerName = player.find('td', {'class': 'playerCol'}).text
-    const playerID = parseInt(player.find('td', {'class': 'playerCol'}).find('a').attrs.href.split('/')[3])
-
-    const countryElement = player.find('td', {'class': 'playerCol'}).find('img')
-    downloadedCountryImages[countryElement.attrs.title] = `https://www.hltv.org${countryElement.attrs.src}`
-
-    idToName[playerID] = playerName
-    playerData[playerID] = {
-      name: playerName,
-      id: playerID,
-      fullName: undefined,
-      country: undefined,
-      age: undefined,
-      rating2: 'N/A',
-      rating1: parseFloat(player.find('td', {'class': 'ratingCol'}).text),
-      KDDiff: undefined,
-      maps: undefined,
-      rounds: undefined,
-      kills: undefined,
-      deaths: undefined,
-      KDRatio: undefined,
-      HSRatio: undefined,
-      adr: undefined,
-      ratingTop20: undefined,
-      ratingYear: {},
-      clutchesTotal: undefined,
-      teams: new Set(),
-      majorsWon: undefined,
-      majorsPlayed: undefined,
-      LANsWon: undefined,
-      LANsPlayed: undefined,
-      MVPs: undefined,
-      top20s: undefined,
-      top10s: undefined,
-      topPlacement: 'N/A',
-    }
-
-    const playerCells = player.findAll('td')
-    playerCache[playerID] = {
-      maps: parseInt(playerCells[2].text),
-      rounds: parseInt(playerCells[3].text),
-      KDDiff: parseInt(playerCells[4].text),
-    }
-  })
-
-  console.log(new Date().toLocaleTimeString() + ' - downloading country flags...')
-  for (const [country, url] of Object.entries(downloadedCountryImages)) {
-    if (fs.existsSync(`static/images/country/${country}.png`)) {
-      console.log(new Date().toLocaleTimeString() + ' - skipping ' + country)
-    }
-    else {
-      console.log(new Date().toLocaleTimeString() + ' - downloading ' + country)
-      await downloadImage(url, 'country', country)
-    }
-  }
-
-  // now read csv file
-  const lastUpdated = await readCSV(playerData, idToName)
-  const updateDate = new Date(lastUpdated)
-
-  let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
+  let curr_id = 0
 
   try {
+    const player_list = await getParsedPage('https://www.hltv.org/stats/players', true)
+    const players = player_list.find('table', {'class': 'stats-table'} ).find('tbody').findAll('tr')
+
+    players.map(player => {
+      const playerName = player.find('td', {'class': 'playerCol'}).text
+      const playerID = parseInt(player.find('td', {'class': 'playerCol'}).find('a').attrs.href.split('/')[3])
+
+      const countryElement = player.find('td', {'class': 'playerCol'}).find('img')
+      downloadedCountryImages[countryElement.attrs.title] = `https://www.hltv.org${countryElement.attrs.src}`
+
+      idToName[playerID] = playerName
+      playerData[playerID] = {
+        name: playerName,
+        id: playerID,
+        fullName: undefined,
+        country: undefined,
+        age: undefined,
+        rating2: 'N/A',
+        rating1: parseFloat(player.find('td', {'class': 'ratingCol'}).text),
+        KDDiff: undefined,
+        maps: undefined,
+        rounds: undefined,
+        kills: undefined,
+        deaths: undefined,
+        KDRatio: undefined,
+        HSRatio: undefined,
+        adr: undefined,
+        ratingTop20: undefined,
+        ratingYear: {},
+        clutchesTotal: undefined,
+        teams: new Set(),
+        majorsWon: undefined,
+        majorsPlayed: undefined,
+        LANsWon: undefined,
+        LANsPlayed: undefined,
+        MVPs: undefined,
+        top20s: undefined,
+        top10s: undefined,
+        topPlacement: 'N/A',
+      }
+
+      const playerCells = player.findAll('td')
+      playerCache[playerID] = {
+        maps: parseInt(playerCells[2].text),
+        rounds: parseInt(playerCells[3].text),
+        KDDiff: parseInt(playerCells[4].text),
+      }
+    })
+
+    console.log(new Date().toLocaleTimeString() + ' - downloading country flags...')
+    for (const [country, url] of Object.entries(downloadedCountryImages)) {
+      if (fs.existsSync(`static/images/country/${country}.png`)) {
+        console.log(new Date().toLocaleTimeString() + ' - skipping ' + country)
+      }
+      else {
+        console.log(new Date().toLocaleTimeString() + ' - downloading ' + country)
+        await downloadImage(url, 'country', country)
+      }
+    }
+
+    // now read csv file
+    const lastUpdated = await readCSV(playerData, idToName)
+    const updateDate = new Date(lastUpdated)
+
+    let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
+
     // loading all player data
     for (const [id, name] of Object.entries(idToName)) {
-      // if (id < 20000) {
-      //   console.log(new Date().toLocaleTimeString() + ' - skipping ' + name + ' id ' + id)
-      //   continue
-      // }
+      console.log(id, skip)
+      if (id < skip) {
+        console.log(new Date().toLocaleTimeString() + ' - skipping ' + name + ' id ' + id)
+        continue
+      }
+      curr_id = parseInt(id)
       if (playerData[id] === undefined || playerCache[id] === undefined || playerCache[id].maps !== playerData[id].maps || playerCache[id].rounds !== playerData[id].rounds || playerCache[id].KDDiff !== playerData[id].KDDiff) {
         console.log(new Date().toLocaleTimeString() + ' - getting stats for ' + name)
 
@@ -556,6 +599,8 @@ async function main() {
   }
   catch (err) {
     console.log(`failed loading with error`, err)
+    console.log(`retrying with curr_id ${Math.max(curr_id, skip)}...`)
+    main(Math.max(curr_id, skip))
   }
 
   // for (const [id, data] of Object.entries(playerData)) {
@@ -577,4 +622,4 @@ async function main() {
   // }
 }
 
-main()
+main(0)
