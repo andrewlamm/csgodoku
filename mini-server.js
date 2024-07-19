@@ -47,7 +47,7 @@ async function readCSV(playerData, playerList) {
       auth: process.env.GH_TOKEN,
     })
     const res = await octokit.repos.getContent({
-      owner: 'superandybean',
+      owner: 'andrewlamm',
       repo: 'csgodoku',
       path: 'playerData.csv',
     })

@@ -50,7 +50,7 @@ async function readCSV(playerData, playerList) {
       auth: process.env.GH_TOKEN,
     })
     const res = await octokit.repos.getContent({
-      owner: 'superandybean',
+      owner: 'andrewlamm',
       repo: 'csgodoku',
       path: 'data/playerData.csv',
     })
@@ -1006,7 +1006,7 @@ async function getAllTeams() {
         auth: process.env.GH_TOKEN,
       })
       const res = await octokit.repos.getContent({
-        owner: 'superandybean',
+        owner: 'andrewlamm',
         repo: 'csgodoku',
         path: 'data/all-teams.txt',
       })
@@ -1029,7 +1029,7 @@ async function getTop30Teams() {
         auth: process.env.GH_TOKEN,
       })
       const res = await octokit.repos.getContent({
-        owner: 'superandybean',
+        owner: 'andrewlamm',
         repo: 'csgodoku',
         path: 'data/top-30-teams.txt',
       })
@@ -1052,7 +1052,7 @@ async function getTop20Teams() {
         auth: process.env.GH_TOKEN,
       })
       const res = await octokit.repos.getContent({
-        owner: 'superandybean',
+        owner: 'andrewlamm',
         repo: 'csgodoku',
         path: 'data/top-20-teams.txt',
       })
@@ -1075,7 +1075,7 @@ async function getTop10Teams() {
         auth: process.env.GH_TOKEN,
       })
       const res = await octokit.repos.getContent({
-        owner: 'superandybean',
+        owner: 'andrewlamm',
         repo: 'csgodoku',
         path: 'data/top-10-teams.txt',
       })
