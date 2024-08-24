@@ -4,7 +4,6 @@ const JSSoup = require('jssoup').default
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const fs = require('fs')
-const { executablePath } = require('puppeteer')
 const csv = require('csv-parser')
 const sharp = require('sharp')
 
@@ -68,9 +67,10 @@ async function getParsedPageHelper(url, loadAllPlayers=false) {
     await delay(2000)
 
     console.log(new Date().toLocaleTimeString() + ' - getting page', url)
+    let browser = undefined
 
     try {
-      const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage'] })
+      browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage'] })
 
       const browserPage = await browser.newPage()
 
@@ -127,6 +127,9 @@ async function getParsedPageHelper(url, loadAllPlayers=false) {
     catch (err) {
       console.log('failed getting page with error', err)
       console.log('retrying...', url)
+      if (browser !== undefined) {
+        browser.close()
+      }
       // reject(err)
       resolve(getParsedPageHelper(url, loadAllPlayers))
     }
