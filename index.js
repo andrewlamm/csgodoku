@@ -53,8 +53,12 @@ async function readCSV(playerData, playerList) {
       owner: 'andrewlamm',
       repo: 'csgodoku',
       path: 'data/playerData.csv',
+      headers: {
+        Accept: 'application/vnd.github.v3.raw',
+      },
     })
-    const data = Base64.decode(res.data.content)
+    const data = res.data
+    // const data = Base64.decode(res.data)
 
     const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
     let lastUpdated = undefined
