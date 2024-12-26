@@ -1,5 +1,6 @@
 # script is used to filter out the teams that have been top 30 (for generating puzzles)
 # prints out all teams that have been at least top 30 in some point in time
+# deprecated since hltv blocks this now (use the js script instead)
 
 from bs4 import BeautifulSoup
 import csv
@@ -10,16 +11,14 @@ import ast
 import json
 
 def get_parsed_page(url):
-	headers = {
-		"referer": "https://www.hltv.org/stats",
-		"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-	}
+  headers = {
+    "referer": "https://www.hltv.org/stats",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+  }
 
-	time.sleep(1)
+  res = requests.get(url, headers=headers)
 
-	res = requests.get(url, headers=headers)
-
-	return BeautifulSoup(res.text, 'html.parser')
+  return BeautifulSoup(res.text, 'html.parser')
 
 THRESHOLDS = [30, 20, 10]
 
