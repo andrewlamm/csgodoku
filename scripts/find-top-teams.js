@@ -10,34 +10,38 @@ const csv = require('csv-parser')
 
 puppeteer.use(StealthPlugin())
 
+let browser = undefined
+let browserPage = undefined
+
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function loadBrowser() {
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ['--disable-dev-shm-usage'],
+    executablePath: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome' // UPDATE THIS TO YOUR CHROME PATH
+  })
+
+  browserPage = await browser.newPage()
+
+  await browserPage.setRequestInterception(true)
+
+  browserPage.on('request', async request => {
+    if (request.resourceType() === 'fetch' || request.resourceType() === 'image' || request.resourceType() === 'media' || request.resourceType() === 'font' || request.resourceType() === 'websocket' || request.resourceType() === 'manifest' || request.resourceType() === 'other' || request.resourceType() === 'script' && !request.url().includes('hltv')) {
+      request.abort()
+    } else {
+      request.continue()
+    }
+  })
 }
 
 async function getParsedPageHelper(url, findElement, loadAllPlayers=false) {
   return new Promise(async function (resolve, reject) {
     // console.log(new Date().toLocaleTimeString() + ' - getting page', url)
-    let browser = undefined
 
     try {
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--disable-dev-shm-usage'],
-        executablePath: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome' // UPDATE THIS TO YOUR CHROME PATH
-      })
-
-      const browserPage = await browser.newPage()
-
-      await browserPage.setRequestInterception(true)
-
-      browserPage.on('request', async request => {
-        if (request.resourceType() === 'fetch' || request.resourceType() === 'image' || request.resourceType() === 'media' || request.resourceType() === 'font' || request.resourceType() === 'websocket' || request.resourceType() === 'manifest' || request.resourceType() === 'other' || request.resourceType() === 'script' && !request.url().includes('hltv')) {
-          request.abort()
-        } else {
-          request.continue()
-        }
-      })
-
       // console.log(new Date().toLocaleTimeString() + ' - go to page', url)
       await browserPage.goto(url, { waitUntil: 'domcontentloaded' })
       // console.log(new Date().toLocaleTimeString() + ' - docloaded', url)
@@ -58,7 +62,7 @@ async function getParsedPageHelper(url, findElement, loadAllPlayers=false) {
       clearTimeout(timeout)
 
       // console.log(new Date().toLocaleTimeString() + ' - got content', url)
-      browser.close()
+      // browser.close()
       // console.log(new Date().toLocaleTimeString() + ' - done going to page', url)
 
       const elementName = findElement[0]
@@ -95,7 +99,7 @@ async function getParsedPageHelper(url, findElement, loadAllPlayers=false) {
       console.log('failed getting page with error', err)
       console.log('retrying...', url)
       if (browser !== undefined) {
-        browser.close()
+        // browser.close()
       }
       // reject(err)
       resolve(getParsedPageHelper(url, findElement, loadAllPlayers))
@@ -150,6 +154,8 @@ async function readCSV(allTeams) {
 }
 
 async function main() {
+  await loadBrowser()
+
   const THRESHOLDS = [30, 20, 10]
 
   const data = await fs.readFile('data/all-teams.txt', 'utf8')
@@ -212,5 +218,5 @@ async function main() {
     await fs.writeFile('data/top-' + THRESHOLD + '-teams.txt', JSON.stringify(topTeamsList))
   }
 }
-main()
 
+main()

@@ -19,6 +19,11 @@ MIN_GRID = 5 # min player in grid
 PUZZLES_GRID = [(0, 3), (1, 3), (2, 3), (0, 4), (1, 4), (2, 4), (0, 5), (1, 5), (2, 5)]
 PUZZLE_TO_GRID = [[0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 1, 2], [3, 4, 5], [6, 7, 8]]
 STATS = [
+  ('country', country_set), # skew the dataset lmao
+  ('country', country_set),
+  ('country', country_set),
+  ('country', country_set),
+  ('country', country_set),
   ('country', country_set),
   ('age', [30, 35, 40]),
   ('rating2', [1.1, 1.2]),
@@ -292,7 +297,18 @@ def generate_puzzle():
 
       all_poss_players.append(generate_player_set(clue1, clue2))
 
+    country_clue = None
+    for i in range(6):
+      if puzzle[i][0] == 'country':
+        country_clue = i
+        break
+
     ans = solve_puzzle(puzzle, board, 0, set(), all_poss_players)
+    country_tries = 0
+    while ans is None and country_tries < 100 and country_clue is not None:
+      puzzle[country_clue] = ('country', random.choice(list(country_set)))
+      ans = solve_puzzle(puzzle, board, 0, set(), all_poss_players)
+      country_tries += 1
     if ans is not None:
       puzzle_list = [convert_clue(elm, ind, all_poss_players) for ind, elm in enumerate(puzzle)]
       # for elm in puzzle_list:
