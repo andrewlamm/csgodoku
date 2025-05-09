@@ -80,10 +80,13 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'top-teams.txt')
   file_string = file.read()
   top_teams = ast.literal_eval(file_string)
 
+def get_team_name(team):
+  return team[team.index('/')+1:]
+
 def preprocess_data():
   for player_id in player_data:
     for team in player_data[player_id]['teams']:
-      team_name = team.split('/')[1]
+      team_name = get_team_name(team)
       if team_name not in team_players:
         team_players[team_name] = set()
         partner_teams[team_name] = set()
@@ -100,8 +103,8 @@ def preprocess_data():
   for i in range(len(top_teams)):
     for j in range(i+1, len(top_teams)):
       # if len(team_players[top_teams[i]].intersection(team_players[top_teams[j]])) > 0:
-      team1 = top_teams[i].split('/')[1]
-      team2 = top_teams[j].split('/')[1]
+      team1 = get_team_name(top_teams[i])
+      team2 = get_team_name(top_teams[j])
       if len(team_players[team1].intersection(team_players[team2])) >= MIN_GRID: # guarantees multiple players in grid
         partner_teams[team1].add(team2)
         partner_teams[team2].add(team1)
@@ -211,7 +214,7 @@ def generate_puzzle():
     puzzle = [None, None, None, None, None, None]
     board = [None, None, None, None, None, None, None, None, None]
 
-    init_team = random.choice(top_teams).split('/')[1]
+    init_team = get_team_name(random.choice(top_teams))
     # init_team = random.choice(teams) # any team
     top_row_teams_count = None
     if len(partner_teams[init_team]) < 1:

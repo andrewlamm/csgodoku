@@ -1141,8 +1141,8 @@ function preprocessData(playerData) {
   /*
   for (let i = 0; i < topTeams.length; i++) {
     for (let j = i + 1; j < topTeams.length; j++) {
-      const team1 = topTeams[i].split('/')[1]
-      const team2 = topTeams[j].split('/')[1]
+      const team1 = topTeams[i].substring(topTeams[i].indexOf('/')+1)
+      const team2 = topTeams[j].substring(topTeams[j].indexOf('/')+1)
 
       const intersect = setIntersection(teamPlayers[team1], teamPlayers[team2])
       // uhh idt this is needed
@@ -1269,7 +1269,7 @@ function createBetterTeamList(teamList) {
 
   const partnerTeamCount = {}
   for (let i = 0; i < teamList.length; i++) {
-    const teamName = teamList[i].split('/')[1]
+    const teamName = teamList[i].substring(teamList[i].indexOf('/')+1)
     partnerTeamCount[teamName] = {}
     minPlayers.forEach(minPlayer => {
       partnerTeamCount[teamName][minPlayer] = new Set()
@@ -1277,9 +1277,9 @@ function createBetterTeamList(teamList) {
   }
 
   for (let i = 0; i < teamList.length; i++) {
-    const team1Name = teamList[i].split('/')[1]
+    const team1Name = teamList[i].substring(teamList[i].indexOf('/')+1)
     for (let j = i+1; j < teamList.length; j++) {
-      const team2Name = teamList[j].split('/')[1]
+      const team2Name = teamList[j].substring(teamList[j].indexOf('/')+1)
 
       if (team1Name === team2Name)
         continue
@@ -1315,7 +1315,7 @@ function createBetterTeamList(teamList) {
 function findPartnerTeams(team, minPlayers, teamList) {
   const partnerTeams = new Set()
   for (let i = 0; i < teamList.length; i++) {
-    const teamName = teamList[i].split('/')[1]
+    const teamName = teamList[i].substring(teamList[i].indexOf('/')+1)
     if (teamName === team)
       continue
 
@@ -1345,7 +1345,7 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   // console.log(initTeamList)
 
   const initTeamFull = getRandomSubarray(initTeamList, 1)[0]
-  const initTeam = initTeamFull.split('/')[1]
+  const initTeam = initTeamFull.substring(initTeamFull.indexOf('/')+1)
   const initPartnerTeams = findPartnerTeams(initTeam, minPlayers, teamList)
 
   // console.log(initTeamFull, initPartnerTeams)

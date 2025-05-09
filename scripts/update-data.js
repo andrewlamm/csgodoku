@@ -531,7 +531,8 @@ async function main(skip) {
 
               const teamURL = matchesTable[i].findAll('td')[1].find('a').attrs.href
               const teamID = parseInt(teamURL.split('/')[3])
-              const teamURLName = teamURL.split('/')[4]
+              // const teamURLName = teamURL.split('/')[4]
+              const teamURLName = "a" // doesnt matter i think
               const teamName = matchesTable[i].findAll('td')[1].find('a').text.replaceAll('&amp;', '&')
 
               playerData[id].teams.add(teamID + '/' + teamName)
