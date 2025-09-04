@@ -209,6 +209,26 @@ def gen_random_stat():
   else:
     return (random_stat[0], random.choice(random_stat[1]))
 
+def puzzle_has_duplicate_clues(puzzle):
+  # kind of a naive check for dupes xd
+  clues = set()
+  dupe_check = False
+  for i in range(6):
+    if puzzle[i] is None:
+      continue
+
+    if puzzle[i][0] == 'team':
+      team_name = puzzle[i][1]
+      if team_name in clues:
+        dupe_check = True
+      clues.add(team_name)
+    else:
+      if puzzle[i][0] in clues:
+        dupe_check = True
+      clues.add(puzzle[i][0])
+
+  return dupe_check
+
 def generate_puzzle():
   while True:
     puzzle = [None, None, None, None, None, None]
@@ -230,7 +250,7 @@ def generate_puzzle():
 
     top_row = random.sample(list(partner_teams[init_team]), top_row_teams_count)
     if top_row_teams_count == 1:
-      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[0]])
+      intersect = partner_teams[top_row[0]]
     elif top_row_teams_count == 2:
       intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]])
     else:
@@ -257,67 +277,50 @@ def generate_puzzle():
     puzzle[0] = ('team', top_row[0])
     puzzle[4] = ('team', left_col[0])
 
-    if top_row_teams_count == 1:
-      puzzle[1] = gen_random_stat()
-    else:
+    if top_row_teams_count != 1:
       puzzle[1] = ('team', top_row[1])
-
-    if top_row_teams_count <= 2:
-      puzzle[2] = gen_random_stat()
-    else:
+    if top_row_teams_count == 3:
       puzzle[2] = ('team', top_row[2])
-
-    if left_col_teams_count == 1:
-      puzzle[5] = gen_random_stat()
-    else:
+    if left_col_teams_count != 1:
       puzzle[5] = ('team', left_col[1])
 
-    # kind of a naive check for dupes xd
-    clues = set()
-    dupe_check = False
-    for i in range(6):
-      if puzzle[i][0] == 'team':
-        team_name = puzzle[i][1]
-        if team_name in clues:
-          dupe_check = True
-        clues.add(team_name)
-      else:
-        if puzzle[i][0] in clues:
-          dupe_check = True
-        clues.add(puzzle[i][0])
-
-    if dupe_check:
+    if puzzle_has_duplicate_clues(puzzle):
       continue
 
-    # code generates all possible player set
-    # print('attempting to solve', puzzle)
+    # We have a valid set of teams, now fill in the rest of the stats, retry this 100 times if we make an invalid set
+    stat_tries = 0
 
-    all_poss_players = []
-    for pos in range(9):
-      clue_pos = PUZZLES_GRID[pos]
-      clue1 = puzzle[clue_pos[0]]
-      clue2 = puzzle[clue_pos[1]]
+    while stat_tries < 100:
+      if top_row_teams_count == 1:
+        puzzle[1] = gen_random_stat()
+      if top_row_teams_count <= 2:
+        puzzle[2] = gen_random_stat()
+      if left_col_teams_count == 1:
+        puzzle[5] = gen_random_stat()
 
-      all_poss_players.append(generate_player_set(clue1, clue2))
+      if puzzle_has_duplicate_clues(puzzle):
+        stat_tries += 1
+        continue
 
-    country_clue = None
-    for i in range(6):
-      if puzzle[i][0] == 'country':
-        country_clue = i
-        break
+      # code generates all possible player set
+      print('attempting to solve', puzzle)
 
-    ans = solve_puzzle(puzzle, board, 0, set(), all_poss_players)
-    country_tries = 0
-    while ans is None and country_tries < 100 and country_clue is not None:
-      puzzle[country_clue] = ('country', random.choice(list(country_set)))
+      all_poss_players = []
+      for pos in range(9):
+        clue_pos = PUZZLES_GRID[pos]
+        clue1 = puzzle[clue_pos[0]]
+        clue2 = puzzle[clue_pos[1]]
+
+        all_poss_players.append(generate_player_set(clue1, clue2))
+
       ans = solve_puzzle(puzzle, board, 0, set(), all_poss_players)
-      country_tries += 1
-    if ans is not None:
-      puzzle_list = [convert_clue(elm, ind, all_poss_players) for ind, elm in enumerate(puzzle)]
-      # for elm in puzzle_list:
-      #   if elm[0] == 'team':
-      #     elm[1] = elm[1][elm[1].index('/')+1:]
-      return puzzle_list, ans
+      if ans is not None:
+        puzzle_list = [convert_clue(elm, ind, all_poss_players) for ind, elm in enumerate(puzzle)]
+        # for elm in puzzle_list:
+        #   if elm[0] == 'team':
+        #     elm[1] = elm[1][elm[1].index('/')+1:]
+        return puzzle_list, ans
+      stat_tries += 1
 
 def generate_puzzles(print_table=True, num_puzzles=10):
   puzzles = []

@@ -1339,6 +1339,33 @@ function generateRandomStat() {
   }
 }
 
+function puzzleHasDuplicateClues(puzzle) {
+  const clues = new Set()
+  let dupeCheck = false
+  for (let i = 0; i < 6; i++) {
+    if (puzzle[i] === undefined) {
+      continue
+    }
+
+    if (puzzle[i][0] === 'team') {
+      if (clues.has(puzzle[i][1])) {
+        dupeCheck = true
+        break
+      }
+      clues.add(puzzle[i][1])
+    }
+    else {
+      if (clues.has(puzzle[i][0])) {
+        dupeCheck = true
+        break
+      }
+      clues.add(puzzle[i][0])
+    }
+  }
+
+  return dupeCheck
+}
+
 async function generatePuzzle(minPlayers, teamList, initTeamList) {
   const puzzle = [undefined, undefined, undefined, undefined, undefined, undefined]
 
@@ -1401,62 +1428,54 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   puzzle[0] = ['team', topRow[0]]
   puzzle[4] = ['team', leftCol[0]]
 
-  // code fills out last row & col
-  if (topRowTeamsCount === 1) {
-    puzzle[1] = generateRandomStat()
-  } else {
+  if (topRowTeamsCount != 1) {
     puzzle[1] = ['team', topRow[1]]
   }
-
-  if (topRowTeamsCount <= 2) {
-    puzzle[2] = generateRandomStat()
-  } else {
+  if (topRowTeamsCount === 3) {
     puzzle[2] = ['team', topRow[2]]
   }
-
-  if (leftColTeamsCount === 1) {
-    puzzle[5] = generateRandomStat()
-  } else {
+  if (leftColTeamsCount != 1) {
     puzzle[5] = ['team', leftCol[1]]
   }
 
-  // Naive Duplciate Check
-  const clues = new Set()
-  let dupeCheck = false
-  for (let i = 0; i < 6; i++) {
-    if (puzzle[i][0] === 'team') {
-      if (clues.has(puzzle[i][1])) {
-        dupeCheck = true
-        break
-      }
-      clues.add(puzzle[i][1])
-    }
-    else {
-      if (clues.has(puzzle[i][0])) {
-        dupeCheck = true
-        break
-      }
-      clues.add(puzzle[i][0])
-    }
-  }
-
-  if (dupeCheck)
+  if (puzzleHasDuplicateClues(puzzle))
     return undefined
 
-  const fixedPuzzle = []
-  for (let i = 0; i < 6; i++) {
-    fixedPuzzle.push(convertClue(puzzle[i]))
-  }
 
-  // console.log('trying', fixedPuzzle)
-  // console.log(new Date().toTimeString(), 'trying to solve puzzle', fixedPuzzle)
-  const solved = await checkValidPuzzle(fixedPuzzle, minPlayers)
-  // console.log(fixedPuzzle, solved)
-  if (solved) {
-    return replacePuzzleTeams(fixedPuzzle, generatePossiblePlayers(fixedPuzzle))
-    // resolve(undefined)
-  }
+  let statsTries = 0
 
+  while (statsTries < 100) {
+    if (topRowTeamsCount === 1) {
+      puzzle[1] = generateRandomStat()
+    }
+    if (topRowTeamsCount <= 2) {
+      puzzle[2] = generateRandomStat()
+    }
+    if (leftColTeamsCount === 1) {
+      puzzle[5] = generateRandomStat()
+    }
+
+    const fixedPuzzle = []
+    for (let i = 0; i < 6; i++) {
+      fixedPuzzle.push(convertClue(puzzle[i]))
+    }
+
+    if (puzzleHasDuplicateClues(puzzle)) {
+      statsTries += 1
+      continue
+    }
+
+
+    // console.log('trying', fixedPuzzle)
+    // console.log(new Date().toTimeString(), 'trying to solve puzzle', fixedPuzzle)
+    const solved = await checkValidPuzzle(fixedPuzzle, minPlayers)
+    // console.log(fixedPuzzle, solved)
+    if (solved) {
+      return replacePuzzleTeams(fixedPuzzle, generatePossiblePlayers(fixedPuzzle))
+      // resolve(undefined)
+    }
+    statsTries += 1
+  }
   return undefined
 }
 
