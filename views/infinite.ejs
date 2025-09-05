@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
-  <%- include('partials/helmet.ejs', {title: 'csgodoku - infinite mode'}) %>
+  <%- include('partials/helmet.ejs', {title: 'csdoku - infinite mode'}) %>
   <body>
     <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white bg-gray-850">
       <div class="text-xl md:text-3xl text-center md:text-left">
-        <a href="/" class="w-full h-full">CSGODOKU</a> - infinite mode
+        <a href="/" class="w-full h-full">CSDOKU</a> - infinite mode
       </div>
       <div class="flex flex-row items-center">
         <div class="text-base md:text-xl cursor-pointer mr-2 md:mr-8 text-center md:text-left">
@@ -396,7 +396,7 @@
           // set copy string
           const score = document.getElementById('score-text').innerHTML.charAt(0)
 
-          copyString += `CSGODOKU infinite mode - ${score}/9\n\n`
+          copyString += `CSDOKU infinite mode - ${score}/9\n\n`
 
           for (let i = 0; i < 9; i++) {
             if (i % 3 === 0) {
