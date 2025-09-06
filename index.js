@@ -158,11 +158,14 @@ app.locals.displayClue = function(clue) {
     if (clue[0] === 'age') {
       clueString = `${clue[1]}+ years old`
     }
+    else if (clue[0] === 'rating3') {
+      clueString = `${clue[1]}+ <b>rating 3.0</b> since 2024`
+    }
     else if (clue[0] === 'rating2') {
-      clueString = `${clue[1]} career <b>rating 2.0</b>`
+      clueString = `${clue[1]}+ career <b>rating 2.0</b>`
     }
     else if (clue[0] === 'rating1') {
-      clueString = `${clue[1]} career <b>rating 1.0</b>`
+      clueString = `${clue[1]}+ career <b>rating 1.0</b>`
     }
     else if (clue[0] === 'KDDiff') {
       clueString `${clue[1]}+ career K/D difference`
@@ -985,6 +988,7 @@ let allTeamsInit = undefined
 const STATS = [
   ['country', undefined],
   ['age', [30, 35, 40]],
+  ['rating3', [1.1, 1.2]],
   ['rating2', [1.1, 1.2]],
   ['rating1', [1.1, 1.2]],
   ['maps', [1000, 2000, 3000]],
@@ -1385,7 +1389,7 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   } else if (initPartnerTeams.size === 2) {
     topRowTeamsCount = 2
   } else {
-    topRowTeamsCount = Math.random() < 0.25 ? 3 : (Math.random() < 0.7 ? 2 : 1)
+    topRowTeamsCount = Math.random() < 0.5 ? 3 : (Math.random() < 0.7 ? 2 : 1)
   }
 
   puzzle[3] = ['team', initTeam]
@@ -1420,7 +1424,7 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   } else if (topRowIntersect.size === 1) {
     leftColTeamsCount = 1
   } else {
-    leftColTeamsCount = Math.random() < 0.5 ? 1 : 2
+    leftColTeamsCount = Math.random() < 0.6 ? 1 : 2
   }
 
   const leftCol = getRandomSubarray([...topRowIntersect], leftColTeamsCount)
@@ -1444,7 +1448,7 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
 
   let statsTries = 0
 
-  while (statsTries < 100) {
+  while (statsTries < 30) {
     if (topRowTeamsCount === 1) {
       puzzle[1] = generateRandomStat()
     }

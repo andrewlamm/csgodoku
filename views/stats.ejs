@@ -401,8 +401,8 @@
       }
 
       function openStatsPopup(ind) {
-        document.getElementById('stats-popup-clue-1').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][0]]).replaceAll(' is ', ' are ').replaceAll(' has ', ' have ')
-        document.getElementById('stats-popup-clue-2').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][1]]).replaceAll(' is ', ' are ').replaceAll(' has ', ' have ')
+        document.getElementById('stats-popup-clue-1').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][0]]).replaceAll('is ', 'are ').replaceAll('has ', 'have ')
+        document.getElementById('stats-popup-clue-2').innerHTML = convertClueToText(puzzle[PUZZLES_GRID[ind][1]]).replaceAll('is ', 'are ').replaceAll('has ', 'have ')
 
         document.getElementById('stats-popup-bg').classList.remove('hidden')
 

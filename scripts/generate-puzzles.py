@@ -26,6 +26,7 @@ STATS = [
   ('country', country_set),
   ('country', country_set),
   ('age', [30, 35, 40]),
+  ('rating3', [1.1, 1.2]),
   ('rating2', [1.1, 1.2]),
   ('rating1', [1.1, 1.2]),
   ('maps', [1000, 2000, 3000]),
@@ -244,7 +245,7 @@ def generate_puzzle():
     elif len(partner_teams[init_team]) == 2:
       top_row_teams_count = 2
     else:
-      top_row_teams_count = 3 if random.random() < 0.25 else 2 if random.random() < 0.7 else 1
+      top_row_teams_count = 3 if random.random() < 0.5 else 2 if random.random() < 0.7 else 1
 
     puzzle[3] = ('team', init_team)
 
@@ -270,7 +271,7 @@ def generate_puzzle():
     elif len(intersect) == 1:
       left_col_teams_count = 1
     else:
-      left_col_teams_count = 1 if random.random() < 0.5 else 2
+      left_col_teams_count = 1 if random.random() < 0.6 else 2
 
     left_col = random.sample(list(intersect), left_col_teams_count)
 
@@ -290,7 +291,7 @@ def generate_puzzle():
     # We have a valid set of teams, now fill in the rest of the stats, retry this 100 times if we make an invalid set
     stat_tries = 0
 
-    while stat_tries < 100:
+    while stat_tries < 30:
       if top_row_teams_count == 1:
         puzzle[1] = gen_random_stat()
       if top_row_teams_count <= 2:
