@@ -54,7 +54,7 @@ async function readCSV(playerData, playerList) {
     })
     const res = await octokit.repos.getContent({
       owner: 'andrewlamm',
-      repo: 'csgodoku',
+      repo: 'csdoku',
       path: 'data/playerData.csv',
       headers: {
         Accept: 'application/vnd.github.v3.raw',
@@ -1020,7 +1020,7 @@ async function getAllTeams() {
       })
       const res = await octokit.repos.getContent({
         owner: 'andrewlamm',
-        repo: 'csgodoku',
+        repo: 'csdoku',
         path: 'data/all-teams.txt',
       })
       const data = Base64.decode(res.data.content)
@@ -1043,7 +1043,7 @@ async function getTop30Teams() {
       })
       const res = await octokit.repos.getContent({
         owner: 'andrewlamm',
-        repo: 'csgodoku',
+        repo: 'csdoku',
         path: 'data/top-30-teams.txt',
       })
       const data = Base64.decode(res.data.content)
@@ -1066,7 +1066,7 @@ async function getTop20Teams() {
       })
       const res = await octokit.repos.getContent({
         owner: 'andrewlamm',
-        repo: 'csgodoku',
+        repo: 'csdoku',
         path: 'data/top-20-teams.txt',
       })
       const data = Base64.decode(res.data.content)
@@ -1089,7 +1089,7 @@ async function getTop10Teams() {
       })
       const res = await octokit.repos.getContent({
         owner: 'andrewlamm',
-        repo: 'csgodoku',
+        repo: 'csdoku',
         path: 'data/top-10-teams.txt',
       })
       const data = Base64.decode(res.data.content)

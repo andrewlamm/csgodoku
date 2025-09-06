@@ -48,7 +48,7 @@ async function readCSV(playerData, playerList) {
     })
     const res = await octokit.repos.getContent({
       owner: 'andrewlamm',
-      repo: 'csgodoku',
+      repo: 'csdoku',
       path: 'playerData.csv',
     })
     const data = Base64.decode(res.data.content)

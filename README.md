@@ -1,4 +1,4 @@
-# csgodoku
+# csdoku
 ## Immaculate Grid for CS:GO
 #### https://csgodoku.onrender.com/
 
