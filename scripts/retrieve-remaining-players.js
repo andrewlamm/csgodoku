@@ -179,7 +179,7 @@ async function getParsedPage(url, findElement, loadAllPlayers=false) {
 
 async function readCSV(playerData, idToName) {
   return new Promise(async function (resolve, reject) {
-    const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
+    const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
     let lastUpdated = undefined
     let topRow = undefined
     fs.createReadStream('data/playerData.csv')
@@ -295,6 +295,7 @@ async function main() {
               fullName: undefined,
               country: undefined,
               age: undefined,
+              rating3: 'N/A',
               rating2: 'N/A',
               rating1: 'N/A',
               KDDiff: undefined,
@@ -346,16 +347,29 @@ async function main() {
               continue
             }
 
-            if (statsDivs.length === 10) {
-              const ratingBox = statsDivs[9]
-              if (ratingBox.text.includes('2.0')) {
-                playerData[id].rating2 = parseFloat(ratingBox.findAll('span')[1].text)
-              }
-              else {
-                playerData[id].rating2 = 'N/A'
-                playerData[id].rating1 = parseFloat(ratingBox.findAll('span')[1].text)
-              }
+            const ratingNumber = parseFloat(statsPage.find('div', {'class': 'player-summary-stat-box-rating-data-text'}).text)
+            const ratingText = statsPage.find('div', {'class': 'player-summary-stat-box-data-description-text'})
+            if (ratingText.includes('3.0')) {
+              playerData[id].rating3 = ratingNumber
+              playerData[id].rating2 = 'N/A'
+            }
+            else if (ratingText.includes('2.0')) {
+              playerData[id].rating2 = ratingNumber
+            }
+            else {
+              playerData[id].rating2 = 'N/A'
+              playerData[id].rating1 = ratingNumber
+            }
 
+            const rating3Page = await getParsedPage(`https://www.hltv.org/stats/players/${id}/${name}?startDate=2024-01-01&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}`, ['div', 'stats-row'])
+            const rating3Type = rating3Page.find('div', {'class': 'player-summary-stat-box-data-description-text'})
+
+            if (rating3Type !== undefined && rating3Type.text.includes('3.0')) {
+              const rating = parseFloat(rating3Page.findAll('div', {'class': 'player-summary-stat-box-rating-data-text'})[0].text)
+              playerData[id].rating3 = rating
+            }
+
+            if (statsDivs.length === 10) {
               const mapsBox = statsDivs[4]
               playerData[id].maps = parseInt(mapsBox.findAll('span')[1].text)
 
@@ -377,15 +391,6 @@ async function main() {
               playerData[id].adr = 'N/A'
             }
             else {
-              const ratingBox = statsDivs[13]
-              if (ratingBox.text.includes('2.0')) {
-                playerData[id].rating2 = parseFloat(ratingBox.findAll('span')[1].text)
-              }
-              else {
-                playerData[id].rating2 = 'N/A'
-                playerData[id].rating1 = parseFloat(ratingBox.findAll('span')[1].text)
-              }
-
               const mapsBox = statsDivs[6]
               playerData[id].maps = parseInt(mapsBox.findAll('span')[1].text)
 
@@ -434,8 +439,10 @@ async function main() {
             let clutchesWon = 0
             for (let i = 0; i < 5; i++) {
               const clutchPage = await getParsedPage('https://www.hltv.org/stats/players/clutches/' + id + `/1on${i+1}/` + name, ['div', 'summary-box'])
-              const clutches = parseInt(clutchPage.find('div', {'class': 'summary-box'}).find('div', {'class': 'value'}).text)
-              clutchesWon += clutches
+              const clutches = clutchPage.find('div', {'class': 'summary-box'}).find('div', {'class': 'value'}).text
+              if (!isNaN(clutches)) {
+                clutchesWon += parseInt(clutches)
+              }
             }
             playerData[id].clutchesTotal = clutchesWon
 

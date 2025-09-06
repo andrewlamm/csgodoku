@@ -1,4 +1,4 @@
-// File to add 1.6 teams to csv
+// File to add 1.6 teams to csv. Do not use.
 
 const JSSoup = require('jssoup').default
 const puppeteer = require('puppeteer-extra')

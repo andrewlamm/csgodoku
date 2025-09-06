@@ -1,4 +1,4 @@
-// Fix rating year bug
+// Fix rating year bug. Do not use.
 
 const JSSoup = require('jssoup').default
 const puppeteer = require('puppeteer-extra')

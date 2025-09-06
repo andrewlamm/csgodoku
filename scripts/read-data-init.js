@@ -117,6 +117,7 @@ async function main() {
       fullName: undefined,
       country: countryElement.attrs.title,
       age: undefined,
+      rating3: undefined,
       rating2: undefined,
       rating1: parseFloat(player.find('td', {'class': 'ratingCol'}).text),
       KDDiff: parseInt(player.find('td', {'class': 'kdDiffCol'}).text),
@@ -147,7 +148,7 @@ async function main() {
     await downloadImage(url, 'country', country)
   }
 
-  let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
+  let dataToWrite = `${new Date().toDateString().split(' ').slice(1).join(' ')},id,fullName,country,age,rating3,rating2,rating1,KDDiff,maps,rounds,kills,deaths,KDRatio,HSRatio,adr,ratingTop20,ratingYear,clutchesTotal,teams,majorsWon,majorsPlayed,LANsWon,LANsPlayed,MVPs,top20s,top10s,topPlacement\n`
 
   try {
     // loading all player data
@@ -177,12 +178,26 @@ async function main() {
 
       const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
 
-      const ratingBox = statsDivs[13]
-      if (ratingBox.text.includes('2.0')) {
-        playerData[id].rating2 = parseFloat(ratingBox.findAll('span')[1].text)
+      const ratingNumber = parseFloat(statsPage.find('div', {'class': 'player-summary-stat-box-rating-data-text'}).text)
+      const ratingText = statsPage.find('div', {'class': 'player-summary-stat-box-data-description-text'})
+      if (ratingText.includes('3.0')) {
+        playerData[id].rating3 = ratingNumber
+        playerData[id].rating2 = 'N/A'
+      }
+      else if (ratingText.includes('2.0')) {
+        playerData[id].rating2 = ratingNumber
       }
       else {
         playerData[id].rating2 = 'N/A'
+        playerData[id].rating1 = ratingNumber
+      }
+
+      const rating3Page = await getParsedPage(`https://www.hltv.org/stats/players/${id}/${name}?startDate=2024-01-01&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}`, ['div', 'stats-row'])
+      const rating3Type = rating3Page.find('div', {'class': 'player-summary-stat-box-data-description-text'})
+
+      if (rating3Type !== undefined && rating3Type.text.includes('3.0')) {
+        const rating = parseFloat(rating3Page.findAll('div', {'class': 'player-summary-stat-box-rating-data-text'})[0].text)
+        playerData[id].rating3 = rating
       }
 
       const mapsBox = statsDivs[6]
@@ -230,8 +245,10 @@ async function main() {
       let clutchesWon = 0
       for (let i = 0; i < 5; i++) {
         const clutchPage = await getParsedPage('https://www.hltv.org/stats/players/clutches/' + id + `/1on${i+1}/` + name)
-        const clutches = parseInt(clutchPage.find('div', {'class': 'summary-box'}).find('div', {'class': 'value'}).text)
-        clutchesWon += clutches
+        const clutches = clutchPage.find('div', {'class': 'summary-box'}).find('div', {'class': 'value'}).text
+        if (!isNaN(clutches)) {
+          clutchesWon += parseInt(clutches)
+        }
       }
       playerData[id].clutchesTotal = clutchesWon
 

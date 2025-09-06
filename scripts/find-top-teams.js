@@ -141,7 +141,7 @@ async function readCSV(allTeams) {
     })
     .on('data', (row) => {
       const rowData = Object.values(row)
-      const teamList = JSON.parse(rowData[18])
+      const teamList = JSON.parse(rowData[19])
 
       for (let i = 0; i < teamList.length; i++) {
         allTeams.add(teamList[i])
