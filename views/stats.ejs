@@ -188,7 +188,7 @@
               </div>
             </div>
           </div>
-          <div class="w-full md:w-128 flex flex-col justify-center items-center mt-8">
+          <div class="w-full md:w-lg flex flex-col justify-center items-center mt-8">
             <div class="flex flex-row justify-center h-96">
               <% for (let i = 0; i < 10; i++) { %>
                 <div class="flex flex-col justify-end h-full items-center w-8 md:w-10">
@@ -420,7 +420,7 @@
           playerFullNameElement.classList.add('text-sm')
 
           playerElement = document.createElement('div')
-          playerElement.classList.add('flex', 'flex-col', 'justify-center', 'flex-grow')
+          playerElement.classList.add('flex', 'flex-col', 'justify-center', 'grow')
           playerElement.appendChild(playerNameElement)
           playerElement.appendChild(playerFullNameElement)
 
