@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<% include('partials/helmet.ejs', {title: 'csgodoku - migrating'}) %>
+  <body>
+    <div class="w-full h-screen flex flex-col items-center justify-center bg-gray-850">
+      <div class="text-2xl md:text-4xl text-white">migrating...</div>
+    </div>
+    <script>
+      const localStorageObj = <%- localStorageValue %>
+      if (localStorageObj !== undefined) {
+        for (const key in localStorageObj) {
+          console.log(`Importing ${key} to localStorage`)
+          localStorage.setItem(key, localStorageObj[key]);
+        }
+      }
+
+      window.location.href = "/"
+    </script>
+  </body>
+</html>

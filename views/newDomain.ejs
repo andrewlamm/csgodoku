@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html>
+  <%- include('partials/helmet.ejs', {title: 'csdoku'}) %>
+  <body>
+    <div class="w-full absolute top-0 flex flex-row px-4 py-2 border-b border-white items-center justify-between text-white">
+      <div class="text-xl md:text-3xl cursor-pointer" onclick="location.reload()">
+        CSDOKU
+      </div>
+    </div>
+    <div class="w-full h-screen flex flex-col items-center justify-center bg-gray-850">
+      <div class="text-2xl md:text-4xl text-white mb-5 text-center">csdoku has moved!</div>
+      <div class="text-sm md:text-xl text-white text-center">csdoku has moved to <span onclick="importAndRedirect()" class="cursor-pointer underline">www.TBD.com</span>! you will be redirected in 5 seconds.</div>
+      <div class="text-sm md:text-xl text-white mb-5 text-center">please let the site redirect you or click on the button below before visiting the new url the first time to ensure that your data is properly migrated</div>
+      <div class="rounded-lg bg-blue-500 text-center p-2 font-bold cursor-pointer" onclick="importAndRedirect()">
+        view stats
+      </div>
+    </div>
+    <script>
+      const newDomain = ""
+      const importURL = `${newDomain}/import`
+
+      async function importAndRedirect() {
+        const cookieValue = "<%= csdokuCookie %>"
+        const cookieSig = "<%= csdokuSig %>"
+        const localStorageValue = JSON.stringify(localStorage)
+
+        const localStorageKey = (await (await fetch(importURL, {
+          method: 'POST',
+          credentials: 'include',
+          headers: new Headers({
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }),
+          body: `csdokuCookie=${cookieValue}&csdokuSig=${cookieSig}&localStorageValue=${localStorageValue}`
+        })).json()).key
+
+        if (localStorageKey === undefiend) {
+          window.location.href = `${newDomain}`
+        }
+        else {
+          window.location.href = `${newDomain}/migrateLocalStorage?key=${localStorageKey}`
+        }
+      }
+
+      setTimeout(sendHome, 5000)
+      function sendHome() {
+        importAndRedirect()
+      }
+    </script>
+  </body>
+</html>

@@ -4,6 +4,7 @@ const session = require('cookie-session')
 const bodyParser = require('body-parser')
 const csv = require('csv-parser')
 const fs = require('fs')
+const cookieParser = require('cookie-parser');
 const { Octokit } = require("@octokit/rest")
 const Readable = require('stream').Readable
 const { Base64 } = require('js-base64')
@@ -21,6 +22,8 @@ app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store')
   next()
 })
+
+app.use(cookieParser());
 
 require('dotenv').config()
 
@@ -255,6 +258,8 @@ const NUMBER_OF_GUESSES = 9
 
 const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
 const PUZZLE_TO_GRID = [[0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 1, 2], [3, 4, 5], [6, 7, 8]]
+
+const LOCALSTORAGE_CACHE = {} // TODO: delete this later when migration is done
 
 function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
   const clue1Type = clue1[0]
@@ -906,7 +911,7 @@ app.get('/', [checkPuzzle, initPlayer, getStats], (req, res) => {
     puzzle: puzzle,
     players: playerList,
     currGame: req.session.player,
-    lastUpdated: lastUpdated
+    lastUpdated: lastUpdated,
   })
 })
 
@@ -1650,6 +1655,41 @@ app.get('/loadInfinite', [defaultInfiniteSettings, setInfiniteSettings], (req, r
   res.render('loadingInfinite')
 })
 
+app.post('/import', (req, res) => {
+  const csdokuCookie = req.body.csdokuCookie
+  const csdokuSig = req.body.csdokuSig
+  const localStorageValue = JSON.parse(req.body.localStorageValue);
+
+  if (req.cookies['csgodoku'] === undefined) {
+    res.cookie('csgodoku', csdokuCookie, { maxAge: 10 * 365 * 24 * 60 * 60 * 1000 })
+    res.cookie('csgodoku.sig', csdokuSig, { maxAge: 10 * 365 * 24 * 60 * 60 * 1000 })
+
+    const localStorageKey = uuidv4()
+    LOCALSTORAGE_CACHE[localStorageKey] = localStorageValue
+
+    res.send({'key': localStorageKey})
+  }
+  else {
+    res.send({'key': undefined})
+  }
+})
+
+app.get('/migrateLocalStorage', (req, res) => {
+  const key = req.query.key
+  if (key !== undefined && LOCALSTORAGE_CACHE[key] !== undefined) {
+    const localStorageValue = LOCALSTORAGE_CACHE[key]
+    delete LOCALSTORAGE_CACHE[key] // only use once
+    res.render('migrateLocalStorage', {localStorageValue: localStorageValue})
+  }
+  else {
+    res.render('migrateLocalStorage', {localStorageValue: undefined})
+  }
+})
+
+app.get('/localstorageCache', (req, res) => {
+  res.send(LOCALSTORAGE_CACHE)
+})
+
 app.post('/generateInfinite', [generatePuzzleMiddleware, saveInfinitePuzzle], (req, res) => {
   res.send({ id: res.locals.puzzleID })
 })
@@ -1685,5 +1725,5 @@ async function start() {
 
 start()
 
-// npx tailwindcss -i .\static\styles.css -o ./static/output.css --watch
-// npx tailwindcss -i static/styles.css -o static/output.css --watch
+// npx @tailwindcss/cli -i .\static\styles.css -o ./static/output.css --watch
+// npx @tailwindcss/cli -i static/styles.css -o static/output.css --watch
