@@ -9,7 +9,9 @@ const { Octokit } = require("@octokit/rest")
 const Readable = require('stream').Readable
 const { Base64 } = require('js-base64')
 const { v4: uuidv4 } = require('uuid')
+const path = require('path')
 
+app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 app.use(express.static(`${__dirname}/static`))
 app.use(express.urlencoded({ extended: false }))
