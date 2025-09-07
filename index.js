@@ -10,6 +10,7 @@ const Readable = require('stream').Readable
 const { Base64 } = require('js-base64')
 const { v4: uuidv4 } = require('uuid')
 const path = require('path')
+const Redis = require('ioredis');
 
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
@@ -31,7 +32,7 @@ require('dotenv').config()
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
-  name: 'csgodoku',
+  name: 'csdoku',
   resave: true,
   saveUninitialized: true,
   maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
@@ -39,6 +40,8 @@ app.use(session({
 
 const db = require('./db')
 const { get, set } = require('express/lib/response')
+
+const redis = new Redis();
 
 const playerData = {}
 const playerList = {}
@@ -260,8 +263,6 @@ const NUMBER_OF_GUESSES = 9
 
 const PUZZLES_GRID = [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]]
 const PUZZLE_TO_GRID = [[0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 1, 2], [3, 4, 5], [6, 7, 8]]
-
-const LOCALSTORAGE_CACHE = {} // TODO: delete this later when migration is done
 
 function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
   const clue1Type = clue1[0]
@@ -1657,39 +1658,49 @@ app.get('/loadInfinite', [defaultInfiniteSettings, setInfiniteSettings], (req, r
   res.render('loadingInfinite')
 })
 
-app.post('/import', (req, res) => {
-  const csdokuCookie = req.body.csdokuCookie
-  const csdokuSig = req.body.csdokuSig
-  const localStorageValue = JSON.parse(req.body.localStorageValue);
-
-  if (req.cookies['csgodoku'] === undefined) {
-    res.cookie('csgodoku', csdokuCookie, { maxAge: 10 * 365 * 24 * 60 * 60 * 1000 })
-    res.cookie('csgodoku.sig', csdokuSig, { maxAge: 10 * 365 * 24 * 60 * 60 * 1000 })
-
-    const localStorageKey = uuidv4()
-    LOCALSTORAGE_CACHE[localStorageKey] = localStorageValue
-
-    res.send({'key': localStorageKey})
+function isNewPlayer(userStats) {
+  // console.log('checking if new player', userStats)
+  if (userStats !== undefined && userStats.finalGridAmount !== undefined) {
+    let sum = 0
+    for (let i = 0; i < 10; i++) {
+      sum += userStats.finalGridAmount[i]
+    }
+    return sum === 0
   }
-  else {
-    res.send({'key': undefined})
-  }
+  return true
+}
+
+app.post('/import', async (req, res) => {
+  const sessionValue = req.body.sessionValue
+  const localStorageValue = req.body.localStorageValue;
+
+  const dataKey = uuidv4()
+
+  await redis.set(`${dataKey}:session`, sessionValue, 'EX', 60)
+  await redis.set(`${dataKey}:localStorage`, localStorageValue, 'EX', 60)
+
+  res.send({'key': dataKey})
 })
 
-app.get('/migrateLocalStorage', (req, res) => {
+app.get('/migrateLocalStorage', async (req, res) => {
   const key = req.query.key
-  if (key !== undefined && LOCALSTORAGE_CACHE[key] !== undefined) {
-    const localStorageValue = LOCALSTORAGE_CACHE[key]
-    delete LOCALSTORAGE_CACHE[key] // only use once
-    res.render('migrateLocalStorage', {localStorageValue: localStorageValue})
+  if (key !== undefined) {
+    if (isNewPlayer(req.session.userStats)) {
+      // console.log('migrating new player')
+      const sessionValue = await redis.get(`${key}:session`)
+      const localStorageValue = await redis.get(`${key}:localStorage`)
+
+      req.session = JSON.parse(sessionValue)
+
+      res.render('migrateLocalStorage', {localStorageValue: JSON.parse(localStorageValue || "{}")})
+    }
+    else {
+      res.render('migrateLocalStorage', {localStorageValue: {}})
+    }
   }
   else {
-    res.render('migrateLocalStorage', {localStorageValue: undefined})
+    res.render('migrateLocalStorage', {localStorageValue: {}})
   }
-})
-
-app.get('/localstorageCache', (req, res) => {
-  res.send(LOCALSTORAGE_CACHE)
 })
 
 app.post('/generateInfinite', [generatePuzzleMiddleware, saveInfinitePuzzle], (req, res) => {
@@ -1707,22 +1718,23 @@ async function start() {
   lastUpdated = await readCSV(playerData, playerList)
   console.log(`Last updated: ${lastUpdated}`)
 
-  console.log('reading all teams...')
+  console.log(`${new Date().toLocaleTimeString()} - reading all teams...`)
   await getAllTeams()
-  console.log('reading top 30 teams')
+  console.log(`${new Date().toLocaleTimeString()} - reading top 30 teams`)
   await getTop30Teams()
-  console.log('reading top 20 teams')
+  console.log(`${new Date().toLocaleTimeString()} - reading top 20 teams`)
   await getTop20Teams()
-  console.log('reading top 10 teams')
+  console.log(`${new Date().toLocaleTimeString()} - reading top 10 teams`)
   await getTop10Teams()
 
-  console.log('preprocessing data...')
+  console.log(`${new Date().toLocaleTimeString()} - preprocessing data...`)
   preprocessData(playerData)
 
-  console.log('creating init team lists')
+  console.log(`${new Date().toLocaleTimeString()} - creating init team lists`)
   createInitTeams()
 
-  app.listen(process.env.PORT || 4000, () => console.log("Server is running..."))
+  if (process.send) process.send('ready');
+  app.listen(process.env.PORT || 4000, () => console.log(`${new Date().toLocaleTimeString()} - Server is running...`))
 }
 
 start()

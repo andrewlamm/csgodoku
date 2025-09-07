@@ -51,6 +51,24 @@
         </div>
       </div>
     </div>
+    <div class="flex flex-col py-4 justify-center items-center absolute z-10 top-0 w-full h-screen hidden" id="migration-msg-bg" onclick="closeMigrationMessage()">
+      <div class="flex flex-col max-h-full items-center justify-center p-4 w-80 md:w-96 relative z-20 bg-gray-400 rounded-xl" id="msg-popup" onclick="event.stopPropagation()">
+        <div class="w-full font-bold text-xl text-center">
+          csdoku update
+        </div>
+        <div class="w-full my-4 overflow-y-auto">
+          hey! as you may have noticed, we have moved to a new domain and also renamed to csdoku (finally)! along with this, there should be some server improvements to reduce downtime of the site and also (hopefully) increase the frequency of player data updates. additionally, rating 3.0 has been added (note that it only applies to matches after 2024) and the puzzle generation algorithm has been slightly updated so more player statistics will show up (rather than just teams).
+        </div>
+        <div class="w-full mb-4 overflow-y-auto">
+          as always, if you find any bugs, please report to me on reddit at u/superandywaffle or create a github issue <a href="https://github.com/andrewlamm/csdoku/issues/new" target="_blank" rel="noopener noreferrer" class="text-blue-700">here</a>! thank you for playing!
+        </div>
+        <div class="flex flex-row mt-2 w-full gap-4">
+          <div class="rounded-lg bg-slate-500 w-full text-center py-2 font-bold cursor-pointer" onclick="closeMigrationMessage()">
+            close
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="w-full h-screen flex flex-col justify-center items-center bg-gray-850" id="game-screen">
       <div class="flex flex-col md:flex-row justify-center">
         <div class="flex flex-col">
@@ -66,7 +84,7 @@
                 <%- displayClue(puzzle[i]) %>
               <% } %>
             </div>
-            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="user-board">
+            <div class="grid grid-cols-3 rounded-2xl border border-white overflow-hidden" id="user-board">
               <% for (let i = 0; i < 9; i++) { %>
                 <% if (currGame.board[i]) { %>
                   <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-600 transition-colors" id="grid-spot-<%= i %>">
@@ -285,8 +303,15 @@
         localStorage.setItem('howToPlay', 'true')
       }
 
+      function closeMigrationMessage() {
+        document.getElementById('migration-msg-bg').classList.add('hidden')
+        localStorage.setItem('migrationMessage', 'true')
+      }
+
       if (localStorage.getItem('howToPlay') !== 'true') {
         openHowToPlay()
+      } else if (localStorage.getItem('migrationMessage') !== 'true') {
+        document.getElementById('migration-msg-bg').classList.remove('hidden')
       }
 
       function closePopup() {
@@ -356,7 +381,7 @@
           }
 
           copyString += '\n\n'
-          copyString += `https://csgodoku.onrender.com`
+          copyString += `https://csdoku.com`
         }
 
         await navigator.clipboard.writeText(copyString)

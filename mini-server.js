@@ -23,7 +23,7 @@ require('dotenv').config()
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
-  name: 'csgodoku',
+  name: 'csdoku',
   resave: true,
   saveUninitialized: true,
   maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
