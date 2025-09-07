@@ -88,7 +88,10 @@ async function getParsedPageHelper(url, findElement, loadAllPlayers=false) {
 
     try {
       // console.log(new Date().toLocaleTimeString() + ' - go to page', url)
-      await browserPage.goto(url, { waitUntil: 'domcontentloaded' })
+      await Promise.race([
+        browserPage.goto(url, { waitUntil: 'domcontentloaded' }),
+        new Promise(resolve => setTimeout(resolve, 10000)) // 10s fallback
+      ]);
       // console.log(new Date().toLocaleTimeString() + ' - docloaded', url)
       // await browserPage.waitForSelector('.' + findElement[1])
       // console.log(new Date().toLocaleTimeString() + ' - loaded elm', url)
@@ -259,6 +262,8 @@ async function getDataString() {
 async function main() {
   await loadBrowser()
 
+  const fields = ["name", "id", "fullName", "country", "age", "rating3", "rating2", "rating1", "KDDiff", "maps", "rounds", "kills", "deaths", "KDRatio", "HSRatio", "adr", "ratingTop20", "ratingYear", "clutchesTotal", "teams", "majorsWon", "majorsPlayed", "LANsWon", "LANsPlayed", "MVPs", "top20s", "top10s", "topPlacement"]
+
   let dataToWrite = await getDataString()
   try {
     const downloadedCountryImages = {}
@@ -320,10 +325,10 @@ async function main() {
               topPlacement: 'N/A',
             }
 
-            const statsPage = await getParsedPage(`https://www.hltv.org/stats/players/${id}/${name}`, ['div', 'summaryRealname'], true)
+            const statsPage = await getParsedPage(`https://www.hltv.org/stats/players/${id}/${name}`, ['div', 'player-summary-stat-box-left-player-name'], true)
 
-            if (statsPage.find('img', {'class': 'summaryBodyshot'}) !== undefined) {
-              const imageURL = statsPage.find('img', {'class': 'summaryBodyshot'}).attrs.src
+            if (statsPage.find('img', {'class': 'player-summary-stat-box-left-bodyshot'}) !== undefined) {
+              const imageURL = statsPage.find('img', {'class': 'player-summary-stat-box-left-bodyshot'}).attrs.src
               await downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'player', id)
             }
             else if (statsPage.find('img', {'class': 'summarySquare'}) !== undefined) {
@@ -331,14 +336,14 @@ async function main() {
               await downloadImage(imageURL.charAt(0) === '/' ? `https://www.hltv.org${imageURL}` : imageURL, 'player', id)
             }
 
-            playerData[id].fullName = statsPage.find('div', {'class': 'summaryRealname'}).text
+            playerData[id].fullName = statsPage.find('div', {'class': 'player-summary-stat-box-left-player-name'}).text
 
-            playerData[id].age = parseInt(statsPage.find('div', {'class': 'summaryPlayerAge'}).text.split(' ')[0])
+            playerData[id].age = parseInt(statsPage.find('div', {'class': 'player-summary-stat-box-left-player-age'}).text.split(' ')[0])
             if (isNaN(playerData[id].age)) {
               playerData[id].age = 'N/A'
             }
 
-            playerData[id].country = statsPage.find('div', {'class': 'summaryRealname'}).find('img').attrs.title
+            playerData[id].country = statsPage.find('div', {'class': 'player-summary-stat-box-left-flag'}).find('img').attrs.title
 
             const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
 
@@ -533,7 +538,10 @@ async function main() {
 
             // writing to string
             let addString = ''
-            for (const [stat, statline] of Object.entries(playerData[id])) {
+            for (let i = 0; i < fields.length; i++) {
+              const stat = fields[i]
+              const statline = playerData[id][stat]
+
               if (stat === 'teams') {
                 addString += `"${JSON.stringify([...statline]).replaceAll('"', '""')}",`
               }

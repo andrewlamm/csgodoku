@@ -102,6 +102,8 @@ async function main() {
   const player_list = await getParsedPage('https://www.hltv.org/stats/players', true)
   const players = player_list.find('table', {'class': 'stats-table'} ).find('tbody').findAll('tr')
 
+  const fields = ["name", "id", "fullName", "country", "age", "rating3", "rating2", "rating1", "KDDiff", "maps", "rounds", "kills", "deaths", "KDRatio", "HSRatio", "adr", "ratingTop20", "ratingYear", "clutchesTotal", "teams", "majorsWon", "majorsPlayed", "LANsWon", "LANsPlayed", "MVPs", "top20s", "top10s", "topPlacement"]
+
   console.log(new Date().toLocaleTimeString() + ' loading initial players...')
   players.map(player => {
     const playerName = player.find('td', {'class': 'playerCol'}).text
@@ -339,7 +341,10 @@ async function main() {
 
       // writing to string
       let addString = ''
-      for (const [stat, statline] of Object.entries(playerData[id])) {
+      for (let i = 0; i < fields.length; i++) {
+        const stat = fields[i]
+        const statline = playerData[id][stat]
+
         if (stat === 'teams') {
           addString += `"${JSON.stringify([...statline]).replaceAll('"', '""')}",`
         }

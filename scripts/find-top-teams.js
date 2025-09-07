@@ -19,7 +19,7 @@ function delay(ms) {
 
 async function loadBrowser() {
   browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     args: ['--disable-dev-shm-usage'],
     executablePath: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome' // UPDATE THIS TO YOUR CHROME PATH
   })
@@ -43,7 +43,10 @@ async function getParsedPageHelper(url, findElement, loadAllPlayers=false) {
 
     try {
       // console.log(new Date().toLocaleTimeString() + ' - go to page', url)
-      await browserPage.goto(url, { waitUntil: 'domcontentloaded' })
+      await Promise.race([
+        browserPage.goto(url, { waitUntil: 'domcontentloaded' }),
+        new Promise(resolve => setTimeout(resolve, 3000)) // 35s fallback
+      ]);
       // console.log(new Date().toLocaleTimeString() + ' - docloaded', url)
       // await browserPage.waitForSelector('.' + findElement[1])
       // console.log(new Date().toLocaleTimeString() + ' - loaded elm', url)
