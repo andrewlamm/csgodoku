@@ -251,11 +251,11 @@ def generate_puzzle():
 
     top_row = random.sample(list(partner_teams[init_team]), top_row_teams_count)
     if top_row_teams_count == 1:
-      intersect = partner_teams[top_row[0]]
+      intersect = partner_teams[top_row[0]].copy()
     elif top_row_teams_count == 2:
-      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]])
+      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]]).copy()
     else:
-      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]]).intersection(partner_teams[top_row[2]])
+      intersect = partner_teams[top_row[0]].intersection(partner_teams[top_row[1]]).intersection(partner_teams[top_row[2]]).copy()
 
     intersect.remove(init_team)
 
@@ -304,7 +304,7 @@ def generate_puzzle():
         continue
 
       # code generates all possible player set
-      print('attempting to solve', puzzle)
+      # print('attempting to solve', puzzle)
 
       all_poss_players = []
       for pos in range(9):

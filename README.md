@@ -1,6 +1,6 @@
 # csdoku
-## Immaculate Grid for CS:GO
-#### https://csdoku.onrender.com/
+## Immaculate Grid for Counterstrike
+#### https://csdoku.com/
 
 ### Scripts
 #### **`read-data-init.js`**

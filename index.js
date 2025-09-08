@@ -1692,7 +1692,16 @@ app.get('/migrateLocalStorage', async (req, res) => {
 
       req.session = JSON.parse(sessionValue)
 
-      res.render('migrateLocalStorage', {localStorageValue: JSON.parse(localStorageValue || "{}")})
+      let localStorageObj = {}
+      try {
+        localStorageObj = JSON.parse(localStorageValue)
+      }
+      catch (err) {
+        localStorageObj = {}
+        console.log(`error parsing local storage value: ${localStorageValue} with error ${err}`)
+      }
+
+      res.render('migrateLocalStorage', {localStorageValue: localStorageObj})
     }
     else {
       res.render('migrateLocalStorage', {localStorageValue: {}})

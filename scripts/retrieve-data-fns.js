@@ -7,6 +7,8 @@ const sharp = require('sharp')
 
 puppeteer.use(StealthPlugin())
 
+const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
+
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -112,7 +114,7 @@ async function getParsedPageHelper(browserPage, url, findElement, loadAllPlayers
       // console.log(new Date().toLocaleTimeString() + ' - go to page', url)
       await Promise.race([
         browserPage.goto(url, { waitUntil: 'domcontentloaded' }),
-        new Promise(resolve => setTimeout(resolve, 10000)) // 10s fallback
+        new Promise(resolve => setTimeout(resolve, 5000))
       ]);
       // console.log(new Date().toLocaleTimeString() + ' - docloaded', url)
       // await browserPage.waitForSelector('.' + findElement[1])
@@ -200,7 +202,6 @@ async function getParsedPage(browserPage, url, findElement, loadAllPlayers=false
 
 async function readPlayerData(playerData, idToName) {
   return new Promise(async function (resolve, reject) {
-    const parseType = ['', 'int', '', '', 'int', 'float', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
     let lastUpdated = undefined
     let topRow = undefined
     fs.createReadStream('data/playerData.csv')
@@ -269,20 +270,24 @@ async function writePlayerData(playerData, lastUpdated, done) {
     for (let i = 0; i < fields.length; i++) {
       const stat = fields[i]
       const statline = data[stat]
+      const statParse = parseType[i]
 
-      if (stat === 'teams') {
+      if (statParse === 'set') {
         addString += `"${JSON.stringify([...statline]).replaceAll('"', '""')}",`
       }
-      else if (stat === 'ratingYear') {
+      else if (statParse === 'dictionary') {
         addString += `"${JSON.stringify(statline).replaceAll('"', '""')}",`
       }
-      else {
+      else if (statParse === 'int' || statParse === 'float') {
         if (isNaN(statline)) {
           addString += 'N/A,'
         }
         else {
           addString += statline + ','
         }
+      }
+      else {
+        addString += statline + ','
       }
     }
 
@@ -446,7 +451,7 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
 
   if (playerName === "UNKNOWN_PLAYER") {
     const playerIgn = statsPage.find('div', {'class': 'player-summary-stat-box-left-nickname'}).text
-    playerData["name"] = playerIgn
+    playerData[playerId]["name"] = playerIgn
   }
 
   if (playerData[playerId].maps === playerMaps && playerData[playerId].rounds === playerRounds && playerData[playerId].kills === playerKills && playerData[playerId].deaths === playerDeaths) {
