@@ -26,19 +26,19 @@ STATS = [
   ('country', country_set),
   ('country', country_set),
   ('age', [30, 35, 40]),
-  ('rating3', [1.1, 1.2]),
-  ('rating2', [1.1, 1.2]),
-  ('rating1', [1.1, 1.2]),
-  ('maps', [1000, 2000, 3000]),
-  ('rounds', [20000, 30000, 40000]),
-  ('kills', [10000, 20000, 30000]),
-  ('deaths', [10000, 20000, 30000]),
-  ('ratingTop20', [1.1, 1.2]),
-  ('ratingYear', [[2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022], [1.1, 1.2]]),
-  ('clutchesTotal', [250, 500, 600]),
+  ('rating3', [1.05, 1.1, 1.2]),
+  ('rating2', [1.05, 1.1, 1.2]),
+  ('rating1', [1.05, 1.1, 1.2]),
+  ('maps', [500, 1000, 2000]),
+  ('rounds', [5000, 10000, 20000, 30000, 40000]),
+  ('kills', [5000, 10000, 20000, 30000, 40000]),
+  ('deaths', [5000, 10000, 20000, 30000, 40000]),
+  ('ratingTop20', [1.05, 1.1, 1.2]),
+  ('ratingYear', [[2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024], [1.05, 1.1, 1.2]]),
+  ('clutchesTotal', [100, 250, 500, 600]),
   ('majorsWon', [1, 2]),
-  ('majorsPlayed', [1, 4, 8]),
-  ('LANsWon', [1, 5, 10]),
+  ('majorsPlayed', [1, 3, 5, 8, 12]),
+  ('LANsWon', [1, 3, 5, 10, 15, 20]),
   ('MVPs', [1, 3, 5, 10]),
   ('top20s', [1, 3, 5, 10]),
   ('top10s', [1, 3, 5]),
@@ -49,7 +49,7 @@ def read_data():
   with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'playerData.csv'), 'r', encoding="utf8") as file:
     csvreader = csv.reader(file)
     top_row = next(csvreader)
-    parse_type = ['', 'int', '', '', 'int', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
+    parse_type = ['', 'int', '', '', 'int', 'float', 'float', 'float', 'int', 'int', 'int', 'int', 'int', 'float', 'float', 'float', 'float', 'dictionary', 'int', 'set', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int']
 
     date_updated = top_row[0]
 

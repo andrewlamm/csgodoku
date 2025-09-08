@@ -277,7 +277,12 @@ async function writePlayerData(playerData, lastUpdated, done) {
         addString += `"${JSON.stringify(statline).replaceAll('"', '""')}",`
       }
       else {
-        addString += statline + ','
+        if (isNaN(statline)) {
+          addString += 'N/A,'
+        }
+        else {
+          addString += statline + ','
+        }
       }
     }
 
