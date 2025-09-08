@@ -52,7 +52,7 @@ app.post('/import', async (req, res) => {
 
 /* 404 Page */
 app.use(function (req, res, next) {
-  res.redirect('index')
+  res.redirect('/')
 })
 
 /* Start Function */
