@@ -508,6 +508,29 @@
             return player.name.toLowerCase().includes(val) || player.fullName.toLowerCase().includes(val)
           })
 
+          // to reduce lag, only do the sorting if the input length is >= 3
+          if (val.length >= 3) {
+            filtered_players.sort((a, b) => {
+              const aLower = a.name.toLowerCase()
+              const bLower = b.name.toLowerCase()
+              if (aLower.startsWith(val) && !bLower.startsWith(val)) {
+                return -1
+              }
+              else if (!aLower.startsWith(val) && bLower.startsWith(val)) {
+                return 1
+              }
+              else if (aLower.includes(val) && !bLower.includes(val)) {
+                return -1
+              }
+              else if (!aLower.includes(val) && bLower.includes(val)) {
+                return 1
+              }
+              else {
+                return 0
+              }
+            })
+          }
+
           filtered_players.map(player => {
             playerNameElement = document.createElement('div')
             playerNameElement.innerHTML = player.name
