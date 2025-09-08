@@ -1670,7 +1670,7 @@ function isNewPlayer(userStats) {
   return true
 }
 
-app.post('/import', express.json({ limit: '10mb' }), async (req, res) => {
+app.post('/import', express.json({ limit: '100mb' }), async (req, res) => {
   const sessionValue = req.body.sessionValue
   const localStorageValue = req.body.localStorageValue;
 

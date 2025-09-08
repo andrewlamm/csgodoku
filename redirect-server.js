@@ -33,8 +33,8 @@ app.get('/', (req, res) => {
   res.render('newDomain')
 })
 
-app.post('/import', express.json({ limit: '10mb' }), async (req, res) => {
-  const localStorageValue = req.body
+app.post('/import', express.json({ limit: '100mb' }), async (req, res) => {
+  const localStorageValue = req.body.localStorageData || {};
   const sessionValue = req.session
 
   console.log('importing user data')
