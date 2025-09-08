@@ -37,7 +37,7 @@ app.post('/import', express.json({ limit: '100mb' }), async (req, res) => {
   const localStorageValue = req.body.localStorageData || {};
   const sessionValue = req.session
 
-  console.log('importing user data')
+  console.log('importing user data with session', sessionValue)
   const localStorageKey = (await (await fetch("https://www.csdoku.com/import", {
     method: 'POST',
     credentials: 'include',
