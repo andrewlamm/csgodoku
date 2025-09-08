@@ -33,18 +33,18 @@ app.get('/', (req, res) => {
   res.render('newDomain')
 })
 
-app.post('/import', async (req, res) => {
-  const localStorageValue = req.body.localStorageValue
-  const sessionValue = JSON.stringify(req.session)
+app.post('/import', express.json({ limit: '10mb' }), async (req, res) => {
+  const localStorageValue = req.body
+  const sessionValue = req.session
 
   console.log('importing user data')
   const localStorageKey = (await (await fetch("https://www.csdoku.com/import", {
     method: 'POST',
     credentials: 'include',
     headers: new Headers({
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/json'
     }),
-    body: `sessionValue=${sessionValue}&localStorageValue=${localStorageValue}`
+    body: JSON.stringify({ sessionValue: sessionValue, localStorageValue: localStorageValue })
   })).json()).key
 
   res.send({ key: localStorageKey})

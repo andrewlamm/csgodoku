@@ -20,15 +20,14 @@
       const newDomain = "https://www.csdoku.com"
 
       async function importAndRedirect() {
-        const localStorageValue = JSON.stringify(localStorage)
-
+        const localStorageData = { ...localStorage };
         const dataKey = (await (await fetch('/import', {
           method: 'POST',
           credentials: 'include',
           headers: new Headers({
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/json'
           }),
-          body: `localStorageValue=${localStorageValue}`
+          body: JSON.stringify({ localStorageData })
         })).json()).key
 
         if (dataKey === undefined) {

@@ -1670,14 +1670,14 @@ function isNewPlayer(userStats) {
   return true
 }
 
-app.post('/import', async (req, res) => {
+app.post('/import', express.json({ limit: '10mb' }), async (req, res) => {
   const sessionValue = req.body.sessionValue
   const localStorageValue = req.body.localStorageValue;
 
   const dataKey = uuidv4()
 
-  await redis.set(`${dataKey}:session`, sessionValue, 'EX', 60)
-  await redis.set(`${dataKey}:localStorage`, localStorageValue, 'EX', 60)
+  await redis.set(`${dataKey}:session`, JSON.stringify(sessionValue), 'EX', 60)
+  await redis.set(`${dataKey}:localStorage`, JSON.stringify(localStorageValue), 'EX', 60)
 
   res.send({'key': dataKey})
 })
