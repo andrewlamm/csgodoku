@@ -69,16 +69,47 @@ async function main() {
       }
     }
 
+    let count = 1
     for (const id of playerIds) {
-      console.log(`${new Date().toLocaleTimeString()} - getting stats for ID ${id}`)
+      console.log(`${new Date().toLocaleTimeString()} - getting stats for ID ${id} (${count} of ${playerIds.size})...`)
+      count += 1
 
       if (playerData[id] === undefined) {
-        playerData[id] = {}
+        playerData[id] = {
+          name: "UNKNOWN_PLAYER",
+          id: id,
+          fullName: undefined,
+          country: undefined,
+          age: undefined,
+          rating3: 'N/A',
+          rating2: 'N/A',
+          rating1: 'N/A',
+          KDDiff: undefined,
+          maps: undefined,
+          rounds: undefined,
+          kills: undefined,
+          deaths: undefined,
+          KDRatio: undefined,
+          HSRatio: undefined,
+          adr: undefined,
+          ratingTop20: undefined,
+          ratingYear: {},
+          clutchesTotal: undefined,
+          teams: new Set(),
+          majorsWon: undefined,
+          majorsPlayed: undefined,
+          LANsWon: undefined,
+          LANsPlayed: undefined,
+          MVPs: undefined,
+          top20s: undefined,
+          top10s: undefined,
+          topPlacement: 'N/A',
+        }
       }
 
       await updateStatsForPlayer(browserPage, id, idToName[id] || "UNKNOWN_PLAYER", lastUpdated, playerData)
 
-      // await writePlayerData(playerData, lastUpdated, false)
+      await writePlayerData(playerData, lastUpdated, false)
     }
 
     await writePlayerData(playerData, lastUpdated, true)

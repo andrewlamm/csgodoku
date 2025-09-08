@@ -314,6 +314,7 @@ async function getInitPlayerData(browserPage) {
       fullName: undefined,
       country: undefined,
       age: undefined,
+      rating3: 'N/A',
       rating2: 'N/A',
       rating1: parseFloat(player.find('td', {'class': 'ratingCol'}).text),
       KDDiff: undefined,
@@ -436,6 +437,11 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
 
     deathsBox = statsDivs[2]
     playerDeaths = parseInt(deathsBox.findAll('span')[1].text)
+  }
+
+  if (playerName === "UNKNOWN_PLAYER") {
+    const playerIgn = statsPage.find('div', {'class': 'player-summary-stat-box-left-nickname'}).text
+    playerData["name"] = playerIgn
   }
 
   if (playerData[playerId].maps === playerMaps && playerData[playerId].rounds === playerRounds && playerData[playerId].kills === playerKills && playerData[playerId].deaths === playerDeaths) {

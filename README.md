@@ -28,6 +28,11 @@ When generating the `playerData.csv` file for the first time, run
 2. `python3 scripts/find-top-teams.py`
 3. `node scripts/retrieve-remaining-players.js`
 
+You can also just run
+1. `node scripts/find-new-matches.js`
+1. `node scripts/find-top-teams.js`
+This hopefully should be faster as it just looks at the new matches since the last update and updates the corresponding players.
+
 When updating the `playerData.csv` file, run
 1. `node scripts/update-data.js`
 2. `node scripts/find-top-teams.js`
