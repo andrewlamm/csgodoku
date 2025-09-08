@@ -41,7 +41,7 @@ app.use(session({
 const db = require('./db')
 const { get, set } = require('express/lib/response')
 
-const redis = new Redis();
+const redis = process.env.NODE_ENV === 'development' ? undefined : new Redis();
 
 const playerData = {}
 const playerList = {}
@@ -1685,26 +1685,26 @@ app.post('/import', express.json({ limit: '100mb' }), async (req, res) => {
 app.get('/migrateLocalStorage', async (req, res) => {
   const key = req.query.key
   if (key !== undefined) {
+    const localStorageValue = await redis.get(`${key}:localStorage`)
+    let localStorageObj = {}
+    try {
+      localStorageObj = JSON.parse(localStorageValue)
+    }
+    catch (err) {
+      localStorageObj = {}
+      console.log(`error parsing local storage value: ${localStorageValue} with error ${err}`)
+    }
+
     if (isNewPlayer(req.session.userStats)) {
       // console.log('migrating new player')
       const sessionValue = await redis.get(`${key}:session`)
-      const localStorageValue = await redis.get(`${key}:localStorage`)
 
       req.session = JSON.parse(sessionValue)
-
-      let localStorageObj = {}
-      try {
-        localStorageObj = JSON.parse(localStorageValue)
-      }
-      catch (err) {
-        localStorageObj = {}
-        console.log(`error parsing local storage value: ${localStorageValue} with error ${err}`)
-      }
 
       res.render('migrateLocalStorage', {localStorageValue: localStorageObj})
     }
     else {
-      res.render('migrateLocalStorage', {localStorageValue: {}})
+      res.render('migrateLocalStorage', {localStorageValue: localStorageObj})
     }
   }
   else {
