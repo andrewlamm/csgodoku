@@ -2,7 +2,7 @@
 
 const fs = require('fs')
 
-const { getParsedPage, loadBrowser, readPlayerData, writePlayerData, getInitPlayerData, downloadCountryFlags, getLastMatchForPlayer, updateStatsForPlayer } = require('./retrieve-data-fns.js')
+const { getParsedPage, loadBrowser, readPlayerData, writePlayerData, getInitPlayerData, downloadCountryFlags, updateStatsForPlayer } = require('./retrieve-data-fns.js')
 
 async function getTopTeams() {
   return new Promise(async function (resolve, reject) {
@@ -19,10 +19,12 @@ async function getTopTeams() {
 }
 
 async function main() {
-  const browserPage = await loadBrowser()
+  const browserInfo = await loadBrowser()
 
   try {
-    const { idToName, playerData, playerTableData, countryImages } = await getInitPlayerData(browserPage)
+    const { idToName, playerData } = await getInitPlayerData(browserInfo)
+
+    await downloadCountryFlags(countryImages)
 
     const lastUpdated = await readPlayerData(playerData, idToName)
     const topTeams = await getTopTeams()
@@ -32,7 +34,7 @@ async function main() {
       console.log(new Date().toLocaleTimeString(), ' - retrieving data for team', teamName, `(team ${i+1} of ${topTeams.length})`)
       const teamID = teamName.substring(0, teamName.lastIndexOf('/'))
 
-      const teamPage = await getParsedPage(browserPage, `https://www.hltv.org/stats/teams/${teamID}/a`, ['div', 'teammate'])
+      const teamPage = await getParsedPage(browserInfo, `https://www.hltv.org/stats/teams/${teamID}/a`, ['div', 'teammate'])
       const teamPlayers = teamPage.findAll('div', {'class': 'teammate'})
 
       for (let j = 0; j < teamPlayers.length; j++) {
@@ -77,7 +79,7 @@ async function main() {
               topPlacement: 'N/A',
             }
 
-            await updateStatsForPlayer(browserPage, id, name, lastUpdated, playerData)
+            await updateStatsForPlayer(browserInfo, id, name, lastUpdated, playerData)
 
             await writePlayerData(playerData, lastUpdated, false)
           }
@@ -86,6 +88,7 @@ async function main() {
     }
 
     await writePlayerData(playerData, lastUpdated, true)
+    await browserInfo.browser.close()
     console.log(new Date().toLocaleTimeString() + ' - done!')
   }
   catch (err) {

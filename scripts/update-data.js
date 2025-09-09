@@ -1,13 +1,13 @@
-// File to update current playerData.csv file. Has not been tested after changes, so use with caution
+// File to update current playerData.csv file
 const { loadBrowser, readPlayerData, writePlayerData, getInitPlayerData, downloadCountryFlags, getLastMatchForPlayer, updateStatsForPlayer } = require('./retrieve-data-fns.js')
 
 async function main(skip) {
-  const browserPage = await loadBrowser();
+  const browserInfo = await loadBrowser();
 
   let currId = 0
 
   try {
-    const { idToName, playerData, playerTableData, countryImages } = await getInitPlayerData(browserPage)
+    const { idToName, playerData, playerTableData, countryImages } = await getInitPlayerData(browserInfo)
 
     await downloadCountryFlags(countryImages)
 
@@ -33,7 +33,7 @@ async function main(skip) {
           console.log(new Date().toLocaleTimeString() + ' - no new matches, skipping ' + name)
         }
         else {
-          await updateStatsForPlayer(browserPage, id, name, lastUpdated, playerData)
+          await updateStatsForPlayer(browserInfo, id, name, lastUpdated, playerData)
         }
       }
       else {
@@ -44,6 +44,7 @@ async function main(skip) {
     }
 
     await writePlayerData(playerData, lastUpdated, true)
+    await browserInfo.browser.close()
 
     console.log(new Date().toLocaleTimeString() + ' - done!')
   }

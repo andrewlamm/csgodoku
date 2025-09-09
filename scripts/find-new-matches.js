@@ -1,8 +1,8 @@
 // File to update current playerData.csv file. Has not been tested after changes, so use with caution
-const { getParsedPage, loadBrowser, readPlayerData, writePlayerData, getLastMatchForPlayer, updateStatsForPlayer } = require('./retrieve-data-fns.js')
+const { getParsedPage, loadBrowser, readPlayerData, writePlayerData, updateStatsForPlayer } = require('./retrieve-data-fns.js')
 
 async function main() {
-  const browserPage = await loadBrowser();
+  const browserInfo = await loadBrowser();
 
   try {
     const idToName = {}
@@ -38,7 +38,7 @@ async function main() {
 
     while (true) {
       console.log(`loading matches with offset ${offset}...`)
-      const matchesPage = await getParsedPage(browserPage, `https://www.hltv.org/stats/matches?startDate=${updateDateArr[0]}-${updateDateArr[1]}-${updateDateArr[2]}&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}&offset=${offset}`, ['table', 'matches-table'])
+      const matchesPage = await getParsedPage(browserInfo, `https://www.hltv.org/stats/matches?startDate=${updateDateArr[0]}-${updateDateArr[1]}-${updateDateArr[2]}&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}&offset=${offset}`, ['table', 'matches-table'])
 
       // .first finds the first link of the match (removing redundant work)
       const matchResults = matchesPage.find('table', {'class': 'matches-table'}).find('tbody').findAll('tr', {'class': 'first'})
@@ -57,7 +57,7 @@ async function main() {
 
     for (const matchLink of matchLinks) {
       console.log(`${new Date().toLocaleTimeString()} - loading match ${matchLink}...`)
-      const matchPage = await getParsedPage(browserPage, `https://www.hltv.org${matchLink}`, ['table', 'stats-table'])
+      const matchPage = await getParsedPage(browserInfo, `https://www.hltv.org${matchLink}`, ['table', 'stats-table'])
       const players = matchPage.findAll('td', {'class': 'st-player'})
 
       for (let i = 0; i < players.length; i++) {
@@ -107,12 +107,13 @@ async function main() {
         }
       }
 
-      await updateStatsForPlayer(browserPage, id, idToName[id] || "UNKNOWN_PLAYER", lastUpdated, playerData)
+      await updateStatsForPlayer(browserInfo, id, idToName[id] || "UNKNOWN_PLAYER", lastUpdated, playerData)
 
       await writePlayerData(playerData, lastUpdated, false)
     }
 
     await writePlayerData(playerData, lastUpdated, true)
+    await browserInfo.browser.close()
     console.log(new Date().toLocaleTimeString() + ' - done!')
   }
   catch (err) {

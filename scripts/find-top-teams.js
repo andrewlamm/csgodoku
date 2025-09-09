@@ -1,139 +1,10 @@
 // script is used to filter out the teams that have been top 30 (for generating puzzles)
 // prints out all teams that have been at least top 30 in some point in time
-
-const JSSoup = require('jssoup').default
-const puppeteer = require('puppeteer-extra')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const fs = require('fs').promises
 const fsold = require('fs')
 const csv = require('csv-parser')
 
-puppeteer.use(StealthPlugin())
-
-let browser = undefined
-let browserPage = undefined
-
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-async function loadBrowser() {
-  browser = await puppeteer.launch({
-    headless: false,
-    args: ['--disable-dev-shm-usage'],
-    executablePath: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome' // UPDATE THIS TO YOUR CHROME PATH
-  })
-
-  browserPage = await browser.newPage()
-
-  await browserPage.setRequestInterception(true)
-
-  browserPage.on('request', async request => {
-    if (request.resourceType() === 'fetch' || request.resourceType() === 'image' || request.resourceType() === 'media' || request.resourceType() === 'font' || request.resourceType() === 'websocket' || request.resourceType() === 'manifest' || request.resourceType() === 'other' || request.resourceType() === 'script' && !request.url().includes('hltv')) {
-      request.abort()
-    } else {
-      request.continue()
-    }
-  })
-}
-
-async function getParsedPageHelper(url, findElement, loadAllPlayers=false) {
-  return new Promise(async function (resolve, reject) {
-    // console.log(new Date().toLocaleTimeString() + ' - getting page', url)
-
-    try {
-      // console.log(new Date().toLocaleTimeString() + ' - go to page', url)
-      await Promise.race([
-        browserPage.goto(url, { waitUntil: 'domcontentloaded' }),
-        new Promise(resolve => setTimeout(resolve, 3000)) // 35s fallback
-      ]);
-      // console.log(new Date().toLocaleTimeString() + ' - docloaded', url)
-      // await browserPage.waitForSelector('.' + findElement[1])
-      // console.log(new Date().toLocaleTimeString() + ' - loaded elm', url)
-      // const fullPage = await browserPage.content()
-
-      let timeout;
-      let timeoutPromise = new Promise((resolve, reject) => {
-          timeout = setTimeout(() => {
-            clearTimeout(timeout)
-            console.log("Function took longer than 5 seconds. Recalling...")
-            resolve(getParsedPageHelper(url, findElement, loadAllPlayers))
-          }, 10000);
-      })
-
-      const fullPage = await Promise.race([browserPage.content(), timeoutPromise])
-      clearTimeout(timeout)
-
-      // console.log(new Date().toLocaleTimeString() + ' - got content', url)
-      // browser.close()
-      // console.log(new Date().toLocaleTimeString() + ' - done going to page', url)
-
-      const elementName = findElement[0]
-      const className = findElement[1]
-
-      if (loadAllPlayers) {
-        const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'), fullPage.indexOf('</table>')) + '</table></div></div></div></div></div></body></html>' // reduce page size to only relevant
-        // console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
-        const soup = new JSSoup(page)
-        if (soup === undefined || soup.find(elementName, {'class': className}) === undefined) {
-          console.log('undefined soup or soup didnt contain elem, retrying...', url)
-          await delay(5000)
-          resolve(getParsedPageHelper(url, findElement, loadAllPlayers))
-        }
-        else {
-          resolve(soup)
-        }
-      }
-      else {
-        const page = '<html><body>' + fullPage.substring(fullPage.indexOf('<div class="navbar">'))
-        // console.log(new Date().toLocaleTimeString() + ' - getting page completed', url)
-        const soup = new JSSoup(page)
-        if (soup === undefined || soup.find(elementName, {'class': className}) === undefined) {
-          console.log('undefined soup or soup didnt contain elem, retrying...', url)
-          await delay(5000)
-          resolve(getParsedPageHelper(url, findElement, loadAllPlayers))
-        }
-        else {
-          resolve(soup)
-        }
-      }
-    }
-    catch (err) {
-      console.log('failed getting page with error', err)
-      console.log('retrying...', url)
-      if (browser !== undefined) {
-        // browser.close()
-      }
-      // reject(err)
-      resolve(getParsedPageHelper(url, findElement, loadAllPlayers))
-    }
-  })
-}
-
-async function getParsedPage(url, findElement, loadAllPlayers=false) {
-  return new Promise(async function (resolve, reject) {
-    let timeout;
-    try {
-      let timeoutPromise = new Promise((resolve, reject) => {
-          timeout = setTimeout(() => {
-            clearTimeout(timeout)
-            console.log("Function took longer than 120 seconds. Recalling...")
-            reject(new Error("Timeout reached"))
-          }, 120000);
-      })
-
-      const page = await Promise.race([getParsedPageHelper(url, findElement, loadAllPlayers), timeoutPromise])
-
-      clearTimeout(timeout)
-      resolve(page)
-    }
-    catch (error) {
-      console.error("get parsed page error:", error)
-      clearTimeout(timeout)
-      resolve(getParsedPage(url, findElement, loadAllPlayers))
-    }
-  })
-}
+const { loadBrowser, getParsedPage } = require('./retrieve-data-fns.js')
 
 async function readCSV(allTeams) {
   return new Promise(async function (resolve, reject) {
@@ -157,7 +28,7 @@ async function readCSV(allTeams) {
 }
 
 async function main() {
-  await loadBrowser()
+  const browserInfo = await loadBrowser();
 
   const THRESHOLDS = [30, 20, 10]
 
@@ -190,7 +61,7 @@ async function main() {
     }
 
     const teamId = team.split('/')[0]
-    const teamPage = await getParsedPage('https://www.hltv.org/team/' + teamId + '/a', ['div', 'team-chart-container'])
+    const teamPage = await getParsedPage(browserInfo, 'https://www.hltv.org/team/' + teamId + '/a', ['div', 'team-chart-container'])
 
     if (teamPage.find('div', {'class': 'team-chart-container'}) === undefined) {
       // whoops broken link, shouldnt happen ??
@@ -220,6 +91,8 @@ async function main() {
     topTeamsList.sort()
     await fs.writeFile('data/top-' + THRESHOLD + '-teams.txt', JSON.stringify(topTeamsList))
   }
+
+  await browserInfo.browser.close()
 }
 
 main()

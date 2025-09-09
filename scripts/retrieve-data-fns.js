@@ -38,18 +38,18 @@ async function downloadImage(url, category, id) {
   }
 }
 
-async function getTeamImage(browserPage, url) {
+async function getTeamImage(browserInfo, url) {
   await delay(2000)
   if (url === '6548/?')
     url = '6548/-'
 
-  const page = await getParsedPage(browserPage, `https://www.hltv.org/stats/teams/${url}`, ['div', 'context-item'])
+  const page = await getParsedPage(browserInfo, `https://www.hltv.org/stats/teams/${url}`, ['div', 'context-item'])
   // const soupPage = new JSSoup(page)
   const imageURL = page.find('div', {'class': 'context-item'}).find('img').attrs.src
   if (imageURL === undefined) {
     console.log('retrying bc image url doesnt exist...')
     await delay(5000)
-    getTeamImage(url)
+    getTeamImage(browserInfo, url)
   }
   else {
     const id = url.split('/')[0]
@@ -58,13 +58,7 @@ async function getTeamImage(browserPage, url) {
   }
 }
 
-async function loadBrowser() {
-  const browser = await puppeteer.launch({
-    headless: false,
-    args: ['--disable-dev-shm-usage'],
-    executablePath: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome' // UPDATE THIS TO YOUR CHROME PATH
-  })
-
+async function createPage(browser) {
   const browserPage = await browser.newPage()
 
   await browserPage.setRequestInterception(true)
@@ -80,7 +74,19 @@ async function loadBrowser() {
   return browserPage
 }
 
-async function getParsedPage(browserPage, url, findElement, loadAllPlayers=false) {
+async function loadBrowser() {
+  const browser = await puppeteer.launch({
+    headless: false,
+    args: ['--disable-dev-shm-usage'],
+    executablePath: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome' // UPDATE THIS TO YOUR CHROME PATH
+  })
+
+  const browserPage = await createPage(browser)
+
+  return { browser, browserPage }
+}
+
+async function getParsedPage(browserInfo, url, findElement, loadAllPlayers=false) {
   return new Promise(async function (resolve, reject) {
     let timeout;
     try {
@@ -92,7 +98,7 @@ async function getParsedPage(browserPage, url, findElement, loadAllPlayers=false
           }, 120000);
       })
 
-      const page = await Promise.race([getParsedPageHelper(browserPage, url, findElement, loadAllPlayers), timeoutPromise])
+      const page = await Promise.race([getParsedPageHelper(browserInfo, url, findElement, loadAllPlayers), timeoutPromise])
 
       clearTimeout(timeout)
       resolve(page)
@@ -100,13 +106,14 @@ async function getParsedPage(browserPage, url, findElement, loadAllPlayers=false
     catch (error) {
       console.error("get parsed page error:", error)
       clearTimeout(timeout)
-      resolve(getParsedPage(browserPage, url, findElement, loadAllPlayers))
+      resolve(getParsedPage(browserInfo, url, findElement, loadAllPlayers))
     }
   })
 }
 
 
-async function getParsedPageHelper(browserPage, url, findElement, loadAllPlayers=false) {
+async function getParsedPageHelper(browserInfo, url, findElement, loadAllPlayers=false) {
+  const { browser, browserPage } = browserInfo
   return new Promise(async function (resolve, reject) {
     console.log(new Date().toLocaleTimeString() + ' - getting page', url)
 
@@ -123,11 +130,13 @@ async function getParsedPageHelper(browserPage, url, findElement, loadAllPlayers
 
       let timeout;
       let timeoutPromise = new Promise((resolve, reject) => {
-          timeout = setTimeout(() => {
-            clearTimeout(timeout)
-            console.log("Function took longer than 5 seconds. Recalling...")
-            resolve(getParsedPageHelper(browserPage, url, findElement, loadAllPlayers))
-          }, 10000);
+        timeout = setTimeout(async () => {
+          clearTimeout(timeout)
+          console.log("Function took longer than 5 seconds. Recalling...")
+          browserPage.close()
+          browserInfo.browserPage = await createPage(browser)
+          resolve(getParsedPageHelper(browserInfo, url, findElement, loadAllPlayers))
+        }, 10000);
       })
 
       const fullPage = await Promise.race([browserPage.content(), timeoutPromise])
@@ -146,7 +155,7 @@ async function getParsedPageHelper(browserPage, url, findElement, loadAllPlayers
         if (soup === undefined || soup.find(elementName, {'class': className}) === undefined) {
           console.log('undefined soup or soup didnt contain elem, retrying...', url)
           await delay(5000)
-          resolve(getParsedPageHelper(browserPage, url, findElement, loadAllPlayers))
+          resolve(getParsedPageHelper(browserInfo, url, findElement, loadAllPlayers))
         }
         else {
           resolve(soup)
@@ -159,7 +168,7 @@ async function getParsedPageHelper(browserPage, url, findElement, loadAllPlayers
         if (soup === undefined || soup.find(elementName, {'class': className}) === undefined) {
           console.log('undefined soup or soup didnt contain elem, retrying...', url)
           await delay(5000)
-          resolve(getParsedPageHelper(browserPage, url, findElement, loadAllPlayers))
+          resolve(getParsedPageHelper(browserInfo, url, findElement, loadAllPlayers))
         }
         else {
           resolve(soup)
@@ -169,13 +178,14 @@ async function getParsedPageHelper(browserPage, url, findElement, loadAllPlayers
     catch (err) {
       console.log('failed getting page with error', err)
       console.log('retrying...', url)
+      await delay(3000)
       // reject(err)
-      resolve(getParsedPageHelper(browserPage, url, findElement, loadAllPlayers))
+      resolve(getParsedPageHelper(browserInfo, url, findElement, loadAllPlayers))
     }
   })
 }
 
-async function getParsedPage(browserPage, url, findElement, loadAllPlayers=false) {
+async function getParsedPage(browserInfo, url, findElement, loadAllPlayers=false) {
   return new Promise(async function (resolve, reject) {
     let timeout;
     try {
@@ -187,7 +197,7 @@ async function getParsedPage(browserPage, url, findElement, loadAllPlayers=false
           }, 60000);
       })
 
-      const page = await Promise.race([getParsedPageHelper(browserPage, url, findElement, loadAllPlayers), timeoutPromise])
+      const page = await Promise.race([getParsedPageHelper(browserInfo, url, findElement, loadAllPlayers), timeoutPromise])
 
       clearTimeout(timeout)
       resolve(page)
@@ -195,7 +205,7 @@ async function getParsedPage(browserPage, url, findElement, loadAllPlayers=false
     catch (error) {
       console.error("get parsed page error:", error)
       clearTimeout(timeout)
-      resolve(getParsedPage(browserPage, url, findElement, loadAllPlayers))
+      resolve(getParsedPage(browserInfo, url, findElement, loadAllPlayers))
     }
   })
 }
@@ -301,13 +311,13 @@ async function writePlayerData(playerData, lastUpdated, done) {
   })
 }
 
-async function getInitPlayerData(browserPage) {
+async function getInitPlayerData(browserInfo) {
   const idToName = {}
   const playerData = {}
   const playerTableData = {} // stores KD from table to compare with current data
   const countryImages = {}
 
-  const playerList = await getParsedPage(browserPage, 'https://www.hltv.org/stats/players', ['table', 'stats-table'], true)
+  const playerList = await getParsedPage(browserInfo, 'https://www.hltv.org/stats/players', ['table', 'stats-table'], true)
   const players = playerList.find('table', {'class': 'stats-table'} ).find('tbody').findAll('tr')
 
   players.map(player => {
@@ -386,7 +396,7 @@ async function getLastMatchForPlayer(playerID) {
 }
 
 // updates the stats for [playerId] and puts them in [playerData] dictionary
-async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdated, playerData) {
+async function updateStatsForPlayer(browserInfo, playerId, playerName, lastUpdated, playerData) {
   const downloadTeamLinks = new Set()
 
   const currDate = new Date()
@@ -409,7 +419,7 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
     updateDateArr[2] = '0' + updateDateArr[2]
   }
 
-  const statsPage = await getParsedPage(browserPage, `https://www.hltv.org/stats/players/${playerId}/${playerName}`, ['div', 'stats-row'])
+  const statsPage = await getParsedPage(browserInfo, `https://www.hltv.org/stats/players/${playerId}/${playerName}`, ['div', 'stats-row'])
 
   const statsDivs = statsPage.findAll('div', {'class': 'stats-row'})
 
@@ -497,7 +507,7 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
       playerData[playerId].rating1 = ratingNumber
     }
 
-    const rating3Page = await getParsedPage(browserPage, `https://www.hltv.org/stats/players/${playerId}/${playerName}?startDate=2024-01-01&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}`, ['div', 'stats-row'])
+    const rating3Page = await getParsedPage(browserInfo, `https://www.hltv.org/stats/players/${playerId}/${playerName}?startDate=2024-01-01&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}`, ['div', 'stats-row'])
     const rating3Type = rating3Page.find('div', {'class': 'player-summary-stat-box-data-description-text'})
 
     if (rating3Type !== undefined && rating3Type.text.includes('3.0')) {
@@ -522,7 +532,7 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
       playerData[playerId].ratingTop20 = parseFloat(ratingBoxes[2].find('div').text)
     }
 
-    const careerPage = await getParsedPage(browserPage, `https://www.hltv.org/stats/players/career/${playerId}/${playerName}`, ['table', 'stats-table'])
+    const careerPage = await getParsedPage(browserInfo, `https://www.hltv.org/stats/players/career/${playerId}/${playerName}`, ['table', 'stats-table'])
 
     const ratingYear = careerPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
     for (let i = 0; i < ratingYear.length; i++) {
@@ -537,7 +547,7 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
 
     let clutchesWon = 0
     for (let i = 0; i < 5; i++) {
-      const clutchPage = await getParsedPage(browserPage, `https://www.hltv.org/stats/players/clutches/${playerId}/1on${i+1}/${playerName}`, ['div', 'summary-box'])
+      const clutchPage = await getParsedPage(browserInfo, `https://www.hltv.org/stats/players/clutches/${playerId}/1on${i+1}/${playerName}`, ['div', 'summary-box'])
       const clutches = clutchPage.find('div', {'class': 'summary-box'}).find('div', {'class': 'value'}).text
       if (!isNaN(clutches)) {
         clutchesWon += parseInt(clutches)
@@ -549,10 +559,10 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
     if (playerData[playerId].majorsWon === undefined || playerData[playerId].majorsWon === "N/A") {
       // completely new player
       console.log('new player')
-      matchesPage = await getParsedPage(browserPage, `https://www.hltv.org/stats/players/matches/${playerId}/${playerName}`, ['table', 'stats-table'], true)
+      matchesPage = await getParsedPage(browserInfo, `https://www.hltv.org/stats/players/matches/${playerId}/${playerName}`, ['table', 'stats-table'], true)
     }
     else {
-      matchesPage = await getParsedPage(browserPage, `https://www.hltv.org/stats/players/matches/${playerId}/${playerName}?startDate=${updateDateArr[0]}-${updateDateArr[1]}-${updateDateArr[2]}&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}`, ['table', 'stats-table'])
+      matchesPage = await getParsedPage(browserInfo, `https://www.hltv.org/stats/players/matches/${playerId}/${playerName}?startDate=${updateDateArr[0]}-${updateDateArr[1]}-${updateDateArr[2]}&endDate=${currDateArr[0]}-${currDateArr[1]}-${currDateArr[2]}`, ['table', 'stats-table'])
     }
     const matchesTable = matchesPage.find('table', {'class': 'stats-table'}).find('tbody').findAll('tr')
 
@@ -572,13 +582,13 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
       playerData[playerId].teams.add(`${teamID}/${teamName}`)
 
       if (!downloadTeamLinks.has(`${teamID}/${teamName}`)) {
-        await getTeamImage(browserPage, `${teamID}/${teamURLName}`)
+        await getTeamImage(browserInfo, `${teamID}/${teamURLName}`)
 
         downloadTeamLinks.add(`${teamID}/${teamName}`)
       }
     }
 
-    const profilePage = await getParsedPage(browserPage, `https://www.hltv.org/player/${playerId}/${playerName}`, ['div', 'playerProfile'])
+    const profilePage = await getParsedPage(browserInfo, `https://www.hltv.org/player/${playerId}/${playerName}`, ['div', 'playerProfile'])
     // const teamsTable = profilePage.find('table', {'class': 'team-breakdown'}).find('tbody').findAll('tr', {'class': 'team'})
 
     // for (let i = 0; i < teamsTable.length; i++) {
@@ -587,7 +597,7 @@ async function updateStatsForPlayer(browserPage, playerId, playerName, lastUpdat
     //   playerData[playerId].teams.add(`${teamID}/${teamName}`)
 
     //   if (!downloadTeamLinks.has(`${teamID}/${teamName}`)) {
-    //     await getTeamImage(browserPage, `${teamID}/${teamName}`)
+    //     await getTeamImage(browserInfo, `${teamID}/${teamName}`)
 
     //     downloadTeamLinks.add(`${teamID}/${teamName}`)
     //   }
