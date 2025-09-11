@@ -599,7 +599,7 @@ async function insertGuessHelper(req, res, next) {
     const guess = parseInt(req.body.guess)
 
     if (req.session.player === undefined) {
-      console.log('insert guess fail, no player')
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, no player`)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
@@ -608,7 +608,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (JSON.stringify(req.session.player.puzzle) !== JSON.stringify(puzzle)) {
-      console.log('insert guess fail, puzzle incorrect', req.session.player)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, puzzle incorrect`, req.session.player)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
@@ -617,7 +617,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (req.session.player.guessesLeft <= 0) {
-      console.log('insert guess fail, no guesses left', req.session.player)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, no guesses left`, req.session.player)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
@@ -626,7 +626,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (isNaN(ind) || ind < 0 || ind >= 9) {
-      console.log('insert guess fail, invalid index', ind)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, invalid index`, ind)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -635,7 +635,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (req.session.player.board === undefined) {
-      console.log('insert guess fail, no board', req.session.player)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, no board`, req.session.player)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -644,8 +644,8 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (req.session.player.board[ind] !== undefined && req.session.player.board[ind] !== null) {
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, index already guessed`, req.session.player)
       console.log(req.session.player.board[ind])
-      console.log('insert guess fail, index already guessed', req.session.player)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -654,7 +654,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (req.session.player.guesses === undefined) {
-      console.log('insert guess fail, no guesses array', req.session.player)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, no guesses array`, req.session.player)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -663,7 +663,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (isNaN(guess) || playerData[guess] === undefined) {
-      console.log('insert guess fail, invalid player guessed', guess)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, invalid player guessed`, guess)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -672,7 +672,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (req.session.player.guesses[ind].includes(guess) || req.session.player.board.includes(guess)) {
-      console.log('insert guess fail, already guessed', playerData[guess].name)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, already guessed`, playerData[guess].name)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -681,7 +681,7 @@ async function insertGuessHelper(req, res, next) {
       next()
     }
     else if (req.session.userStats === undefined || req.session.userStats.finalGridAmount === undefined || req.session.userStats.finalGridAmount.length !== 10) {
-      console.log('insert guess fail, user stats error', req.session.userStats)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, user stats error`, req.session.userStats)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -761,7 +761,7 @@ async function insertGuessHelper(req, res, next) {
     }
   }
   catch (err) {
-    console.log('insert guess fail, error', err)
+    console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - insert guess fail, error`, err)
     res.locals.guessReturn = {
       guessStatus: -1,
       guessesLeft: 0,
@@ -774,7 +774,7 @@ async function insertGuessHelper(req, res, next) {
 async function concedeHelper(req, res, next) {
   try {
     if (req.session.player === undefined) {
-      console.log('concede fail, no player')
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - concede fail, no player`)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
@@ -783,7 +783,7 @@ async function concedeHelper(req, res, next) {
       next()
     }
     else if (JSON.stringify(req.session.player.puzzle) !== JSON.stringify(puzzle)) {
-      console.log('concede fail, puzzle incorrect', req.session.player)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - concede fail, puzzle incorrect`, req.session.player)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: 0,
@@ -792,7 +792,7 @@ async function concedeHelper(req, res, next) {
       next()
     }
     else if (req.session.player.board === undefined) {
-      console.log('concede fail, no board', req.session.player)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - concede fail, no board`, req.session.player)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -801,7 +801,7 @@ async function concedeHelper(req, res, next) {
       next()
     }
     else if (req.session.userStats === undefined || req.session.userStats.finalGridAmount === undefined || req.session.userStats.finalGridAmount.length !== 10) {
-      console.log('concede fail, user stats error', req.session.userStats)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - concede fail, user stats error`, req.session.userStats)
       res.locals.guessReturn = {
         guessStatus: -1,
         guessesLeft: req.session.player.guessesLeft,
@@ -811,7 +811,7 @@ async function concedeHelper(req, res, next) {
     }
     else if (req.session.player.gameStatus !== 0) {
       // game has ended, do nothing
-      console.log('concede fail, game ended', req.session.player)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - concede fail, game ended`, req.session.player)
       next()
     }
     else {
@@ -854,7 +854,7 @@ async function concedeHelper(req, res, next) {
     }
   }
   catch (err) {
-    console.log('concede fail, error', err)
+    console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - concede fail, error`, err)
     next()
   }
 }
@@ -1032,7 +1032,7 @@ async function getAllTeams() {
       resolve(1)
     }
     catch (err) {
-      console.log('error reading top teams with error', err)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - error reading top teams with error`, err)
       reject(err)
     }
   })
@@ -1055,7 +1055,7 @@ async function getTop30Teams() {
       resolve(1)
     }
     catch (err) {
-      console.log('error reading top teams with error', err)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - error reading top teams with error`, err)
       reject(err)
     }
   })
@@ -1078,7 +1078,7 @@ async function getTop20Teams() {
       resolve(1)
     }
     catch (err) {
-      console.log('error reading top teams with error', err)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - error reading top teams with error`, err)
       reject(err)
     }
   })
@@ -1101,7 +1101,7 @@ async function getTop10Teams() {
       resolve(1)
     }
     catch (err) {
-      console.log('error reading top teams with error', err)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - error reading top teams with error`, err)
       reject(err)
     }
   })
@@ -1692,7 +1692,7 @@ app.get('/migrateLocalStorage', async (req, res) => {
     }
     catch (err) {
       localStorageObj = {}
-      console.log(`error parsing local storage value: ${localStorageValue} with error ${err}`)
+      console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - error parsing local storage value: ${localStorageValue} with error ${err}`)
     }
 
     if (isNewPlayer(req.session.userStats)) {
@@ -1723,27 +1723,27 @@ app.use(function (req, res, next) {
 
 /* Start Function */
 async function start() {
-  console.log('reading csv...')
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - reading csv...`)
   lastUpdated = await readCSV(playerData, playerList)
-  console.log(`Last updated: ${lastUpdated}`)
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - Last updated: ${lastUpdated}`)
 
-  console.log(`${new Date().toLocaleTimeString()} - reading all teams...`)
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - reading all teams...`)
   await getAllTeams()
-  console.log(`${new Date().toLocaleTimeString()} - reading top 30 teams`)
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - reading top 30 teams`)
   await getTop30Teams()
-  console.log(`${new Date().toLocaleTimeString()} - reading top 20 teams`)
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - reading top 20 teams`)
   await getTop20Teams()
-  console.log(`${new Date().toLocaleTimeString()} - reading top 10 teams`)
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - reading top 10 teams`)
   await getTop10Teams()
 
-  console.log(`${new Date().toLocaleTimeString()} - preprocessing data...`)
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - preprocessing data...`)
   preprocessData(playerData)
 
-  console.log(`${new Date().toLocaleTimeString()} - creating init team lists`)
+  console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - creating init team lists`)
   createInitTeams()
 
   if (process.send) process.send('ready');
-  app.listen(process.env.PORT || 4000, () => console.log(`${new Date().toLocaleTimeString()} - Server is running...`))
+  app.listen(process.env.PORT || 4000, () => console.log(`${new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York" })} - Server is running...`))
 }
 
 start()
