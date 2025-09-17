@@ -422,7 +422,12 @@ async function checkPuzzle(req, res, next) {
 
       const historicalResult = { ...statsResult, _id: statsResult.puzzleDate }
       delete historicalResult.puzzleDate
-      await historicalDb.insertOne(historicalResult)
+
+      try {
+        await historicalDb.insertOne(historicalResult)
+      } catch (error) {
+        console.error('Error inserting historical result:', error)
+      }
 
       puzzleUpdating = false
       next()
