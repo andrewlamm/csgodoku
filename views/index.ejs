@@ -38,7 +38,7 @@
             <li>unlike other immaculate grids that you may be used to, for a team & stat grid, the player <b>does not</b> have to achieve the stat on a certain team. typically, the stats are valid for their entire career (unless otherwise noted in the criteria)</li>
             <li>a player can only be picked once, and when it has been picked for a certain spot in the grid, it cannot be changed</li>
             <li>uniqueness scores are calculated by summing up <span class="font-mono">(100 - percentage of games with chosen player)</span> for each 9 spots in the grid. an empty grid slot is worth 0 points. the higher the uniqueness score, the rarer the board is</li>
-            <li>new games everyday at 9 PM EST</li>
+            <li>new puzzle everday</li>
             <li>player data was last updated on <b><%= lastUpdated%></b></li>
             <li>send suggestions/bug reports on reddit at u/superandywaffle</li>
             <li>glhf!</li>
@@ -350,7 +350,14 @@
 
         // console.log(res)
 
-        gameOverSequence(res)
+        const gameState = res.gameState
+        const puzzleDate = gameState.puzzleDate
+
+        if (puzzleDate > 778) {
+          localStorage.setItem(`day-${puzzleDate}`, JSON.stringify(gameState))
+        }
+
+        gameOverSequence(res.guessReturn)
       }
 
       function cancelConcede() {
@@ -444,21 +451,30 @@
           })
         })).json()
 
+        const gameState = res.gameState
+        const puzzleDate = gameState.puzzleDate
+
+        if (puzzleDate > 778) {
+          localStorage.setItem(`day-${puzzleDate}`, JSON.stringify(gameState))
+        }
+
+        const guessReturn = res.guessReturn
+
         // console.log(res)
 
-        document.getElementById('rounds-left').innerHTML = res.guessesLeft
-        if (res.guessesLeft === 1) {
+        document.getElementById('rounds-left').innerHTML = guessReturn.guessesLeft
+        if (guessReturn.guessesLeft === 1) {
           document.getElementById('rounds-plural').innerHTML = ''
         }
         else {
           document.getElementById('rounds-plural').innerHTML = 's'
         }
 
-        if (res.guessStatus === -1) {
+        if (guessReturn.guessStatus === -1) {
           // error, do nothing
           return
         }
-        else if (res.guessStatus === 0) {
+        else if (guessReturn.guessStatus === 0) {
           // incorrect
           document.getElementById(`player-popup-element-${player.id}`).classList.add('line-through', 'opacity-50')
 
@@ -466,7 +482,7 @@
           document.getElementById(`player-popup-select-${player.id}`).classList.add('bg-red-400')
           document.getElementById(`player-popup-select-${player.id}`).innerHTML = 'incorrect'
         }
-        else if (res.guessStatus === 1) {
+        else if (guessReturn.guessStatus === 1) {
           // correct
           player.correct = true
 
@@ -476,7 +492,7 @@
 
           document.getElementById(`grid-image-${ind}`).src = `/images/player/${player.id}.png`
           document.getElementById(`grid-name-${ind}`).innerHTML = player.name
-          document.getElementById(`grid-percentage-${ind}`).innerHTML = formatPercentage(res.guessPercentage * 100)
+          document.getElementById(`grid-percentage-${ind}`).innerHTML = formatPercentage(guessReturn.guessPercentage * 100)
 
           document.getElementById(`recap-grid-${ind}`).classList.add('bg-green-500')
           document.getElementById(`recap-grid-${ind}`).classList.remove('bg-gray-500')
@@ -488,9 +504,9 @@
           return
         }
 
-        if (res.guessesLeft === 0) {
+        if (guessReturn.guessesLeft === 0) {
           // game over sequence
-          gameOverSequence(res)
+          gameOverSequence(guessReturn)
         }
       }
 

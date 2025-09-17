@@ -7,9 +7,11 @@ try {
   const client = new MongoClient(process.env.MONGO_DB_URL)
   client.connect()
   console.log("Connected to MongoDB")
-  const db = client.db('csgodoku').collection('game')
+  const db = client.db('csgodoku')
+  const historicalDb = db.collection('historical')
+  const gameDb = db.collection('game')
 
-  module.exports = db
+  module.exports = { historicalDb, gameDb }
 }
 catch (err){
   console.log("error connecting to mongodb", err)

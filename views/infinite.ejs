@@ -86,7 +86,7 @@
                 <%- displayClue(puzzle[i]) %>
               <% } %>
             </div>
-            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden" id="user-board">
+            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden border-white" id="user-board">
               <% for (let i = 0; i < 9; i++) { %>
                 <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> bg-slate-800 transition-colors" id="grid-spot-<%= i %>">
                   <img class="w-full h-full" id="grid-image-<%= i %>" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">
@@ -95,7 +95,7 @@
                 </div>
               <% } %>
             </div>
-            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden" id="stats-board">
+            <div class="grid grid-cols-3 rounded-2xl border overflow-hidden hidden border-white" id="stats-board">
               <% for (let i = 0; i < 9; i++) { %>
                 <div class="flex flex-col h-20 w-20 md:h-36 md:w-36 relative items-center justify-center border-white <%= getBorders(i) %> cursor-pointer bg-slate-600 hover:bg-gray-700 transition-colors" onclick="openStatsPopup(<%= i %>)" id="stats-spot-<%= i %>">
                   <img class="w-full h-full" id="stats-image-<%= i %>" onerror="if (this.src != 'images/player/placeholder.png') this.src = 'images/player/placeholder.png';">

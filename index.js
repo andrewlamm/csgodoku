@@ -38,7 +38,7 @@ app.use(session({
   maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
 }))
 
-const db = require('./db')
+const { historicalDb, gameDb } = require('./db')
 const { get, set } = require('express/lib/response')
 
 const redis = process.env.NODE_ENV === 'development' ? undefined : new Redis();
@@ -386,13 +386,13 @@ async function checkPuzzle(req, res, next) {
     const currTime = Math.floor(new Date().getTime() / 1000) - TIME_OFFSET
     puzzleDate = parseInt(currTime / SECONDS_PER_DAY)
 
-    const puzzleResult = await db.findOne({ _id: 'puzzleList' })
+    const puzzleResult = await gameDb.findOne({ _id: 'puzzleList' })
     const puzzleList = puzzleResult.puzzles
     puzzle = puzzleList[puzzleDate]
 
     findAllPossiblePlayers(puzzle)
 
-    const statsResult = await db.findOne({ _id: 'currentPuzzleStats' })
+    const statsResult = await gameDb.findOne({ _id: 'currentPuzzleStats' })
     if (puzzleDate === statsResult.puzzleDate) {
       // date on stats is correct, no need to reset
       next()
@@ -400,6 +400,7 @@ async function checkPuzzle(req, res, next) {
     else {
       // need to reset stats as well
       puzzleUpdating = true
+
       const initPickedPlayers = [{}, {}, {}, {}, {}, {}, {}, {}, {}]
       for (let i = 0; i < 9; i++) {
         possiblePlayers[i].forEach(playerID => {
@@ -417,7 +418,11 @@ async function checkPuzzle(req, res, next) {
         pickedPlayers: initPickedPlayers,
       } }
 
-      const updateRes = await db.updateOne(query, update)
+      const updateRes = await gameDb.updateOne(query, update)
+
+      const historicalResult = { ...statsResult, _id: statsResult.puzzleDate }
+      delete historicalResult.puzzleDate
+      await historicalDb.insertOne(historicalResult)
 
       puzzleUpdating = false
       next()
@@ -433,7 +438,7 @@ async function checkPuzzle(req, res, next) {
 
       puzzleDate = parseInt(currTime / SECONDS_PER_DAY)
 
-      const puzzleResult = await db.findOne({ _id: 'puzzleList' })
+      const puzzleResult = await gameDb.findOne({ _id: 'puzzleList' })
       const puzzleList = puzzleResult.puzzles
       puzzle = puzzleList[puzzleDate]
 
@@ -458,7 +463,7 @@ async function checkPuzzle(req, res, next) {
         pickedPlayers: initPickedPlayers,
       } }
 
-      const updateRes = await db.updateOne(query, update)
+      const updateRes = await gameDb.updateOne(query, update)
 
       puzzleUpdating = false
 
@@ -531,7 +536,7 @@ async function getPickedPlayersList() {
   }
 
   const query = { _id: 'currentPuzzleStats' }
-  const result = await db.findOne(query)
+  const result = await gameDb.findOne(query)
 
   for (let ind = 0; ind < 9; ind++) {
     for (const [playerID, count] of Object.entries(result.pickedPlayers[ind])) {
@@ -568,19 +573,19 @@ async function updateGlobalFinalScores(score, unique) {
   update.$inc.numberGames = 1
   update.$inc.totalUniqueness = unique
 
-  const updateRes = await db.updateOne(query, update)
+  const updateRes = await gameDb.updateOne(query, update)
 }
 
 async function getFinalScores() {
   const query = { _id: 'currentPuzzleStats' }
-  const result = await db.findOne(query)
+  const result = await gameDb.findOne(query)
 
   return [result.scores, result.numberGames]
 }
 
 async function getUniqueness() {
   const query = { _id: 'currentPuzzleStats' }
-  const result = await db.findOne(query)
+  const result = await gameDb.findOne(query)
 
   return result.numberGames === 0 ? 0 : parseInt(result.totalUniqueness / result.numberGames)
 }
@@ -714,7 +719,7 @@ async function insertGuessHelper(req, res, next) {
 
         /* add picks to db */
         const query = { _id: 'currentPuzzleStats' }
-        const result = await db.findOne(query)
+        const result = await gameDb.findOne(query)
 
         const update = { $inc: { } }
 
@@ -725,7 +730,7 @@ async function insertGuessHelper(req, res, next) {
           }
         }
 
-        const resultDoc = await db.updateOne(query, update)
+        const resultDoc = await gameDb.updateOne(query, update)
 
         const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
@@ -819,7 +824,7 @@ async function concedeHelper(req, res, next) {
       req.session.player.gameStatus = -1
 
       const query = { _id: 'currentPuzzleStats' }
-      const result = await db.findOne(query)
+      const result = await gameDb.findOne(query)
 
       const update = { $inc: { } }
 
@@ -830,7 +835,7 @@ async function concedeHelper(req, res, next) {
         }
       }
 
-      const resultDoc = await db.updateOne(query, update)
+      const resultDoc = await gameDb.updateOne(query, update)
 
       const score = 9 - req.session.player.board.filter(x => x === undefined || x === null).length
 
@@ -975,11 +980,31 @@ app.get('/stats', [checkPuzzle, initPlayer, getStats], (req, res) => {
 })
 
 app.post('/insertGuess', [checkPuzzle, checkPlayer, insertGuessHelper], (req, res) => {
-  res.send(res.locals.guessReturn)
+  res.locals.gameState = {
+    guessesLeft: req.session.player.guessesLeft,
+    board: req.session.player.board,
+    guesses: req.session.player.guesses,
+    gameStatus: req.session.player.gameStatus,
+    puzzleDate: puzzleDate,
+  }
+  res.send({
+    guessReturn: res.locals.guessReturn,
+    gameState: res.locals.gameState
+  })
 })
 
 app.post('/concede', [checkPuzzle, checkPlayer, concedeHelper], (req, res) => {
-  res.send(res.locals.guessReturn)
+  res.locals.gameState = {
+    guessesLeft: req.session.player.guessesLeft,
+    board: req.session.player.board,
+    guesses: req.session.player.guesses,
+    gameStatus: req.session.player.gameStatus,
+    puzzleDate: puzzleDate,
+  }
+  res.send({
+    guessReturn: res.locals.guessReturn,
+    gameState: res.locals.gameState
+  })
 })
 
 /* Infinite Mode */
@@ -1734,7 +1759,7 @@ async function saveInfinitePuzzle(req, res, next) {
     puzzle: JSON.stringify(res.locals.puzzle),
   }
 
-  const insertRes = await db.insertOne(doc)
+  const insertRes = await gameDb.insertOne(doc)
 
   // console.log(insertRes)
 
@@ -1746,7 +1771,7 @@ async function saveInfinitePuzzle(req, res, next) {
   const update = { $set: {} }
   update.$set[res.locals.puzzleID] = JSON.stringify(res.locals.puzzle)
 
-  const updateRes = await db.updateOne(query, update)
+  const updateRes = await gameDb.updateOne(query, update)
 
   next()
   */
@@ -1758,7 +1783,7 @@ async function findPuzzle(req, res, next) {
   }
   else {
     const puzzleID = req.query.id
-    const result = await db.findOne({ _id: puzzleID })
+    const result = await gameDb.findOne({ _id: puzzleID })
 
     if (result === null || result.puzzle === undefined) {
       res.redirect('/infiniteSettings')

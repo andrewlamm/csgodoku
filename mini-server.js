@@ -1,6 +1,7 @@
 // copy of index.js used for testing
 // reads from local csv instead of github
 // never updates the database
+// not been updated in a while, probably out of date
 
 const express = require('express')
 const app = express()
