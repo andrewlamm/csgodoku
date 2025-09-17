@@ -995,10 +995,10 @@ let allTeamsInit = undefined
 
 const STATS = [
   ['country', undefined],
-  ['age', [30, 35, 40]],
+  ['age', [25, 30, 35, 40]],
   ['rating3', [1.05, 1.1, 1.2]],
   ['rating2', [1.05, 1.1, 1.2]],
-  ['rating1', [1.05, 1.1, 1.2]],
+  // ['rating1', [1.05, 1.1, 1.2]],
   ['maps', [500, 1000, 2000]],
   ['rounds', [5000, 10000, 20000, 30000, 40000]],
   ['kills', [5000, 10000, 20000, 30000, 40000]],
@@ -1351,6 +1351,170 @@ function generateRandomStat() {
   }
 }
 
+function generateBetterStat(minPlayers, validPlayersList) {
+  let tries = 0
+  while (tries < 20) {
+    const randomStat = getRandomSubarray([...STATS], 1)[0]
+    // console.log('trying', randomStat[0])
+    if (randomStat[0] === 'country') {
+      const playerCountries = {}
+      for (let i = 0; i < validPlayersList.length; i++) {
+        const validPlayers = validPlayersList[i]
+        validPlayers.forEach(player => {
+          const country = playerData[player].country
+          if (playerCountries[country] === undefined) {
+            playerCountries[country] = []
+            for (let j = 0; j < validPlayersList.length; j++) {
+              playerCountries[country].push(0)
+            }
+          }
+          playerCountries[country][i] += 1
+        })
+      }
+
+      const possibleCountries = []
+      for (const [country, counts] of Object.entries(playerCountries)) {
+        let valid = true
+        for (let i = 0; i < counts.length; i++) {
+          if (counts[i] < minPlayers) {
+            valid = false
+            break
+          }
+        }
+        if (valid) {
+          possibleCountries.push(country)
+        }
+      }
+
+      if (possibleCountries.length > 0) {
+        return ['country', getRandomSubarray(possibleCountries, 1)[0]]
+      }
+    }
+    else if (randomStat[0] === 'ratingYear') {
+      const years = randomStat[1][0]
+      const ratings = randomStat[1][1]
+
+      const playerCounts = {}
+      years.forEach(year => {
+        ratings.forEach(rating => {
+          playerCounts[`${year}-${rating}`] = []
+          for (let i = 0; i < validPlayersList.length; i++) {
+            playerCounts[`${year}-${rating}`].push(0)
+          }
+
+          for (let i = 0; i < validPlayersList.length; i++) {
+            const validPlayers = validPlayersList[i]
+            validPlayers.forEach(player => {
+              if (playerData[player].ratingYear !== undefined && playerData[player].ratingYear[year] !== undefined && playerData[player].ratingYear[year] >= rating) {
+                playerCounts[`${year}-${rating}`][i] += 1
+              }
+            })
+          }
+        })
+      })
+
+      const validStats = []
+      for (const [stat, counts] of Object.entries(playerCounts)) {
+        let valid = true
+        for (let i = 0; i < counts.length; i++) {
+          if (counts[i] < minPlayers) {
+            valid = false
+            break
+          }
+        }
+
+        if (valid) {
+          validStats.push(stat)
+        }
+      }
+
+      if (validStats.length > 0) {
+        const chosenStat = getRandomSubarray(validStats, 1)[0]
+        const splitStat = chosenStat.split('-')
+        return ['ratingYear', [parseInt(splitStat[0]), parseFloat(splitStat[1])]]
+      }
+    }
+    else if (randomStat[0] === 'topPlacement') {
+      const playerCounts = {}
+
+      randomStat[1].forEach(placement => {
+        playerCounts[placement] = []
+        for (let i = 0; i < validPlayersList.length; i++) {
+          playerCounts[placement].push(0)
+        }
+
+        for (let i = 0; i < validPlayersList.length; i++) {
+          const validPlayers = validPlayersList[i]
+          validPlayers.forEach(player => {
+            if (playerData[player].topPlacement !== undefined && playerData[player].topPlacement <= placement) {
+              playerCounts[placement][i] += 1
+            }
+          })
+        }
+      })
+
+      const validStats = []
+      for (const [stat, counts] of Object.entries(playerCounts)) {
+        let valid = true
+        for (let i = 0; i < counts.length; i++) {
+          if (counts[i] < minPlayers) {
+            valid = false
+            break
+          }
+        }
+
+        if (valid) {
+          validStats.push(stat)
+        }
+      }
+
+      if (validStats.length > 0) {
+        return ['topPlacement', parseInt(getRandomSubarray(validStats, 1)[0])]
+      }
+    }
+    else {
+      const playerCounts = {}
+
+      randomStat[1].forEach(value => {
+        playerCounts[value] = []
+        for (let i = 0; i < validPlayersList.length; i++) {
+          playerCounts[value].push(0)
+        }
+
+        for (let i = 0; i < validPlayersList.length; i++) {
+          const validPlayers = validPlayersList[i]
+          validPlayers.forEach(player => {
+            if (playerData[player][randomStat[0]] !== undefined && playerData[player][randomStat[0]] >= value) {
+              playerCounts[value][i] += 1
+            }
+          })
+        }
+      })
+
+      const validStats = []
+      for (const [stat, counts] of Object.entries(playerCounts)) {
+        let valid = true
+        for (let i = 0; i < counts.length; i++) {
+          if (counts[i] < minPlayers) {
+            valid = false
+            break
+          }
+        }
+
+        if (valid) {
+          validStats.push(stat)
+        }
+      }
+
+      if (validStats.length > 0) {
+        return [randomStat[0], parseInt(getRandomSubarray(validStats, 1)[0])]
+      }
+    }
+  }
+
+  return generateRandomStat()
+}
+
 function puzzleHasDuplicateClues(puzzle) {
   const clues = new Set()
   let dupeCheck = false
@@ -1397,7 +1561,7 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   } else if (initPartnerTeams.size === 2) {
     topRowTeamsCount = 2
   } else {
-    topRowTeamsCount = Math.random() < 0.5 ? 3 : (Math.random() < 0.7 ? 2 : 1)
+    topRowTeamsCount = Math.random() < 0.6 ? 3 : (Math.random() < 0.7 ? 2 : 1)
   }
 
   puzzle[3] = ['team', initTeam]
@@ -1430,9 +1594,19 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
   if (topRowIntersect.size < 1) {
     return undefined
   } else if (topRowIntersect.size === 1) {
-    leftColTeamsCount = 1
+    if (topRowTeamsCount !== 3) {
+      return undefined
+    }
+    else {
+      leftColTeamsCount = 1
+    }
   } else {
-    leftColTeamsCount = Math.random() < 0.6 ? 1 : 2
+    if (topRowTeamsCount === 3) {
+      leftColTeamsCount = Math.random() < 0.5 ? 1 : 2
+    }
+    else {
+      leftColTeamsCount = 2
+    }
   }
 
   const leftCol = getRandomSubarray([...topRowIntersect], leftColTeamsCount)
@@ -1456,15 +1630,34 @@ async function generatePuzzle(minPlayers, teamList, initTeamList) {
 
   let statsTries = 0
 
+  let colValidPlayers = []
+  if (leftColTeamsCount === 1) {
+    colValidPlayers = [[...teamPlayers[initTeam]], [...teamPlayers[leftCol[0]]]]
+  }
+  else {
+    colValidPlayers = [[...teamPlayers[initTeam]], [...teamPlayers[leftCol[0]]], [...teamPlayers[leftCol[1]]]]
+  }
+
+  let rowValidPlayers = []
+  if (topRowTeamsCount === 1) {
+    rowValidPlayers = [[...teamPlayers[topRow[0]]]]
+  }
+  else if (topRowTeamsCount === 2) {
+    rowValidPlayers = [[...teamPlayers[topRow[0]]], [...teamPlayers[topRow[1]]]]
+  }
+  else {
+    rowValidPlayers = [[...teamPlayers[topRow[0]]], [...teamPlayers[topRow[1]]], [...teamPlayers[topRow[2]]]]
+  }
+
   while (statsTries < 30) {
     if (topRowTeamsCount === 1) {
-      puzzle[1] = generateRandomStat()
+      puzzle[1] = generateBetterStat(minPlayers, colValidPlayers)
     }
     if (topRowTeamsCount <= 2) {
-      puzzle[2] = generateRandomStat()
+      puzzle[2] = generateBetterStat(minPlayers, colValidPlayers)
     }
     if (leftColTeamsCount === 1) {
-      puzzle[5] = generateRandomStat()
+      puzzle[5] = generateBetterStat(minPlayers, rowValidPlayers)
     }
 
     const fixedPuzzle = []

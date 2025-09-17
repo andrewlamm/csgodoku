@@ -19,16 +19,11 @@ MIN_GRID = 5 # min player in grid
 PUZZLES_GRID = [(0, 3), (1, 3), (2, 3), (0, 4), (1, 4), (2, 4), (0, 5), (1, 5), (2, 5)]
 PUZZLE_TO_GRID = [[0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 1, 2], [3, 4, 5], [6, 7, 8]]
 STATS = [
-  ('country', country_set), # skew the dataset lmao
   ('country', country_set),
-  ('country', country_set),
-  ('country', country_set),
-  ('country', country_set),
-  ('country', country_set),
-  ('age', [30, 35, 40]),
+  ('age', [25, 30, 35, 40]),
   ('rating3', [1.05, 1.1, 1.2]),
   ('rating2', [1.05, 1.1, 1.2]),
-  ('rating1', [1.05, 1.1, 1.2]),
+  # ('rating1', [1.05, 1.1, 1.2]),
   ('maps', [500, 1000, 2000]),
   ('rounds', [5000, 10000, 20000, 30000, 40000]),
   ('kills', [5000, 10000, 20000, 30000, 40000]),
@@ -210,6 +205,85 @@ def gen_random_stat():
   else:
     return (random_stat[0], random.choice(random_stat[1]))
 
+def gen_better_stat(valid_players_list):
+  tries = 0
+  while tries < 20:
+    random_stat = random.choice(STATS)
+    # print('trying', random_stat[0])
+
+    if random_stat[0] == 'country':
+      player_counties = {}
+      for idx, valid_players in enumerate(valid_players_list):
+        for player in valid_players:
+          country = player_data[player]['country']
+          if country not in player_counties:
+            player_counties[country] = [0 for _ in range(len(valid_players_list))]
+          player_counties[country][idx] += 1
+
+      valid_countries = []
+      for country in player_counties:
+        if all([player_counties[country][i] >= MIN_GRID for i in range(len(valid_players_list))]):
+          valid_countries.append(country)
+
+      if len(valid_countries) > 0:
+        return ('country', random.choice(valid_countries))
+    elif random_stat[0] == 'ratingYear':
+      years = random_stat[1][0]
+      ratings = random_stat[1][1]
+
+      player_counts = {}
+      for year in years:
+        for rating in ratings:
+          player_counts[(year, rating)] = [0 for _ in range(len(valid_players_list))]
+          for idx, valid_players in enumerate(valid_players_list):
+            for player in valid_players:
+              if year in player_data[player]['ratingYear'] and player_data[player]['ratingYear'][year] >= rating:
+                player_counts[(year, rating)][idx] += 1
+
+      valid_stats = []
+      for stat in player_counts:
+        if all([player_counts[stat][i] >= MIN_GRID for i in range(len(valid_players_list))]):
+          valid_stats.append(stat)
+
+      if len(valid_stats) > 0:
+        return ('ratingYear', list(random.choice(valid_stats)))
+    elif random_stat[0] == 'topPlacement':
+      player_counts = {}
+      for value in random_stat[1]:
+        player_counts[value] = [0 for _ in range(len(valid_players_list))]
+        for idx, valid_players in enumerate(valid_players_list):
+          for player in valid_players:
+            if player_data[player]['topPlacement'] is not None and player_data[player]['topPlacement'] <= value:
+              player_counts[value][idx] += 1
+
+      valid_stats = []
+      for key in player_counts:
+        if all([player_counts[key][i] >= MIN_GRID for i in range(len(valid_players_list))]):
+          valid_stats.append(key)
+
+      if len(valid_stats) > 0:
+        return ('topPlacement', random.choice(valid_stats))
+    else:
+      player_counts = {}
+
+      for value in random_stat[1]:
+        player_counts[value] = [0 for _ in range(len(valid_players_list))]
+        for idx, valid_players in enumerate(valid_players_list):
+          for player in valid_players:
+            if player_data[player][random_stat[0]] is not None and player_data[player][random_stat[0]] >= value:
+              player_counts[value][idx] += 1
+
+      valid_stats = []
+      for key in player_counts:
+        if all([player_counts[key][i] >= MIN_GRID for i in range(len(valid_players_list))]):
+          valid_stats.append(key)
+
+      if len(valid_stats) > 0:
+        return (random_stat[0], random.choice(valid_stats))
+
+  return gen_random_stat()
+
+
 def puzzle_has_duplicate_clues(puzzle):
   # kind of a naive check for dupes xd
   clues = set()
@@ -245,7 +319,7 @@ def generate_puzzle():
     elif len(partner_teams[init_team]) == 2:
       top_row_teams_count = 2
     else:
-      top_row_teams_count = 3 if random.random() < 0.5 else 2 if random.random() < 0.7 else 1
+      top_row_teams_count = 3 if random.random() < 0.6 else 2 if random.random() < 0.7 else 1
 
     puzzle[3] = ('team', init_team)
 
@@ -269,9 +343,15 @@ def generate_puzzle():
     if len(intersect) < 1:
       continue
     elif len(intersect) == 1:
-      left_col_teams_count = 1
+      if top_row_teams_count != 3:
+        continue
+      else:
+        left_col_teams_count = 1
     else:
-      left_col_teams_count = 1 if random.random() < 0.6 else 2
+      if top_row_teams_count == 3:
+        left_col_teams_count = 1 if random.random() < 0.5 else 2
+      else:
+        left_col_teams_count = 2
 
     left_col = random.sample(list(intersect), left_col_teams_count)
 
@@ -291,13 +371,28 @@ def generate_puzzle():
     # We have a valid set of teams, now fill in the rest of the stats, retry this 100 times if we make an invalid set
     stat_tries = 0
 
-    while stat_tries < 30:
+    col_valid_players = []
+    if left_col_teams_count == 1:
+      col_valid_players = [team_players[init_team], team_players[left_col[0]]]
+    else:
+      col_valid_players = [team_players[init_team], team_players[left_col[0]], team_players[left_col[1]]]
+
+    row_valid_players = []
+    if top_row_teams_count == 1:
+      row_valid_players = [team_players[top_row[0]]]
+    elif top_row_teams_count == 2:
+      row_valid_players = [team_players[top_row[0]], team_players[top_row[1]]]
+    else:
+      row_valid_players = [team_players[top_row[0]], team_players[top_row[1]], team_players[top_row[2]]]
+
+
+    while stat_tries < 20:
       if top_row_teams_count == 1:
-        puzzle[1] = gen_random_stat()
+        puzzle[1] = gen_better_stat(col_valid_players)
       if top_row_teams_count <= 2:
-        puzzle[2] = gen_random_stat()
+        puzzle[2] = gen_better_stat(col_valid_players)
       if left_col_teams_count == 1:
-        puzzle[5] = gen_random_stat()
+        puzzle[5] = gen_better_stat(row_valid_players)
 
       if puzzle_has_duplicate_clues(puzzle):
         stat_tries += 1
