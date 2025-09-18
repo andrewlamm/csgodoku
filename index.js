@@ -470,6 +470,15 @@ async function checkPuzzle(req, res, next) {
 
       const updateRes = await gameDb.updateOne(query, update)
 
+      const historicalResult = { ...statsResult, _id: statsResult.puzzleDate }
+      delete historicalResult.puzzleDate
+
+      try {
+        await historicalDb.insertOne(historicalResult)
+      } catch (error) {
+        console.error('Error inserting historical result:', error)
+      }
+
       puzzleUpdating = false
 
       next()
