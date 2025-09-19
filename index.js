@@ -440,6 +440,8 @@ async function checkPuzzle(req, res, next) {
       /* get puzzle */
       puzzleUpdating = true
 
+      const oldStats = await gameDb.findOne({ _id: 'currentPuzzleStats' })
+
       puzzleDate = parseInt(currTime / SECONDS_PER_DAY)
 
       const puzzleResult = await gameDb.findOne({ _id: 'puzzleList' })
@@ -469,8 +471,7 @@ async function checkPuzzle(req, res, next) {
 
       const updateRes = await gameDb.updateOne(query, update)
 
-      const statsResult = await gameDb.findOne({ _id: 'currentPuzzleStats' })
-      const historicalResult = { ...statsResult, _id: statsResult.puzzleDate }
+      const historicalResult = { ...oldStats, _id: oldStats.puzzleDate }
       delete historicalResult.puzzleDate
 
       try {
