@@ -39,7 +39,6 @@ app.use(session({
 }))
 
 const { historicalDb, gameDb } = require('./db')
-const { get, set } = require('express/lib/response')
 
 const redis = process.env.NODE_ENV === 'development' ? undefined : new Redis();
 
@@ -470,6 +469,7 @@ async function checkPuzzle(req, res, next) {
 
       const updateRes = await gameDb.updateOne(query, update)
 
+      const statsResult = await gameDb.findOne({ _id: 'currentPuzzleStats' })
       const historicalResult = { ...statsResult, _id: statsResult.puzzleDate }
       delete historicalResult.puzzleDate
 
