@@ -298,6 +298,13 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
       clue1Check = true
     }
   }
+  else if (clue1Type === 'rating1' || clue1Type === 'rating2' || clue1Type === 'rating3') { // bandaid rating fix
+    if ((playerData[playerID]['rating1'] !== undefined && playerData[playerID]['rating1'] >= parseFloat(clue1Val)) ||
+        (playerData[playerID]['rating2'] !== undefined && playerData[playerID]['rating2'] >= parseFloat(clue1Val)) ||
+        (playerData[playerID]['rating3'] !== undefined && playerData[playerID]['rating3'] >= parseFloat(clue1Val))) {
+      clue1Check = true
+    }
+  }
   else {
     if (playerData[playerID][clue1Type] === undefined) {
       clue1Check = false
@@ -331,6 +338,13 @@ function checkPlayerGrid(playerID, clue1, clue2, teamNameHasID = true) {
       clue2Check = false
     }
     else if (playerData[playerID]['topPlacement'] <= parseInt(clue2Val)) {
+      clue2Check = true
+    }
+  }
+  else if (clue2Type === 'rating1' || clue2Type === 'rating2' || clue2Type === 'rating3') {  // bandaid rating fix
+    if ((playerData[playerID]['rating1'] !== undefined && playerData[playerID]['rating1'] >= parseFloat(clue2Val)) ||
+        (playerData[playerID]['rating2'] !== undefined && playerData[playerID]['rating2'] >= parseFloat(clue2Val)) ||
+        (playerData[playerID]['rating3'] !== undefined && playerData[playerID]['rating3'] >= parseFloat(clue2Val))) {
       clue2Check = true
     }
   }
