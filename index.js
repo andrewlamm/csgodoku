@@ -489,7 +489,9 @@ async function checkPuzzle(req, res, next) {
       delete historicalResult.puzzleDate
 
       try {
-        await historicalDb.insertOne(historicalResult)
+        if (oldStats.puzzleDate !== puzzleDate) {
+          await historicalDb.insertOne(historicalResult)
+        }
       } catch (error) {
         console.error('Error inserting historical result:', error)
       }
