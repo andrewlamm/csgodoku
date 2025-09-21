@@ -483,22 +483,29 @@ async function checkPuzzle(req, res, next) {
         pickedPlayers: initPickedPlayers,
       } }
 
-      const updateRes = await gameDb.updateOne(query, update)
+      if (oldStats.puzzleDate !== puzzleDate) {
+        const updateRes = await gameDb.updateOne(query, update)
 
-      const historicalResult = { ...oldStats, _id: oldStats.puzzleDate }
-      delete historicalResult.puzzleDate
+        const historicalResult = { ...oldStats, _id: oldStats.puzzleDate }
+        delete historicalResult.puzzleDate
 
-      try {
-        if (oldStats.puzzleDate !== puzzleDate) {
-          await historicalDb.insertOne(historicalResult)
+        try {
+          if (oldStats.puzzleDate !== puzzleDate) {
+            await historicalDb.insertOne(historicalResult)
+          }
+        } catch (error) {
+          console.error('Error inserting historical result:', error)
         }
-      } catch (error) {
-        console.error('Error inserting historical result:', error)
+
+        puzzleUpdating = false
+
+        next()
       }
+      else {
+        puzzleUpdating = false
 
-      puzzleUpdating = false
-
-      next()
+        next()
+      }
     }
     else {
       // current puzzle is fine, do nothing
